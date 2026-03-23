@@ -1,0 +1,39 @@
+{
+  "featureId": "strava-oauth-and-sync",
+  "reviewedAt": "2026-03-23T05:16:22Z",
+  "commitId": "eb739a3",
+  "transcriptSkeletonReviewed": false,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Strava token storage/refresh, sync endpoint, trip grouping, stream fetch, and setup script are implemented, but the sync call only pulls one page of Strava activities and therefore does not meet the requirement to fetch all athlete activities.",
+    "issues": [
+      {
+        "file": "functions/src/router.ts",
+        "line": 23,
+        "severity": "blocking",
+        "description": "The sync endpoint calls `GET /api/v3/athlete/activities?per_page=100` exactly once and has no pagination loop (`page` handling). This does not satisfy the feature requirement to fetch all athlete activities."
+      },
+      {
+        "file": "functions/src/router.ts",
+        "line": 83,
+        "severity": "non_blocking",
+        "description": "Firestore write failures are swallowed and the endpoint still returns HTTP 200 success. This can report successful sync while activities/trips/streams were not actually persisted, which weakens operational reliability and troubleshooting."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "Feature lifecycle artifacts are incomplete for this completed feature: no transcript skeleton entry and no handoff file for the assigned worker session, while the feature remains marked completed.",
+      "evidence": "features.json keeps `currentWorkerSessionId` set and `completedWorkerSessionId` null for this feature (/Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/features.json:536-537). progress_log shows the session started and then failed after a resume message saying the feature was completed (/Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/progress_log.jsonl:33-38). `worker-transcripts.jsonl` and `handoffs/` have no match for session `b25cc1fc-97b8-4e8d-bfef-683b64d9104a` (grep returned no matches)."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Shared Strava notes document rate limits/token expiry but omit pagination guidance, which likely contributed to the single-page implementation.",
+      "evidence": "Strava section in /Users/primmer/trip_tracker/.factory/library/environment.md:32-35 has no pagination note; implementation uses one request with `per_page=100` in /Users/primmer/trip_tracker/functions/src/router.ts:23."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed commit eb739a3 and related mission evidence for strava-oauth-and-sync. Core pieces are present, but the implementation fails the all-activities requirement because it only fetches one page from Strava. Review result is FAIL with one blocking and one non-blocking code issue, plus shared-state process/documentation observations."
+}

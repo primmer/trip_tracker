@@ -1,0 +1,39 @@
+{
+  "featureId": "trip-list-ui",
+  "reviewedAt": "2026-03-23T05:15:01Z",
+  "commitId": "7e7ec9d",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Trip list rendering, Firestore reads, empty/loading states, and trip-card navigation are implemented, but the sync endpoint is hardcoded to localhost instead of the required /api/strava/sync route contract.",
+    "issues": [
+      {
+        "file": "src/pages/Trips.tsx",
+        "line": 37,
+        "severity": "blocking",
+        "description": "Sync uses `fetch('http://localhost:5001/api/strava/sync', ...)` instead of calling the required `/api/strava/sync` route. This hardcodes a dev-only host and violates the feature contract."
+      },
+      {
+        "file": "src/test/Trips.test.tsx",
+        "line": 125,
+        "severity": "non_blocking",
+        "description": "Test expectation hardcodes `http://localhost:5001/api/strava/sync`, which reinforces the route-contract mismatch and will fail once the endpoint is corrected to `/api/strava/sync`."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The fullstack-worker skill requires manual verification with recorded interactive checks, but this feature handoff reports no interactive checks while still marking followedProcedure true.",
+      "evidence": "Skill requirement: /Users/primmer/trip_tracker/.factory/skills/fullstack-worker/SKILL.md:69. Handoff values: /Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-23T05-03-45-553Z__trip-list-ui__663bbacd-1e2e-4cba-b121-2fa549f659bc.json:31 and :60."
+    },
+    {
+      "area": "conventions",
+      "observation": "Shared docs do not define a frontend API-base convention for Cloud Function calls, and this review found a hardcoded localhost endpoint in UI code.",
+      "evidence": "Architecture only states API calls go through Cloud Functions (/Users/primmer/trip_tracker/.factory/library/architecture.md:47), while implementation hardcodes host in /Users/primmer/trip_tracker/src/pages/Trips.tsx:37."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed transcript skeleton, handoff, and commit 7e7ec9d for trip-list-ui. Most UI behaviors are present, but the sync call does not meet the required `/api/strava/sync` contract due to a hardcoded localhost URL, so this review is FAIL until corrected."
+}

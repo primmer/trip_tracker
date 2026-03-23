@@ -1,0 +1,72 @@
+{
+  "milestone": "strava-integration",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "npx vitest run --reporter=verbose",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "npm run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 2,
+    "passed": 0,
+    "failed": 2,
+    "failedFeatures": [
+      "strava-oauth-and-sync",
+      "trip-list-ui"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "strava-oauth-and-sync",
+      "severity": "blocking",
+      "description": "Sync endpoint fetches only one Strava activities page (`per_page=100`) with no pagination loop, so it does not fetch all athlete activities as required."
+    },
+    {
+      "featureId": "trip-list-ui",
+      "severity": "blocking",
+      "description": "Trip sync call is hardcoded to `http://localhost:5001/api/strava/sync` instead of the required `/api/strava/sync` route contract."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "skills/fullstack-worker",
+      "suggestion": "Fail handoff procedure checks when `followedProcedure=true` but required manual `interactiveChecks` are missing for features with UI/manual verification requirements.",
+      "evidence": "trip-list-ui review found no interactive checks recorded in handoff despite the skill requiring manual verification evidence.",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add an explicit frontend API-call convention: client code must call relative `/api/...` routes and must not hardcode `localhost` hosts.",
+      "evidence": "trip-list-ui implemented `fetch('http://localhost:5001/api/strava/sync')`, violating the feature contract and environment-port assumptions.",
+      "isSystemic": true
+    },
+    {
+      "target": "mission handoff/state validation",
+      "suggestion": "Prevent marking a feature completed unless `completedWorkerSessionId`, transcript skeleton, and handoff artifacts all exist and are internally consistent.",
+      "evidence": "strava-oauth-and-sync is marked completed while `completedWorkerSessionId` is null and no matching transcript/handoff artifact exists for the assigned worker session.",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Document Strava list-endpoint pagination expectation (iterate pages until empty) when requirements state 'fetch all activities'.",
+      "evidence": "strava-oauth-and-sync used a single `per_page=100` request without page iteration and failed the all-activities requirement.",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}
