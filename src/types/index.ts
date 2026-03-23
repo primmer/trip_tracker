@@ -23,3 +23,10 @@ export interface Activity {
   start_latlng: [number, number] | null;
   end_latlng: [number, number] | null;
 }
+
+export interface ActivityStreams {
+  latlng: [number, number][];
+  altitude: number[];
+  time: number[];
+  distance: number[];
+}
