@@ -3,16 +3,19 @@ import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Trip, Activity, ActivityStreams } from '../types';
-import { ChevronLeft, Calendar, Play, Pause, FastForward } from 'lucide-react';
+import { Photo } from '../components/Map/PhotoMarkers';
+import { ChevronLeft, Calendar, Play, Pause, FastForward, ImagePlus, Loader2 } from 'lucide-react';
 import { metersToFeet, metersToMiles, metersToKm, secondsToDuration } from '../utils/units';
 import { TripMap } from '../components/Map/TripMap';
 import { ElevationChart } from '../components/ElevationChart';
+import { getApiBaseUrl } from '../utils/api';
 
 export const TripDetail: React.FC = () => {
   const { tripId } = useParams<{ tripId: string }>();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [streams, setStreams] = useState<Record<number, ActivityStreams>>({});
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeActivityId, setActiveActivityId] = useState<number | null>(null);
@@ -25,6 +28,88 @@ export const TripDetail: React.FC = () => {
     speed: 1,
     activityId: null,
   });
+  const [isPickingPhotos, setIsPickingPhotos] = useState(false);
+  const [pickProgress, setPickProgress] = useState<string | null>(null);
+
+  const handleAddPhotos = async () => {
+    if (!tripId) return;
+    setIsPickingPhotos(true);
+    setPickProgress('Creating session...');
+    const apiBaseUrl = getApiBaseUrl();
+    try {
+      // 1. Create Picker Session
+      const response = await fetch(`${apiBaseUrl}/api/photos/picker-session`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to create picker session');
+      const session = await response.json();
+      
+      // 2. Open Picker in new window
+      const pickerWindow = window.open(session.pickerUri, 'Google Photos Picker', 'width=800,height=600');
+      if (!pickerWindow) {
+        throw new Error('Please enable popups to use the photo picker');
+      }
+
+      setPickProgress('Waiting for selection...');
+      
+      // 3. Poll session for completion
+      const pollInterval = setInterval(async () => {
+        try {
+          const pollResponse = await fetch(`${apiBaseUrl}/api/photos/picker-session/${session.id}`);
+          if (!pollResponse.ok) throw new Error('Polling failed');
+          const pollData = await pollResponse.json();
+          
+          if (pollData.mediaItemsSet) {
+            clearInterval(pollInterval);
+            setPickProgress('Processing photos...');
+            
+            // 4. Trigger processing in backend
+            const processResponse = await fetch(`${apiBaseUrl}/api/photos/process-session`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId: session.id, tripId }),
+            });
+            
+            if (!processResponse.ok) throw new Error('Processing failed');
+            
+            setPickProgress('Done!');
+            
+            // Refresh photos
+            const photosQuery = query(collection(db, 'trips', tripId, 'photos'));
+            const photosSnapshot = await getDocs(photosQuery);
+            const photosData = photosSnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            })) as Photo[];
+            setPhotos(photosData);
+
+            setTimeout(() => {
+              setPickProgress(null);
+              setIsPickingPhotos(false);
+              // TODO: Refresh photos display (not implemented yet)
+            }, 2000);
+          }
+          
+          if (pickerWindow.closed && !pollData.mediaItemsSet) {
+            clearInterval(pollInterval);
+            setPickProgress(null);
+            setIsPickingPhotos(false);
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
+          clearInterval(pollInterval);
+          setIsPickingPhotos(false);
+          setPickProgress(null);
+        }
+      }, 3000);
+
+    } catch (err) {
+      console.error('Error adding photos:', err);
+      alert(err instanceof Error ? err.message : 'Failed to add photos');
+      setIsPickingPhotos(false);
+      setPickProgress(null);
+    }
+  };
 
   const handlePlayPause = (activityId: number) => {
     setAnimationState(prev => ({
@@ -101,6 +186,15 @@ export const TripDetail: React.FC = () => {
         }
         setStreams(streamsData);
 
+        // Fetch photos
+        const photosQuery = query(collection(db, 'trips', tripId, 'photos'));
+        const photosSnapshot = await getDocs(photosQuery);
+        const photosData = photosSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Photo[];
+        setPhotos(photosData);
+
       } catch (err) {
         console.error('Error fetching trip data:', err);
         setError('Failed to load trip data');
@@ -150,6 +244,23 @@ export const TripDetail: React.FC = () => {
             </div>
           </div>
         </div>
+        
+        <div className="flex items-center gap-2">
+          {pickProgress && (
+            <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>{pickProgress}</span>
+            </div>
+          )}
+          <button
+            onClick={handleAddPhotos}
+            disabled={isPickingPhotos}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-bold shadow-md transition-all active:scale-95"
+          >
+            <ImagePlus className="w-5 h-5" />
+            <span>Add Photos</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Content: Map and Stats */}
@@ -161,6 +272,7 @@ export const TripDetail: React.FC = () => {
             highlightedActivityId={activeActivityId}
             animationState={animationState}
             onAnimationComplete={() => setAnimationState(prev => ({ ...prev, isPlaying: false }))}
+            photos={photos}
           />
           
           {/* Overlay Day Navigation (if multi-day) */}

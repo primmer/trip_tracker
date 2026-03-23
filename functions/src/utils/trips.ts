@@ -24,6 +24,13 @@ export interface Activity {
   end_latlng: [number, number] | null;
 }
 
+export interface ActivityStreams {
+  latlng: [number, number][];
+  altitude: number[];
+  time: number[];
+  distance: number[];
+}
+
 export interface Trip {
   id: string; // The hashtag or a generated ID
   hashtag: string | null;

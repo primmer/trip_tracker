@@ -2,15 +2,36 @@ import admin from 'firebase-admin';
 const TOKENS_DOC_PATH = 'secrets/strava_tokens';
 export async function getStravaTokens() {
     const db = admin.firestore();
-    const doc = await db.doc(TOKENS_DOC_PATH).get();
-    if (!doc.exists) {
-        return null;
+    try {
+        const doc = await db.doc(TOKENS_DOC_PATH).get();
+        if (doc.exists) {
+            return doc.data();
+        }
     }
-    return doc.data();
+    catch (error) {
+        console.warn('Failed to read Strava tokens from Firestore:', error);
+    }
+    // Fallback to .env for initialization
+    const access_token = process.env.STRAVA_ACCESS_TOKEN; // Optional
+    const refresh_token = process.env.STRAVA_REFRESH_TOKEN;
+    if (refresh_token) {
+        console.log('Using Strava refresh token from environment');
+        return {
+            access_token: access_token || '',
+            refresh_token: refresh_token,
+            expires_at: 0, // Force refresh
+        };
+    }
+    return null;
 }
 export async function saveStravaTokens(tokens) {
     const db = admin.firestore();
-    await db.doc(TOKENS_DOC_PATH).set(tokens);
+    try {
+        await db.doc(TOKENS_DOC_PATH).set(tokens);
+    }
+    catch (error) {
+        console.warn('Failed to save Strava tokens to Firestore:', error);
+    }
 }
 export async function refreshStravaTokenIfNeeded() {
     const tokens = await getStravaTokens();

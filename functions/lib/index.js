@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions/v2';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import express from 'express';
 import cors from 'cors';
 import { router } from './router.js';
@@ -10,5 +10,5 @@ if (!admin.apps.length) {
 const app = express();
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(router);
-export const api = functions.https.onRequest({ cors: true }, app);
+export const api = functions.https.onRequest({ cors: true, timeoutSeconds: 300, memory: '512MiB' }, app);
 //# sourceMappingURL=index.js.map

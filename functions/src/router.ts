@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { refreshStravaTokenIfNeeded } from './services/strava.js';
 import { groupActivitiesIntoTrips, type Activity } from './utils/trips.js';
 import admin from 'firebase-admin';
+import { createPickerSession, getPickerSession, listPickedMediaItems } from './services/google.js';
+import { findNearestLatLng } from './utils/geo.js';
 
 const router = Router();
 
@@ -115,7 +117,7 @@ router.post('/strava/sync', async (req, res) => {
       try {
         // Check if we already have this activity with a description in Firestore
         const doc = await db.collection('activities').doc(summary.id.toString()).get();
-        let detailed;
+        let detailed: any;
         
         if (doc.exists && doc.data()?.description !== undefined && doc.data()?.description !== null) {
           console.log(`Activity ${summary.id} already has description in Firestore. Skipping detail fetch.`);
@@ -126,7 +128,7 @@ router.post('/strava/sync', async (req, res) => {
           
           // Save detailed activity to Firestore
           const activityRef = db.collection('activities').doc(summary.id.toString());
-          const cleanedData = prepareActivityForFirestore(detailed);
+          const cleanedData: any = prepareActivityForFirestore(detailed);
           
           await activityRef.set({
             ...cleanedData,
@@ -167,8 +169,9 @@ router.post('/strava/sync', async (req, res) => {
     for (const trip of trips) {
       try {
         const tripRef = db.collection('trips').doc(trip.id);
+        const tripDataToSave: any = { ...trip };
         await tripRef.set({
-          ...trip,
+          ...tripDataToSave,
           synced_at: admin.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
         tripsSaved++;
@@ -197,6 +200,136 @@ router.post('/strava/sync', async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.post('/api/photos/picker-session', async (req, res) => {
+  try {
+    const session = await createPickerSession();
+    res.status(200).json(session);
+  } catch (error) {
+    console.error('Error creating picker session:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.get('/api/photos/picker-session/:sessionId', async (req, res) => {
+  try {
+    const session = await getPickerSession(req.params.sessionId);
+    res.status(200).json(session);
+  } catch (error) {
+    console.error('Error getting picker session:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.post('/api/photos/process-session', async (req, res) => {
+  const { sessionId, tripId } = req.body;
+  if (!sessionId || !tripId) {
+    return res.status(400).json({ error: 'sessionId and tripId are required' });
+  }
+
+  try {
+    const db = admin.firestore();
+    const tripDoc = await db.collection('trips').doc(tripId).get();
+    if (!tripDoc.exists) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+    const tripData = tripDoc.data();
+    const activityIds = tripData?.activityIds || [];
+
+    // Fetch activities and their streams for this trip
+    const activitiesData: any[] = [];
+    for (const activityId of activityIds) {
+      const activityDoc = await db.collection('activities').doc(activityId.toString()).get();
+      if (activityDoc.exists) {
+        const streamDoc = await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').get();
+        const activityRaw = activityDoc.data();
+        if (activityRaw) {
+          activitiesData.push({
+            ...activityRaw,
+            streams: streamDoc.exists ? streamDoc.data() : null
+          });
+        }
+      }
+    }
+
+    const mediaItems = await listPickedMediaItems(sessionId);
+    const results = [];
+
+    for (const item of mediaItems) {
+      try {
+        // 1. Download photo (baseUrl + w2048)
+        const photoUrl = `${item.baseUrl}=w2048`;
+        const response = await fetch(photoUrl);
+        if (!response.ok) throw new Error(`Failed to download photo ${item.id}`);
+        const buffer = await response.arrayBuffer();
+
+        // 2. Upload to Firebase Storage
+        const bucket = admin.storage().bucket();
+        const filename = `${item.id}.jpg`; // Assumption: mostly JPEGs or conversion handled by baseUrl
+        const storagePath = `trips/${tripId}/photos/${filename}`;
+        const file = bucket.file(storagePath);
+        
+        await file.save(Buffer.from(buffer), {
+          metadata: {
+            contentType: item.mimeType || 'image/jpeg',
+          },
+        });
+
+        // Get public download URL
+        const [downloadUrl] = await file.getSignedUrl({
+          action: 'read',
+          expires: '03-01-2500', // Long-lived
+        });
+
+        // 3. Geolocation derivation
+        let lat = null;
+        let lng = null;
+        if (item.creationTime) {
+          for (const activity of activitiesData) {
+            if (activity.streams) {
+              const geo = findNearestLatLng(item.creationTime, activity.start_date, activity.streams);
+              if (geo) {
+                lat = geo.lat;
+                lng = geo.lng;
+                break; // Found matching activity
+              }
+            }
+          }
+        }
+
+        // 4. Firestore metadata
+        const photoMetadata = {
+          id: item.id,
+          filename,
+          storagePath,
+          downloadUrl,
+          createdAt: item.creationTime,
+          lat,
+          lng,
+          mimeType: item.mimeType,
+          syncedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        await db.collection('trips').doc(tripId).collection('photos').doc(item.id).set(photoMetadata);
+        results.push({ id: item.id, success: true });
+      } catch (err) {
+        console.error(`Error processing photo ${item.id}:`, err);
+        results.push({ id: item.id, success: false, error: err instanceof Error ? err.message : 'Unknown' });
+      }
+    }
+
+    res.status(200).json({ processed: results.length, details: results });
+  } catch (error) {
+    console.error('Error processing picker session:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

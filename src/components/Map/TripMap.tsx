@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Map, useMap, MapProps, Marker } from '@vis.gl/react-google-maps';
 import { ActivityStreams } from '../../types';
 import { RouteAnimation } from './RouteAnimation';
+import { PhotoMarkers, Photo } from './PhotoMarkers';
 
 interface TripMapProps extends MapProps {
   activityStreams: Record<number, ActivityStreams>;
@@ -12,6 +13,7 @@ interface TripMapProps extends MapProps {
     activityId: number | null;
   };
   onAnimationComplete?: () => void;
+  photos?: Photo[];
 }
 
 export const TripMap: React.FC<TripMapProps> = ({ 
@@ -19,6 +21,7 @@ export const TripMap: React.FC<TripMapProps> = ({
   highlightedActivityId,
   animationState,
   onAnimationComplete,
+  photos = [],
   ...mapProps 
 }) => {
   const [animationPos, setAnimationPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -50,6 +53,9 @@ export const TripMap: React.FC<TripMapProps> = ({
         highlightedActivityId={highlightedActivityId} 
         isAnimationPlaying={animationState?.isPlaying}
       />
+      
+      <PhotoMarkers photos={photos} />
+
       {animationPath && animationState && animationState.activityId !== null && (
         <>
           <RouteAnimation
