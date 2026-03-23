@@ -1,0 +1,28 @@
+{
+  "featureId": "fix-maps-scrutiny-issues",
+  "reviewedAt": "2026-03-23T09:17:48Z",
+  "commitId": "f853e12",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The fix commit correctly addresses two prior failures (TripMap first-load full-trip fit and ElevationChart axis labels/zero-range guard), but RouteAnimation reset logic is still incorrect for the required play semantics because pause/resume on the same activity now restarts from distance 0.",
+    "issues": [
+      {
+        "file": "src/components/Map/RouteAnimation.tsx",
+        "line": 38,
+        "severity": "blocking",
+        "description": "`currentDistance` is reset on every `path` prop identity change (`useEffect(..., [path])`). In `TripMap`, `animationPath` is recomputed from `streams.latlng.map(...)` whenever `animationState` changes (`src/components/Map/TripMap.tsx:26-31`), so toggling Play/Pause or speed recreates `path` and forces a reset to 0. This breaks the required behavior that only non-paused restarts (completion/route change) should start from the beginning; paused mid-run should resume from the paused position."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The skill requires manual verification via agent-browser (and recording interactive checks), but this worker run reported `followedProcedure: true` with only CLI validators in handoff verification and no interactiveChecks evidence in transcript/handoff.",
+      "evidence": "fullstack-worker SKILL.md step 7 requires manual verification; handoff verification lists only typecheck/lint/vitest commands and no browser/curl interactive check entries."
+    }
+  ],
+  "addressesFailureFrom": ".factory/validation/maps-and-routes/scrutiny/reviews/map-and-route-display.json, .factory/validation/maps-and-routes/scrutiny/reviews/elevation-chart.json, .factory/validation/maps-and-routes/scrutiny/reviews/route-animation.json",
+  "summary": "Fail: map auto-zoom and elevation chart scrutiny blockers are fixed, but route animation reset still does not adequately preserve pause/resume semantics due path-identity-driven resets, so prior route-animation failure is not fully resolved."
+}

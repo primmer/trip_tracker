@@ -1,6 +1,6 @@
 {
   "milestone": "maps-and-routes",
-  "round": 1,
+  "round": 2,
   "status": "fail",
   "validatorsRun": {
     "test": {
@@ -20,62 +20,27 @@
     }
   },
   "reviewsSummary": {
-    "total": 4,
-    "passed": 1,
-    "failed": 3,
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
     "failedFeatures": [
-      "map-and-route-display",
-      "elevation-chart",
-      "route-animation"
+      "fix-maps-scrutiny-issues"
     ]
   },
   "blockingIssues": [
     {
-      "featureId": "map-and-route-display",
+      "featureId": "fix-maps-scrutiny-issues",
       "severity": "blocking",
-      "description": "Initial multi-day map auto-zoom fits only the default highlighted day instead of the full trip route, violating the expected full-route fit on load."
-    },
-    {
-      "featureId": "elevation-chart",
-      "severity": "blocking",
-      "description": "Elevation chart does not satisfy required axis labeling/units: expected ft/m Y-axis and distance X-axis labeling, but current chart only shows imperial corner badges without full axis labels."
-    },
-    {
-      "featureId": "route-animation",
-      "severity": "blocking",
-      "description": "Route animation progress is not reset after completion or route change, so Play does not reliably restart from the beginning, violating expected control behavior."
+      "description": "RouteAnimation resets currentDistance whenever the path prop identity changes. TripMap rebuilds animationPath when animation state toggles, causing play/pause/speed changes to reset to 0 and breaking required pause/resume semantics."
     }
   ],
   "appliedUpdates": [],
-  "suggestedGuidanceUpdates": [
-    {
-      "target": "skills/fullstack-worker",
-      "suggestion": "Explicitly prohibit AskUser usage in non-interactive mission/exec runs and require autonomous default decision-making when clarification would otherwise be requested.",
-      "evidence": "elevation-chart review observed AskUser tool failure in non-interactive worker session 398af245-6616-460d-be33-bb7dad5756b6.",
-      "isSystemic": true
-    },
-    {
-      "target": "skills/fullstack-worker",
-      "suggestion": "Add a documented fallback path for manual browser verification requirements when feature scope is non-UI (e.g., test/lint remediation) or when interactive verification is infeasible in mission execution.",
-      "evidence": "Both elevation-chart and fix-maps-lint-and-tests reviews reported mismatch between strict manual verification requirement and practical completion flow for those features.",
-      "isSystemic": true
-    },
-    {
-      "target": "skills/fullstack-worker",
-      "suggestion": "Clarify TDD requirement scope (new behavior vs. remediation-only changes) and expected evidence for red/green so reviewers can distinguish process non-compliance from acceptable exceptions.",
-      "evidence": "map-and-route-display and fix-maps-lint-and-tests reviews flagged procedure ambiguity around strict red/green expectations for mixed implementation/fix workflows.",
-      "isSystemic": true
-    }
-  ],
+  "suggestedGuidanceUpdates": [],
   "rejectedObservations": [
     {
-      "observation": "Add shared-state guidance about VITE_GOOGLE_MAPS_API_KEY discovery/location.",
-      "reason": "already-documented"
-    },
-    {
-      "observation": "Update shared state because one worker did not run full validators required by skill.",
-      "reason": "worker-noncompliance-no-shared-state-change"
+      "observation": "The fullstack-worker skill mandates manual browser verification for every run, while some remediation runs complete with validator-only evidence.",
+      "reason": "duplicate-prior-synthesis"
     }
   ],
-  "previousRound": null
+  "previousRound": ".factory/validation/maps-and-routes/scrutiny/synthesis.round1.json"
 }
