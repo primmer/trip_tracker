@@ -70,8 +70,9 @@ export const Trips: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-64" role="status">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <span className="sr-only">Loading trips...</span>
         </div>
       ) : trips.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center border border-gray-100">
@@ -91,7 +92,7 @@ export const Trips: React.FC = () => {
               <div className="p-6">
                 <div className="flex justify-between items-start mb-2">
                   <h2 className="text-xl font-bold text-gray-900 truncate">
-                    {trip.hashtag ? `#${trip.hashtag}` : trip.name}
+                    {trip.hashtag ? `#${trip.hashtag}` : 'Individual Ride'}
                   </h2>
                   <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
                     {trip.activityIds.length} {trip.activityIds.length === 1 ? 'ride' : 'rides'}
