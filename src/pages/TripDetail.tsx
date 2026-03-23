@@ -4,9 +4,10 @@ import { doc, getDoc, collection, getDocs, query, where, documentId } from 'fire
 import { db } from '../firebase';
 import { Trip, Activity, ActivityStreams } from '../types';
 import { Photo } from '../components/Map/PhotoMarkers';
-import { ChevronLeft, Calendar, Play, Pause, FastForward, ImagePlus, Loader2 } from 'lucide-react';
+import { ChevronLeft, Calendar, Play, Pause, FastForward, ImagePlus, Loader2, Map as MapIcon, Grid } from 'lucide-react';
 import { metersToFeet, metersToMiles, metersToKm, secondsToDuration } from '../utils/units';
 import { TripMap } from '../components/Map/TripMap';
+import { PhotoGallery } from '../components/PhotoGallery';
 import { ElevationChart } from '../components/ElevationChart';
 import { getApiBaseUrl } from '../utils/api';
 
@@ -30,6 +31,8 @@ export const TripDetail: React.FC = () => {
   });
   const [isPickingPhotos, setIsPickingPhotos] = useState(false);
   const [pickProgress, setPickProgress] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'map' | 'gallery'>('map');
+  const [selectedGalleryPhoto, setSelectedGalleryPhoto] = useState<Photo | null>(null);
 
   const handleAddPhotos = async () => {
     if (!tripId) return;
@@ -245,7 +248,34 @@ export const TripDetail: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200">
+            <button
+              onClick={() => setActiveView('map')}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                activeView === 'map'
+                  ? 'bg-white text-blue-600 shadow-md'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <MapIcon className="w-4 h-4" />
+              <span>Map</span>
+            </button>
+            <button
+              onClick={() => setActiveView('gallery')}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                activeView === 'gallery'
+                  ? 'bg-white text-blue-600 shadow-md'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+              <span>Gallery</span>
+            </button>
+          </div>
+
+          <div className="h-8 w-px bg-gray-200 mx-2" />
+
           {pickProgress && (
             <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -263,9 +293,9 @@ export const TripDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content: Map and Stats */}
+      {/* Main Content: Map/Gallery and Stats */}
       <div className="flex flex-grow overflow-hidden relative">
-        <div className="flex-grow bg-gray-200 relative">
+        <div className={`flex-grow bg-gray-200 relative ${activeView === 'gallery' ? 'hidden' : 'block'}`}>
           <TripMap 
             activityStreams={streams}
             mapId="trip_map"
@@ -405,6 +435,53 @@ export const TripDetail: React.FC = () => {
               })}
           </div>
         </div>
+
+        {/* Gallery View */}
+        <div className={`flex-grow overflow-hidden ${activeView === 'gallery' ? 'block' : 'hidden'}`}>
+          <PhotoGallery photos={photos} onPhotoClick={setSelectedGalleryPhoto} />
+        </div>
+
+        {/* Fullscreen Photo Overlay */}
+        {selectedGalleryPhoto && (
+          <div 
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center animate-in fade-in duration-300"
+            onClick={() => setSelectedGalleryPhoto(null)}
+          >
+            <div className="relative max-w-[90vw] max-h-[80vh] group">
+              <img 
+                src={selectedGalleryPhoto.downloadUrl} 
+                alt={selectedGalleryPhoto.filename}
+                className="max-w-full max-h-[80vh] object-contain shadow-2xl rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button 
+                className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full transition-colors"
+                onClick={() => setSelectedGalleryPhoto(null)}
+              >
+                <ChevronLeft className="w-6 h-6 rotate-180" />
+              </button>
+            </div>
+            
+            <div className="mt-8 text-center text-white space-y-2 px-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-xl font-bold">{selectedGalleryPhoto.filename}</h3>
+              <div className="flex items-center justify-center gap-4 text-gray-400">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  <span>{new Date(selectedGalleryPhoto.createdAt).toLocaleDateString(undefined, { 
+                    weekday: 'long', 
+                    month: 'long', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Grid className="w-4 h-4" />
+                  <span>{new Date(selectedGalleryPhoto.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

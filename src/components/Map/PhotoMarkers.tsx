@@ -1,6 +1,6 @@
 import React from 'react';
-import { Marker, InfoWindow } from '@vis.gl/react-google-maps';
-import { Camera } from 'lucide-react';
+import { AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
+import { Camera, Calendar as CalendarIcon } from 'lucide-react';
 
 export interface Photo {
   id: string;
@@ -16,43 +16,68 @@ interface PhotoMarkersProps {
 }
 
 export const PhotoMarkers: React.FC<PhotoMarkersProps> = ({ photos }) => {
-  const [selectedPhoto, setSelectedPhoto] = React.useState<Photo | null>(null);
+  const [selectedPhotoId, setSelectedPhotoId] = React.useState<string | null>(null);
+  const map = useMap();
 
   const validPhotos = photos.filter(p => p.lat !== null && p.lng !== null);
+  const selectedPhoto = React.useMemo(() => 
+    photos.find(p => p.id === selectedPhotoId), 
+    [photos, selectedPhotoId]
+  );
+
+  if (!map) return null;
 
   return (
     <>
       {validPhotos.map((photo) => (
-        <Marker
+        <AdvancedMarker
           key={photo.id}
           position={{ lat: photo.lat!, lng: photo.lng! }}
-          onClick={() => setSelectedPhoto(photo)}
-          icon={{
-            path: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
-            fillColor: "#ffffff",
-            fillOpacity: 1,
-            strokeColor: "#ef4444",
-            strokeWeight: 2,
-            scale: 1,
-            anchor: new google.maps.Point(12, 12),
-          }}
-        />
+          onClick={() => setSelectedPhotoId(photo.id)}
+        >
+          <div className="relative group cursor-pointer">
+            <div className="w-10 h-10 rounded-full border-2 border-white shadow-lg overflow-hidden transition-transform hover:scale-110 active:scale-95 bg-gray-200">
+              <img 
+                src={photo.downloadUrl} 
+                alt={photo.filename}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-0.5 border border-white shadow-sm">
+              <Camera className="w-2 h-2 text-white" />
+            </div>
+          </div>
+        </AdvancedMarker>
       ))}
 
       {selectedPhoto && (
         <InfoWindow
           position={{ lat: selectedPhoto.lat!, lng: selectedPhoto.lng! }}
-          onCloseClick={() => setSelectedPhoto(null)}
+          onCloseClick={() => setSelectedPhotoId(null)}
+          headerDisabled
         >
-          <div className="p-1 max-w-xs">
-            <img 
-              src={selectedPhoto.downloadUrl} 
-              alt={selectedPhoto.filename} 
-              className="w-full h-auto rounded-lg shadow-sm mb-2"
-            />
-            <div className="text-xs text-gray-500 flex items-center gap-1">
-              <Camera className="w-3 h-3" />
-              <span>{new Date(selectedPhoto.createdAt).toLocaleString()}</span>
+          <div className="p-0 max-w-[280px] overflow-hidden rounded-lg">
+            <div className="aspect-video w-full bg-gray-100 overflow-hidden">
+              <img 
+                src={selectedPhoto.downloadUrl} 
+                alt={selectedPhoto.filename} 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="p-3 bg-white">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                  <CalendarIcon className="w-3.5 h-3.5 text-blue-500" />
+                  <span>{new Date(selectedPhoto.createdAt).toLocaleDateString(undefined, { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</span>
+                </div>
+              </div>
             </div>
           </div>
         </InfoWindow>
