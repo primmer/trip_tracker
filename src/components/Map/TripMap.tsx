@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Map, useMap, MapProps, Marker } from '@vis.gl/react-google-maps';
 import { ActivityStreams } from '../../types';
 import { RouteAnimation } from './RouteAnimation';
@@ -141,6 +141,8 @@ const MapAutoZoom: React.FC<{
 }> = ({ activityStreams, highlightedActivityId, isAnimationPlaying }) => {
   const map = useMap();
 
+  const isFirstLoad = useRef(true);
+
   useEffect(() => {
     if (!map || isAnimationPlaying) return;
     
@@ -151,7 +153,8 @@ const MapAutoZoom: React.FC<{
       const id = parseInt(idStr);
       // If an activity is highlighted, only zoom to that one.
       // If null is highlighted (show all), zoom to all.
-      if (highlightedActivityId !== null && highlightedActivityId !== id) return;
+      // Special case: on first load, we want to zoom to ALL activities if it's a multi-day trip
+      if (!isFirstLoad.current && highlightedActivityId !== null && highlightedActivityId !== id) return;
 
       if (streams.latlng && streams.latlng.length > 0) {
         streams.latlng.forEach(([lat, lng]) => {
@@ -168,6 +171,7 @@ const MapAutoZoom: React.FC<{
         bottom: 100,
         left: 100
       });
+      isFirstLoad.current = false;
     }
   }, [map, activityStreams, highlightedActivityId, isAnimationPlaying]);
 

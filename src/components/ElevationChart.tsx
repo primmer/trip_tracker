@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { processElevationData } from '../utils/elevation';
-import { metersToFeet, metersToMiles } from '../utils/units';
+import { metersToFeet, metersToMiles, metersToKm } from '../utils/units';
 
 interface ElevationChartProps {
   distance: number[];
@@ -33,8 +33,17 @@ export const ElevationChart: React.FC<ElevationChartProps> = ({
   const chartMinY = minY - yPadding;
   const chartMaxY = maxY + yPadding;
 
-  const getX = (x: number) => ((x - minX) / (maxX - minX)) * 100;
-  const getY = (y: number) => 100 - ((y - chartMinY) / (chartMaxY - chartMinY)) * 100;
+  const getX = (x: number) => {
+    const range = maxX - minX;
+    if (range <= 0) return 0;
+    return ((x - minX) / range) * 100;
+  };
+  
+  const getY = (y: number) => {
+    const range = chartMaxY - chartMinY;
+    if (range <= 0) return 50;
+    return 100 - ((y - chartMinY) / range) * 100;
+  };
 
   const points = data.map(p => `${getX(p.x)},${getY(p.y)}`).join(' ');
   const areaPoints = `0,100 ${points} 100,100`;
@@ -69,15 +78,25 @@ export const ElevationChart: React.FC<ElevationChartProps> = ({
         </defs>
       </svg>
       
+      {/* Y-Axis Label */}
+      <div className="absolute top-1/2 -left-8 -translate-y-1/2 -rotate-90 text-[8px] font-medium text-gray-400 pointer-events-none">
+        Elevation (ft / m)
+      </div>
+
+      {/* X-Axis Label */}
+      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] font-medium text-gray-400 pointer-events-none">
+        Distance (mi / km)
+      </div>
+
       {/* Axes / Labels */}
       <div className="absolute top-0 left-0 text-[9px] font-bold text-gray-500 bg-white/50 px-1 rounded pointer-events-none">
-        {Math.round(metersToFeet(maxY)).toLocaleString()} ft
+        {Math.round(metersToFeet(maxY)).toLocaleString()} ft / {Math.round(maxY).toLocaleString()} m
       </div>
       <div className="absolute bottom-0 left-0 text-[9px] font-bold text-gray-500 bg-white/50 px-1 rounded pointer-events-none">
-        {Math.round(metersToFeet(minY)).toLocaleString()} ft
+        {Math.round(metersToFeet(minY)).toLocaleString()} ft / {Math.round(minY).toLocaleString()} m
       </div>
       <div className="absolute bottom-0 right-0 text-[9px] font-bold text-gray-500 bg-white/50 px-1 rounded pointer-events-none">
-        {metersToMiles(maxX).toFixed(1)} mi
+        {metersToMiles(maxX).toFixed(1)} mi / {metersToKm(maxX).toFixed(1)} km
       </div>
     </div>
   );

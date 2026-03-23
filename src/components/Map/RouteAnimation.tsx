@@ -29,6 +29,15 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
   const BASE_SPEED = 500; 
 
   useEffect(() => {
+    setCurrentDistance(0);
+    lastTimeRef.current = null;
+    if (requestRef.current !== null) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = null;
+    }
+  }, [path]);
+
+  useEffect(() => {
     const animate = (time: number) => {
       if (lastTimeRef.current === null) {
         lastTimeRef.current = time;
@@ -43,7 +52,7 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
         const next = prev + distanceDelta;
         if (next >= totalLength) {
           onComplete();
-          return totalLength;
+          return 0; // Reset to 0 on completion
         }
         return next;
       });
@@ -65,7 +74,7 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, currentDistance, totalLength, speed, onComplete]);
+  }, [isPlaying, totalLength, speed, onComplete, currentDistance]);
 
   useEffect(() => {
     if (!map || path.length === 0) return;
