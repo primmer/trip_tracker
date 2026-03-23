@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Trip, Activity, ActivityStreams } from '../types';
-import { ChevronLeft, Calendar } from 'lucide-react';
+import { ChevronLeft, Calendar, Play, Pause, FastForward } from 'lucide-react';
 import { metersToFeet, metersToMiles, metersToKm, secondsToDuration } from '../utils/units';
 import { TripMap } from '../components/Map/TripMap';
 import { ElevationChart } from '../components/ElevationChart';
@@ -16,6 +16,30 @@ export const TripDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeActivityId, setActiveActivityId] = useState<number | null>(null);
+  const [animationState, setAnimationState] = useState<{
+    isPlaying: boolean;
+    speed: number;
+    activityId: number | null;
+  }>({
+    isPlaying: false,
+    speed: 1,
+    activityId: null,
+  });
+
+  const handlePlayPause = (activityId: number) => {
+    setAnimationState(prev => ({
+      ...prev,
+      activityId,
+      isPlaying: prev.activityId === activityId ? !prev.isPlaying : true
+    }));
+  };
+
+  const toggleSpeed = () => {
+    setAnimationState(prev => ({
+      ...prev,
+      speed: prev.speed === 1 ? 2 : 1
+    }));
+  };
 
   useEffect(() => {
     const fetchTripData = async () => {
@@ -135,6 +159,8 @@ export const TripDetail: React.FC = () => {
             activityStreams={streams}
             mapId="trip_map"
             highlightedActivityId={activeActivityId}
+            animationState={animationState}
+            onAnimationComplete={() => setAnimationState(prev => ({ ...prev, isPlaying: false }))}
           />
           
           {/* Overlay Day Navigation (if multi-day) */}
@@ -181,6 +207,33 @@ export const TripDetail: React.FC = () => {
                       <h3 className="font-bold text-gray-900 text-base leading-tight">
                         {activities.length > 1 ? `Day ${dayIndex + 1}: ` : ''}{activity.name}
                       </h3>
+                      
+                      {/* Animation Controls */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleSpeed()}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            animationState.speed > 1 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400 hover:text-gray-600'
+                          }`}
+                          title="Toggle Speed (1x/2x)"
+                        >
+                          <FastForward className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handlePlayPause(activity.id)}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            animationState.activityId === activity.id && animationState.isPlaying
+                              ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                              : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                          }`}
+                        >
+                          {animationState.activityId === activity.id && animationState.isPlaying ? (
+                            <Pause className="w-5 h-5" />
+                          ) : (
+                            <Play className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-y-4 gap-x-6">

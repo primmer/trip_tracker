@@ -1,17 +1,35 @@
-import React, { useEffect, useMemo } from 'react';
-import { Map, useMap, MapProps } from '@vis.gl/react-google-maps';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Map, useMap, MapProps, Marker } from '@vis.gl/react-google-maps';
 import { ActivityStreams } from '../../types';
+import { RouteAnimation } from './RouteAnimation';
 
 interface TripMapProps extends MapProps {
   activityStreams: Record<number, ActivityStreams>;
   highlightedActivityId?: number | null;
+  animationState?: {
+    isPlaying: boolean;
+    speed: number;
+    activityId: number | null;
+  };
+  onAnimationComplete?: () => void;
 }
 
 export const TripMap: React.FC<TripMapProps> = ({ 
   activityStreams, 
   highlightedActivityId,
+  animationState,
+  onAnimationComplete,
   ...mapProps 
 }) => {
+  const [animationPos, setAnimationPos] = useState<{ lat: number; lng: number } | null>(null);
+
+  const animationPath = useMemo(() => {
+    if (!animationState || animationState.activityId === null) return null;
+    const streams = activityStreams[animationState.activityId];
+    if (!streams || !streams.latlng || streams.latlng.length === 0) return null;
+    return streams.latlng.map(([lat, lng]) => ({ lat, lng }));
+  }, [animationState, activityStreams]);
+
   return (
     <Map
       {...mapProps}
@@ -30,7 +48,33 @@ export const TripMap: React.FC<TripMapProps> = ({
       <MapAutoZoom 
         activityStreams={activityStreams} 
         highlightedActivityId={highlightedActivityId} 
+        isAnimationPlaying={animationState?.isPlaying}
       />
+      {animationPath && animationState && (
+        <>
+          <RouteAnimation
+            path={animationPath}
+            isPlaying={animationState.isPlaying}
+            speed={animationState.speed}
+            onComplete={() => onAnimationComplete?.()}
+            onPositionChange={setAnimationPos}
+          />
+          {animationPos && (
+            <Marker 
+              position={animationPos}
+              zIndex={1000}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#FFFFFF',
+                fillOpacity: 1,
+                strokeColor: '#3b82f6',
+                strokeWeight: 4,
+              }}
+            />
+          )}
+        </>
+      )}
     </Map>
   );
 };
@@ -93,11 +137,12 @@ const RoutePolylines: React.FC<{
 const MapAutoZoom: React.FC<{ 
   activityStreams: Record<number, ActivityStreams>;
   highlightedActivityId?: number | null;
-}> = ({ activityStreams, highlightedActivityId }) => {
+  isAnimationPlaying?: boolean;
+}> = ({ activityStreams, highlightedActivityId, isAnimationPlaying }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || isAnimationPlaying) return;
     
     const bounds = new google.maps.LatLngBounds();
     let hasCoords = false;
