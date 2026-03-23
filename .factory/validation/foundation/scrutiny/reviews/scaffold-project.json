@@ -1,0 +1,51 @@
+{
+  "featureId": "scaffold-project",
+  "reviewedAt": "2026-03-23T04:11:58Z",
+  "commitId": "f523ce8",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "issues": [
+    {
+      "severity": "blocking",
+      "description": "firebase.json uses `serviceId` under a Hosting `function` rewrite; this key is for Cloud Run rewrites and does not satisfy the expected Cloud Function rewrite for /api/**.",
+      "suggestedFix": "Use a valid Functions rewrite, e.g. `{ \"source\": \"/api/**\", \"function\": \"api\" }` or `{ \"source\": \"/api/**\", \"function\": { \"functionId\": \"api\", \"region\": \"us-central1\" } }`."
+    },
+    {
+      "severity": "non_blocking",
+      "description": "The implementation violates the mission convention requiring named exports only; multiple frontend modules still use default exports.",
+      "suggestedFix": "Convert default exports/imports to named exports/imports in App, Layout, Home, Trips, and firebase modules."
+    }
+  ],
+  "codeReview": {
+    "summary": "Most scaffold requirements are implemented, but the Firebase Hosting API rewrite is misconfigured and is a release-blocking defect for the `/api/**` routing requirement.",
+    "issues": [
+      {
+        "file": "firebase.json",
+        "line": 13,
+        "severity": "blocking",
+        "description": "`serviceId` is used inside a `function` rewrite object. For Functions rewrites, Firebase expects `function` string or `functionId`; current config is invalid for the stated routing contract."
+      },
+      {
+        "file": "src/App.tsx",
+        "line": 20,
+        "severity": "non_blocking",
+        "description": "Default export used despite mission convention (`No default exports; use named exports`). Same pattern appears in `src/components/Layout.tsx:46`, `src/pages/Home.tsx:18`, `src/pages/Trips.tsx:14`, and `src/firebase.ts:11`."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The fullstack-worker skill mandates manual verification with recorded `interactiveChecks`, but this feature handoff reports `interactiveChecks: []` while still marking `followedProcedure: true`.",
+      "evidence": "Skill requirement: `.factory/skills/fullstack-worker/SKILL.md:69-76`; handoff: `.../handoffs/2026-03-23T04-08-16-452Z__scaffold-project__c45aabeb-debb-4478-8d20-d96a9d787636.json:36` and `:59`."
+    },
+    {
+      "area": "conventions",
+      "observation": "The mission convention banning default exports is documented, but lint/tooling did not enforce it, allowing violations to pass validation.",
+      "evidence": "Convention: `.../missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/AGENTS.md:30`; violations: `src/App.tsx:20`, `src/components/Layout.tsx:46`, `src/pages/Home.tsx:18`, `src/pages/Trips.tsx:14`, `src/firebase.ts:11`; lint still reported success in handoff `.../handoffs/...json:31-33`."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed transcript skeleton and commit f523ce8 for scaffold-project. The feature is close, but a blocking Firebase Hosting rewrite misconfiguration prevents acceptance until fixed; additional non-blocking convention/tooling gaps were noted."
+}

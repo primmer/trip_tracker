@@ -1,0 +1,54 @@
+{
+  "milestone": "foundation",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "npx vitest run --reporter=verbose",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "npm run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "failedFeatures": [
+      "scaffold-project"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "scaffold-project",
+      "severity": "blocking",
+      "description": "firebase.json uses `serviceId` under a Hosting `function` rewrite; this key is for Cloud Run rewrites and does not satisfy the expected Cloud Function rewrite for /api/**."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "skills/fullstack-worker",
+      "suggestion": "Require explicit failure or deviation reporting when `interactiveChecks` is empty for features that claim manual/UI verification, rather than allowing `followedProcedure: true` silently.",
+      "evidence": "scaffold-project handoff marked followedProcedure true while recording no interactive checks despite skill instructions requiring them.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Clarify that conventions requiring named exports must be enforced via lint rules (or add that enforcement requirement), otherwise violations can pass automated validation.",
+      "evidence": "Mission AGENTS.md bans default exports, but scaffold-project shipped default exports in multiple files and lint still passed.",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}
