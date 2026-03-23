@@ -3,6 +3,7 @@ import { useMap } from '@vis.gl/react-google-maps';
 import { getPointAtDistance, computePathLength } from '../../utils/interpolation';
 
 export interface RouteAnimationProps {
+  activityId: number;
   path: { lat: number; lng: number }[];
   isPlaying: boolean;
   speed: number; // Speed multiplier (1 = normal, 2 = fast)
@@ -11,6 +12,7 @@ export interface RouteAnimationProps {
 }
 
 export const RouteAnimation: React.FC<RouteAnimationProps> = ({ 
+  activityId,
   path, 
   isPlaying, 
   speed, 
@@ -35,7 +37,7 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
       cancelAnimationFrame(requestRef.current);
       requestRef.current = null;
     }
-  }, [path]);
+  }, [activityId]);
 
   useEffect(() => {
     const animate = (time: number) => {

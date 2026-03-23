@@ -24,11 +24,11 @@ export const TripMap: React.FC<TripMapProps> = ({
   const [animationPos, setAnimationPos] = useState<{ lat: number; lng: number } | null>(null);
 
   const animationPath = useMemo(() => {
-    if (!animationState || animationState.activityId === null) return null;
+    if (!animationState?.activityId) return null;
     const streams = activityStreams[animationState.activityId];
     if (!streams || !streams.latlng || streams.latlng.length === 0) return null;
     return streams.latlng.map(([lat, lng]) => ({ lat, lng }));
-  }, [animationState, activityStreams]);
+  }, [animationState?.activityId, activityStreams]);
 
   return (
     <Map
@@ -50,9 +50,10 @@ export const TripMap: React.FC<TripMapProps> = ({
         highlightedActivityId={highlightedActivityId} 
         isAnimationPlaying={animationState?.isPlaying}
       />
-      {animationPath && animationState && (
+      {animationPath && animationState && animationState.activityId !== null && (
         <>
           <RouteAnimation
+            activityId={animationState.activityId}
             path={animationPath}
             isPlaying={animationState.isPlaying}
             speed={animationState.speed}
