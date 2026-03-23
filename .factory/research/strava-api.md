@@ -26,6 +26,13 @@
 - Can use `unique_id`, `location`, `created_at` timestamps for cross-referencing with Google Photos
 
 ## Rate Limits
-- 100 requests per 15 minutes, 1,000 per day
+- Overall: 200 requests per 15 minutes, 2,000 per day
+- Read-only: 100 requests per 15 minutes, 1,000 per day
 - Headers: `X-RateLimit-Limit`, `X-RateLimit-Usage`
 - Strategy: cache all data in Firestore after initial fetch
+
+## CRITICAL: List vs Detail Endpoints
+- GET /athlete/activities returns SummaryActivity objects -- `description` is ALWAYS null
+- GET /activities/{id} returns DetailedActivity -- `description` contains the actual text (including hashtags)
+- You MUST fetch individual activity details to get descriptions for trip grouping
+- With 64 activities, this means 64 read requests + 1 list request = 65 reads per sync (within 100/15min limit)
