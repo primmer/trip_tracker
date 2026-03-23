@@ -18,79 +18,97 @@ router.post('/strava/sync', async (req, res) => {
   try {
     const accessToken = await refreshStravaTokenIfNeeded();
     
-    // 1. Fetch activities from Strava
-    // Default to a reasonable number, or all athlete activities
-    const activitiesResponse = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=100', {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    });
+    // 1. Fetch ALL activities from Strava via pagination
+    const allStravaActivities: Activity[] = [];
+    let page = 1;
+    const perPage = 100;
+    let hasMore = true;
 
-    if (!activitiesResponse.ok) {
-      throw new Error(`Failed to fetch activities from Strava: ${activitiesResponse.status}`);
+    while (hasMore) {
+      const activitiesResponse = await fetch(`https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${perPage}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!activitiesResponse.ok) {
+        throw new Error(`Failed to fetch activities from Strava (page ${page}): ${activitiesResponse.status}`);
+      }
+
+      const pageActivities = await activitiesResponse.json() as Activity[];
+      if (pageActivities.length === 0) {
+        hasMore = false;
+      } else {
+        allStravaActivities.push(...pageActivities);
+        page++;
+      }
     }
-
-    const stravaActivities = await activitiesResponse.json() as Activity[];
     
     let activitiesSaved = 0;
+    let activitiesFailed = 0;
     let tripsSaved = 0;
+    let tripsFailed = 0;
 
-    try {
-      const db = admin.firestore();
-      
-      // 2. Save activities to Firestore
-      for (const activity of stravaActivities) {
-        try {
-          const activityRef = db.collection('activities').doc(activity.id.toString());
-          await activityRef.set({
-            id: activity.id,
-            name: activity.name,
-            start_date: activity.start_date,
-            distance: activity.distance,
-            total_elevation_gain: activity.total_elevation_gain,
-            elapsed_time: activity.elapsed_time,
-            description: activity.description,
-            map: {
-              summary_polyline: activity.map.summary_polyline,
-            },
-            start_latlng: activity.start_latlng,
-            end_latlng: activity.end_latlng,
-            synced_at: admin.firestore.FieldValue.serverTimestamp(),
-          }, { merge: true });
-          activitiesSaved++;
+    const db = admin.firestore();
+    
+    // 2. Save activities to Firestore
+    for (const activity of allStravaActivities) {
+      try {
+        const activityRef = db.collection('activities').doc(activity.id.toString());
+        await activityRef.set({
+          id: activity.id,
+          name: activity.name,
+          start_date: activity.start_date,
+          distance: activity.distance,
+          total_elevation_gain: activity.total_elevation_gain,
+          elapsed_time: activity.elapsed_time,
+          description: activity.description,
+          map: {
+            summary_polyline: activity.map.summary_polyline,
+          },
+          start_latlng: activity.start_latlng,
+          end_latlng: activity.end_latlng,
+          synced_at: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        activitiesSaved++;
 
-          // Fetch GPS streams
-          await fetchAndSaveStreams(activity.id, accessToken);
-        } catch (error) {
-          console.warn(`Failed to save activity ${activity.id} to Firestore:`, error);
-        }
+        // Fetch GPS streams
+        await fetchAndSaveStreams(activity.id, accessToken);
+      } catch (error) {
+        console.error(`Failed to save activity ${activity.id} to Firestore:`, error);
+        activitiesFailed++;
       }
-
-      // 3. Group into trips and save
-      const trips = groupActivitiesIntoTrips(stravaActivities);
-      for (const trip of trips) {
-        try {
-          const tripRef = db.collection('trips').doc(trip.id);
-          await tripRef.set({
-            ...trip,
-            synced_at: admin.firestore.FieldValue.serverTimestamp(),
-          }, { merge: true });
-          tripsSaved++;
-        } catch (error) {
-          console.warn(`Failed to save trip ${trip.id} to Firestore:`, error);
-        }
-      }
-    } catch (error) {
-      console.warn('Firestore is not available. Returning Strava data directly.');
     }
 
-    res.status(200).json({
-      status: 'success',
-      activities_synced: stravaActivities.length,
-      trips_created: groupActivitiesIntoTrips(stravaActivities).length,
-      firestore_synced: activitiesSaved > 0,
+    // 3. Group into trips and save
+    const trips = groupActivitiesIntoTrips(allStravaActivities);
+    for (const trip of trips) {
+      try {
+        const tripRef = db.collection('trips').doc(trip.id);
+        await tripRef.set({
+          ...trip,
+          synced_at: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        tripsSaved++;
+      } catch (error) {
+        console.error(`Failed to save trip ${trip.id} to Firestore:`, error);
+        tripsFailed++;
+      }
+    }
+
+    const hasCriticalFailures = (allStravaActivities.length > 0 && activitiesSaved === 0) || 
+                               (trips.length > 0 && tripsSaved === 0);
+    
+    const responseStatus = hasCriticalFailures || activitiesFailed > 0 || tripsFailed > 0 ? 500 : 200;
+
+    res.status(responseStatus).json({
+      status: responseStatus === 200 ? 'success' : 'partial_success_or_error',
+      activities_synced: allStravaActivities.length,
+      trips_created: trips.length,
       activities_saved: activitiesSaved,
+      activities_failed: activitiesFailed,
       trips_saved: tripsSaved,
+      trips_failed: tripsFailed,
     });
   } catch (error) {
     console.error('Error syncing with Strava:', error);

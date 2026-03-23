@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { Trip } from '../types';
 import { RefreshCw, MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getApiBaseUrl } from '../utils/api';
 
 export const Trips: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -34,7 +35,7 @@ export const Trips: React.FC = () => {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const response = await fetch('http://localhost:5001/api/strava/sync', {
+      const response = await fetch(`${getApiBaseUrl()}/api/strava/sync`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Sync failed');
