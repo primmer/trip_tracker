@@ -5,11 +5,13 @@ import { Trip } from '../types';
 import { RefreshCw, MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getApiBaseUrl } from '../utils/api';
+import { ErrorBanner } from '../components/ErrorBanner';
 
 export const Trips: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const fetchTrips = async () => {
     setLoading(true);
@@ -34,6 +36,7 @@ export const Trips: React.FC = () => {
 
   const handleSync = async () => {
     setSyncing(true);
+    setSyncError(null);
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/strava/sync`, {
         method: 'POST',
@@ -42,7 +45,7 @@ export const Trips: React.FC = () => {
       await fetchTrips();
     } catch (error) {
       console.error('Error syncing:', error);
-      alert('Failed to sync with Strava');
+      setSyncError('Failed to sync with Strava. Please check your connection and try again.');
     } finally {
       setSyncing(false);
     }
@@ -69,6 +72,13 @@ export const Trips: React.FC = () => {
           {syncing ? 'Syncing...' : 'Sync with Strava'}
         </button>
       </div>
+
+      {syncError && (
+        <ErrorBanner 
+          message={syncError} 
+          onDismiss={() => setSyncError(null)} 
+        />
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-64" role="status">

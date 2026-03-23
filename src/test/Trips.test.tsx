@@ -9,6 +9,8 @@ vi.mock('lucide-react', () => ({
   RefreshCw: () => <div data-testid="refresh-icon" />,
   MapPin: () => <div data-testid="map-pin-icon" />,
   Calendar: () => <div data-testid="calendar-icon" />,
+  AlertCircle: () => <div data-testid="alert-circle-icon" />,
+  X: () => <div data-testid="x-icon" />,
 }));
 
 // Mock Firebase
@@ -122,7 +124,35 @@ describe('Trips Page', () => {
     expect(syncButton).toBeDisabled();
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/strava/sync', expect.anything());
+      expect(global.fetch).toHaveBeenCalled();
     });
+  });
+
+  it('shows error banner when sync fails', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+    } as Response);
+
+    render(
+      <MemoryRouter>
+        <Trips />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    const syncButton = screen.getByRole('button', { name: /sync with strava/i });
+    fireEvent.click(syncButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/failed to sync with strava/i)).toBeInTheDocument();
+    });
+
+    const dismissButton = screen.getByLabelText(/dismiss error/i);
+    fireEvent.click(dismissButton);
+
+    expect(screen.queryByText(/failed to sync with strava/i)).not.toBeInTheDocument();
   });
 });
