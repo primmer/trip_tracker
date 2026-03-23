@@ -1,0 +1,170 @@
+{
+  "groupId": "strava-api",
+  "testedAt": "2026-03-23T05:43:30Z",
+  "credentials": {
+    "account": "N/A",
+    "namespace": "strava_api_flow_ns"
+  },
+  "toolsUsed": [
+    "curl",
+    "python3"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-STRAVA-001",
+      "title": "Sync fetches and persists activities",
+      "status": "fail",
+      "reason": "Sync fetched Strava activities but persisted zero activity documents.",
+      "steps": [
+        {
+          "action": "POST http://localhost:5001/api/strava/sync",
+          "expected": "HTTP 200 and activities written to Firestore with required fields",
+          "observed": "HTTP 500 with activities_synced=64, activities_saved=0, activities_failed=64"
+        },
+        {
+          "action": "Retry POST http://localhost:5001/api/strava/sync",
+          "expected": "Successful persistence on retry",
+          "observed": "Same result: HTTP 500 and activities_saved=0"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "N/A (API flow)",
+        "network": "POST /api/strava/sync -> 500; body: {\"status\":\"partial_success_or_error\",\"activities_synced\":64,\"trips_created\":64,\"activities_saved\":0,\"activities_failed\":64,\"trips_saved\":0,\"trips_failed\":64}",
+        "apiCalls": [
+          "curl -i -X POST http://localhost:5001/api/strava/sync",
+          "curl -X POST http://localhost:5001/api/strava/sync -w HTTP_STATUS"
+        ]
+      },
+      "issues": "Persistence precondition failed: no activities were saved despite successful Strava fetch count."
+    },
+    {
+      "id": "VAL-STRAVA-002",
+      "title": "Same-hashtag activities form a multi-day trip",
+      "status": "fail",
+      "reason": "Sync grouping output indicates no aggregation occurred (trip count equals activity count).",
+      "steps": [
+        {
+          "action": "POST http://localhost:5001/api/strava/sync",
+          "expected": "At least one grouped trip for #hmb_jul4 with 2 activities, so trips_created < activities_synced",
+          "observed": "activities_synced=64 and trips_created=64 (no reduction from grouping), then trips_saved=0"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "N/A (API flow)",
+        "network": "POST /api/strava/sync -> 500; response reports trips_created exactly equal to activities_synced",
+        "apiCalls": [
+          "curl -X POST http://localhost:5001/api/strava/sync"
+        ]
+      },
+      "issues": "Expected grouped #hmb_jul4 trip behavior not observed from sync output, and no trip documents were persisted in this run."
+    },
+    {
+      "id": "VAL-STRAVA-003",
+      "title": "Unique hashtag creates a single-ride trip",
+      "status": "blocked",
+      "reason": "Direct trip-document verification for #otb was not possible because sync persistence failed and no evidence endpoint exposes persisted trip docs by id.",
+      "steps": [
+        {
+          "action": "POST http://localhost:5001/api/strava/sync",
+          "expected": "Persisted trip document for #otb with exactly one activity and 2026-03-15 date",
+          "observed": "HTTP 500 with trips_saved=0; response does not include per-trip identifiers/details"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "N/A (API flow)",
+        "network": "POST /api/strava/sync -> 500; trips_saved=0",
+        "apiCalls": [
+          "curl -X POST http://localhost:5001/api/strava/sync"
+        ]
+      },
+      "issues": "Blocked on missing persisted-output observability for #otb under current failing sync state."
+    },
+    {
+      "id": "VAL-STRAVA-007",
+      "title": "Expired token auto-refreshes",
+      "status": "blocked",
+      "reason": "Refresh behavior is only indirectly inferable; required direct evidence (refresh POST + token persistence) is not exposed by available endpoints.",
+      "steps": [
+        {
+          "action": "Check local env token setup",
+          "expected": "Ability to determine whether refresh path is required",
+          "observed": "STRAVA_ACCESS_TOKEN absent; STRAVA_REFRESH_TOKEN/CLIENT_ID/CLIENT_SECRET present"
+        },
+        {
+          "action": "POST http://localhost:5001/api/strava/sync twice",
+          "expected": "Operation completes via valid token path",
+          "observed": "Both calls fetched activities (activities_synced=64), but endpoint provides no explicit refresh/token-persistence trace"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "N/A (API flow)",
+        "network": "POST /api/strava/sync -> 500 with activities_synced=64 on repeated attempts",
+        "supportingData": "python3 env inspection: STRAVA_ACCESS_TOKEN present=False; STRAVA_REFRESH_TOKEN present=True",
+        "apiCalls": [
+          "python3 env variable presence check",
+          "curl -X POST http://localhost:5001/api/strava/sync (repeated)"
+        ]
+      },
+      "issues": "Unable to directly capture backend outbound POST https://www.strava.com/oauth/token and token write-back evidence from available testing surface."
+    },
+    {
+      "id": "VAL-STRAVA-010",
+      "title": "GPS streams fetched and persisted",
+      "status": "fail",
+      "reason": "Current sync run persisted zero activities, so required per-activity stream persistence condition is not met.",
+      "steps": [
+        {
+          "action": "POST http://localhost:5001/api/strava/sync",
+          "expected": "Activities saved and associated streams persisted for each activity",
+          "observed": "activities_saved=0 and activities_failed=64; no successful persistence stage for stream-backed activity records"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "N/A (API flow)",
+        "network": "POST /api/strava/sync -> 500 with activities_saved=0",
+        "apiCalls": [
+          "curl -X POST http://localhost:5001/api/strava/sync"
+        ]
+      },
+      "issues": "Stream persistence validation failed due zero persisted activities in the tested sync runs."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "No dedicated evidence endpoint exists to return persisted Firestore activity/trip/stream documents for assertion-level verification in this flow.",
+      "resolved": false,
+      "resolution": "Used sync response payloads and repeated API calls as closest available observable evidence.",
+      "affectedAssertions": [
+        "VAL-STRAVA-003",
+        "VAL-STRAVA-007"
+      ]
+    },
+    {
+      "description": "Client Firebase config in local .env uses placeholder values ('...'), preventing direct client-SDK Firestore reads from this validator shell.",
+      "resolved": true,
+      "resolution": "Pivoted to backend endpoint evidence only (curl against local functions).",
+      "affectedAssertions": [
+        "VAL-STRAVA-003",
+        "VAL-STRAVA-010"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Prerequisite sync persistence failed consistently: POST http://localhost:5001/api/strava/sync returned HTTP 500 with activities_synced=64 but activities_saved=0 and trips_saved=0.",
+      "affectedAssertions": [
+        "VAL-STRAVA-001",
+        "VAL-STRAVA-002",
+        "VAL-STRAVA-003",
+        "VAL-STRAVA-010"
+      ],
+      "quickFixAttempted": "Retried the sync endpoint multiple times; identical failure payload each attempt."
+    }
+  ],
+  "summary": "Tested 5 assigned assertions using API-focused validation. Results: 3 failed (VAL-STRAVA-001, VAL-STRAVA-002, VAL-STRAVA-010) and 2 blocked (VAL-STRAVA-003, VAL-STRAVA-007), primarily due repeatable sync persistence failure and limited token-refresh observability from available endpoints."
+}

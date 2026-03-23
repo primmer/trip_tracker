@@ -1,0 +1,70 @@
+{
+  "milestone": "strava-integration",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 12,
+    "passed": 1,
+    "failed": 5,
+    "blocked": 6
+  },
+  "passedAssertions": [
+    "VAL-FOUND-006"
+  ],
+  "failedAssertions": [
+    {
+      "id": "VAL-FOUND-007",
+      "reason": "Only trip-fetch and sync loading indicators were present. Required loading indicators for map initialization and photo download/upload could not be observed because those UI flows are not implemented on the tested surface."
+    },
+    {
+      "id": "VAL-STRAVA-001",
+      "reason": "Sync fetched Strava activities but persisted zero activity documents."
+    },
+    {
+      "id": "VAL-STRAVA-002",
+      "reason": "Sync grouping output indicates no aggregation occurred (trip count equals activity count)."
+    },
+    {
+      "id": "VAL-STRAVA-005",
+      "reason": "Activity stats UI is not implemented on the tested surface, so required fields and value comparison cannot be performed."
+    },
+    {
+      "id": "VAL-STRAVA-010",
+      "reason": "Current sync run persisted zero activities, so required per-activity stream persistence condition is not met."
+    }
+  ],
+  "blockedAssertions": [
+    {
+      "id": "VAL-STRAVA-003",
+      "blockedBy": "Direct trip-document verification for #otb was not possible because sync persistence failed and no evidence endpoint exposes persisted trip docs by id."
+    },
+    {
+      "id": "VAL-STRAVA-004",
+      "blockedBy": "Blocked by prerequisite sync persistence failure; no trip cards were available to validate name/date/activity-count rendering."
+    },
+    {
+      "id": "VAL-STRAVA-006",
+      "blockedBy": "Blocked: sync precondition failed, so cached-data behavior could not be validated end-to-end."
+    },
+    {
+      "id": "VAL-STRAVA-007",
+      "blockedBy": "Refresh behavior is only indirectly inferable; required direct evidence (refresh POST + token persistence) is not exposed by available endpoints."
+    },
+    {
+      "id": "VAL-STRAVA-008",
+      "blockedBy": "Blocked by backend sync failure; successful data refresh in the list could not be confirmed."
+    },
+    {
+      "id": "VAL-STRAVA-009",
+      "blockedBy": "Blocked by prerequisite sync/data availability failure; untagged-activity handling could not be exercised."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added Flow Validator Guidance: strava-integration-web-api section defining sequential execution and namespace boundaries for shared Firestore/Strava state.",
+      "source": "setup"
+    }
+  ],
+  "previousRound": null
+}

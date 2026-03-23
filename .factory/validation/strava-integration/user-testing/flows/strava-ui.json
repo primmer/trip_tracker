@@ -1,0 +1,218 @@
+{
+  "groupId": "strava-ui",
+  "testedAt": "2026-03-23T05:38:03Z",
+  "credentials": {
+    "account": "N/A",
+    "namespace": "strava_ui_flow_ns"
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "curl"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-FOUND-006",
+      "title": "Empty trip list state",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to /trips and wait for initial Firestore trip fetch to settle",
+          "expected": "A meaningful empty state is shown when there are no trips",
+          "observed": "Page rendered \"No trips yet. Sync with Strava to get started.\""
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "inline:trips-empty-state-after-load",
+          "inline:trips-empty-state-after-failed-sync"
+        ],
+        "consoleErrors": "No app-rendering error related to empty state (only environment extension noise: net::ERR_BLOCKED_BY_CLIENT)",
+        "network": "Firestore Listen requests returned 200 while empty state rendered"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-FOUND-007",
+      "title": "Loading indicators during async operations",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "Load /trips",
+          "expected": "Trip data fetch from Firestore shows loading indicator",
+          "observed": "Visible loading spinner with accessible text \"Loading trips...\""
+        },
+        {
+          "action": "Click \"Sync with Strava\"",
+          "expected": "Strava sync shows loading indicator",
+          "observed": "Button changed to disabled \"Syncing...\" with animated refresh icon"
+        },
+        {
+          "action": "Navigate to /trip/otb to check map/photo related async states",
+          "expected": "Visible loading indicators for initial map loading and photo download/upload operations",
+          "observed": "Trip detail route renders only \"Trip Detail Placeholder\"; no map or photo upload/download flows and no corresponding loading states"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "inline:trips-initial-loading-spinner",
+          "inline:sync-button-syncing-state",
+          "inline:trip-detail-placeholder"
+        ],
+        "consoleErrors": "Sync attempt logged Error syncing: Error: Sync failed; also extension-originated net::ERR_BLOCKED_BY_CLIENT entries",
+        "network": "POST http://localhost:5001/api/strava/sync -> 500"
+      },
+      "issues": "Only trip-fetch and sync loading indicators were present. Required loading indicators for map initialization and photo download/upload could not be observed because those UI flows are not implemented on the tested surface."
+    },
+    {
+      "id": "VAL-STRAVA-004",
+      "title": "Trip list shows name, date range, activity count",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Click \"Sync with Strava\" from /trips",
+          "expected": "Trips persist and list includes #hmb_jul4 (count 2, multi-day range) and #otb (count 1, single day)",
+          "observed": "Sync request failed (500), alert shown, and list remained empty"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "inline:sync-button-syncing-state",
+          "inline:trips-empty-state-after-failed-sync"
+        ],
+        "consoleErrors": "Error syncing: Error: Sync failed",
+        "network": "POST /api/strava/sync -> 500, response body: {\"activities_saved\":0,\"trips_saved\":0}"
+      },
+      "issues": "Blocked by prerequisite sync persistence failure; no trip cards were available to validate name/date/activity-count rendering."
+    },
+    {
+      "id": "VAL-STRAVA-005",
+      "title": "Activity shows distance, elevation, date, duration",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "Navigate directly to /trip/otb",
+          "expected": "Activity detail UI with distance, elevation, date, and duration",
+          "observed": "Route displays only \"Trip Detail Placeholder\""
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "inline:trip-detail-placeholder"
+        ],
+        "consoleErrors": "No route-crash error while rendering placeholder",
+        "network": "No activity detail data-fetch call observed on /trip/otb"
+      },
+      "issues": "Activity stats UI is not implemented on the tested surface, so required fields and value comparison cannot be performed."
+    },
+    {
+      "id": "VAL-STRAVA-006",
+      "title": "Cached data loads without Strava re-fetch",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Attempt sync via UI and via curl",
+          "expected": "Successful sync creates cached data for subsequent reload verification",
+          "observed": "Both attempts returned 500 with activities_saved=0 and trips_saved=0"
+        },
+        {
+          "action": "Reload trip URL and inspect network",
+          "expected": "Cached trip data loads with zero strava.com/api/v3 requests",
+          "observed": "No strava.com/api/v3 requests were seen, but cached data precondition was not met"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "inline:trip-detail-placeholder"
+        ],
+        "consoleErrors": "No additional console errors after reload beyond React Router warnings",
+        "network": "Reload of /trip/otb showed only localhost assets; no strava.com/api/v3 requests"
+      },
+      "issues": "Blocked: sync precondition failed, so cached-data behavior could not be validated end-to-end."
+    },
+    {
+      "id": "VAL-STRAVA-008",
+      "title": "Sync trigger accessible from UI",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Observe trip list toolbar",
+          "expected": "Visible sync trigger",
+          "observed": "Visible button labeled \"Sync with Strava\""
+        },
+        {
+          "action": "Click sync trigger",
+          "expected": "Loading indicator then refreshed trip list data without page reload",
+          "observed": "Loading state appeared (\"Syncing...\"), then backend returned 500 and alert \"Failed to sync with Strava\""
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "inline:trips-toolbar-with-sync-button",
+          "inline:sync-button-syncing-state",
+          "inline:trips-empty-state-after-failed-sync"
+        ],
+        "consoleErrors": "Error syncing: Error: Sync failed",
+        "network": "POST /api/strava/sync -> 500"
+      },
+      "issues": "Blocked by backend sync failure; successful data refresh in the list could not be confirmed."
+    },
+    {
+      "id": "VAL-STRAVA-009",
+      "title": "Activities without hashtags handled gracefully",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Attempt to sync and then inspect trip list sections",
+          "expected": "Untagged activities appear in an \"Individual Rides\"/\"Ungrouped\" section or are otherwise clearly handled without rendering errors",
+          "observed": "Sync failed and trip list remained empty; no activity grouping UI became available"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "inline:trips-empty-state-after-failed-sync"
+        ],
+        "consoleErrors": "Sync failure error present; no independent rendering crash observed",
+        "network": "POST /api/strava/sync -> 500"
+      },
+      "issues": "Blocked by prerequisite sync/data availability failure; untagged-activity handling could not be exercised."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Browser environment emitted extension-related net::ERR_BLOCKED_BY_CLIENT entries, adding noise while validating app-level errors and request outcomes.",
+      "resolved": true,
+      "resolution": "Filtered evidence to localhost and app-origin requests plus explicit /api/strava/sync and curl outputs.",
+      "affectedAssertions": [
+        "VAL-FOUND-006",
+        "VAL-FOUND-007",
+        "VAL-STRAVA-004",
+        "VAL-STRAVA-006",
+        "VAL-STRAVA-008",
+        "VAL-STRAVA-009"
+      ]
+    },
+    {
+      "description": "Sync failure opened a blocking browser alert dialog (\"Failed to sync with Strava\") before additional interactions were possible.",
+      "resolved": true,
+      "resolution": "Accepted dialog and continued evidence collection.",
+      "affectedAssertions": [
+        "VAL-STRAVA-004",
+        "VAL-STRAVA-008",
+        "VAL-STRAVA-009"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Strava sync endpoint consistently failed: POST http://localhost:5001/api/strava/sync returned 500 with response {\"status\":\"partial_success_or_error\",\"activities_synced\":64,\"trips_created\":64,\"activities_saved\":0,\"activities_failed\":64,\"trips_saved\":0,\"trips_failed\":64}.",
+      "affectedAssertions": [
+        "VAL-STRAVA-004",
+        "VAL-STRAVA-006",
+        "VAL-STRAVA-008",
+        "VAL-STRAVA-009"
+      ],
+      "quickFixAttempted": "Retried sync via UI and directly via curl; both attempts returned the same 500 result."
+    }
+  ],
+  "summary": "Tested 7 assigned assertions: 1 passed, 2 failed, 4 blocked. Empty-state behavior passed; loading coverage and activity detail stats failed on current UI surface; sync-dependent assertions were blocked by repeatable /api/strava/sync 500 failures with zero persisted activities/trips."
+}

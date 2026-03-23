@@ -38,3 +38,11 @@ Testing surface: tools, URLs, setup steps, isolation notes, known quirks.
 - Shared-state boundaries: do not change `.env`, do not run deployment commands, do not write outside `.factory/validation/foundation/user-testing/flows/`.
 - Service boundaries: frontend must run on `localhost:5173`, functions on `localhost:5001`; avoid port `5000`.
 - Failure policy: if a prerequisite service cannot start or endpoint is unreachable, mark only directly affected assertions as `fail`/`blocked` with concrete error output.
+
+## Flow Validator Guidance: strava-integration-web-api
+- Surface scope: strava integration milestone checks for sync persistence, hashtag grouping, streams persistence, token refresh behavior, and trip-list UI states.
+- Isolation: this app has no auth and uses shared Firestore + Strava account, so run validator flows sequentially to avoid concurrent sync interference/rate-limit contention.
+- Assigned namespaces for evidence only: `strava_ui_flow_ns` and `strava_api_flow_ns`; each flow must write only to its own report JSON path.
+- Shared-state boundaries: do not edit `.env`, do not deploy, do not modify application source; limit writes to app behavior under test (normal sync endpoint writes) and `.factory/validation/strava-integration/user-testing/flows/` outputs.
+- Service boundaries: frontend `http://localhost:5173`, functions `http://localhost:5001`; never use port `5000`.
+- Failure policy: if prerequisite sync/setup fails, mark only dependent assertions as blocked with concrete command/snapshot evidence.
