@@ -1,0 +1,24 @@
+commands:
+  install: npm install && cd functions && npm install
+  dev: npm run dev
+  dev:functions: cd functions && npm run dev
+  build: npm run build
+  build:functions: cd functions && npm run build
+  typecheck: npm run typecheck
+  lint: npm run lint
+  test: npx vitest run --reporter=verbose
+
+services:
+  frontend:
+    start: npm run dev -- --port 5173
+    stop: lsof -ti :5173 | xargs kill
+    healthcheck: curl -sf http://localhost:5173
+    port: 5173
+    depends_on: []
+
+  functions:
+    start: cd functions && npm run dev -- --port 5001
+    stop: lsof -ti :5001 | xargs kill
+    healthcheck: curl -sf http://localhost:5001/api/health
+    port: 5001
+    depends_on: []
