@@ -1,54 +1,46 @@
 {
   "milestone": "foundation",
-  "round": 1,
-  "status": "fail",
+  "round": 2,
+  "status": "pass",
   "validatorsRun": {
     "test": {
       "passed": true,
-      "command": "npx vitest run --reporter=verbose",
+      "command": "npx --prefix /Users/primmer/trip_tracker vitest run --reporter=verbose",
       "exitCode": 0
     },
     "typecheck": {
       "passed": true,
-      "command": "npm run typecheck",
+      "command": "npm -C /Users/primmer/trip_tracker run typecheck",
       "exitCode": 0
     },
     "lint": {
       "passed": true,
-      "command": "npm run lint",
+      "command": "npm -C /Users/primmer/trip_tracker run lint",
       "exitCode": 0
     }
   },
   "reviewsSummary": {
     "total": 1,
-    "passed": 0,
-    "failed": 1,
-    "failedFeatures": [
-      "scaffold-project"
-    ]
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
   },
-  "blockingIssues": [
-    {
-      "featureId": "scaffold-project",
-      "severity": "blocking",
-      "description": "firebase.json uses `serviceId` under a Hosting `function` rewrite; this key is for Cloud Run rewrites and does not satisfy the expected Cloud Function rewrite for /api/**."
-    }
-  ],
+  "blockingIssues": [],
   "appliedUpdates": [],
   "suggestedGuidanceUpdates": [
     {
       "target": "skills/fullstack-worker",
-      "suggestion": "Require explicit failure or deviation reporting when `interactiveChecks` is empty for features that claim manual/UI verification, rather than allowing `followedProcedure: true` silently.",
-      "evidence": "scaffold-project handoff marked followedProcedure true while recording no interactive checks despite skill instructions requiring them.",
-      "isSystemic": false
+      "suggestion": "Enforce a strict mismatch failure when a handoff marks followedProcedure=true but omits required interactiveChecks for features with manual/UI verification requirements.",
+      "evidence": "fix-foundation-scrutiny reviewer observed the same mismatch in handoff metadata (required interactive checks absent while followedProcedure remained true).",
+      "isSystemic": true
     },
     {
-      "target": "AGENTS.md",
-      "suggestion": "Clarify that conventions requiring named exports must be enforced via lint rules (or add that enforcement requirement), otherwise violations can pass automated validation.",
-      "evidence": "Mission AGENTS.md bans default exports, but scaffold-project shipped default exports in multiple files and lint still passed.",
+      "target": "mission handoff validation",
+      "suggestion": "Add commit object validation so handoff commitId values must resolve in git before a feature can be marked complete.",
+      "evidence": "fix-foundation-scrutiny reviewer reported handoff commitId `be30a426136be5b349540b07e558c704a29a5624` did not resolve via git cat-file.",
       "isSystemic": false
     }
   ],
   "rejectedObservations": [],
-  "previousRound": null
+  "previousRound": "/Users/primmer/trip_tracker/.factory/validation/foundation/scrutiny/synthesis.round1.json"
 }
