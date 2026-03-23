@@ -6,6 +6,7 @@ import { Trip, Activity, ActivityStreams } from '../types';
 import { ChevronLeft, Calendar } from 'lucide-react';
 import { metersToFeet, metersToMiles, metersToKm, secondsToDuration } from '../utils/units';
 import { TripMap } from '../components/Map/TripMap';
+import { ElevationChart } from '../components/ElevationChart';
 
 export const TripDetail: React.FC = () => {
   const { tripId } = useParams<{ tripId: string }>();
@@ -221,6 +222,18 @@ export const TripDetail: React.FC = () => {
                         </p>
                       </div>
                     </div>
+
+                    {/* Elevation Chart */}
+                    {streams[activity.id] && streams[activity.id].altitude && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Elevation Profile</p>
+                        <ElevationChart 
+                          distance={streams[activity.id].distance} 
+                          altitude={streams[activity.id].altitude} 
+                          height={80}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
