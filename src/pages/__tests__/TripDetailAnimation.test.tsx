@@ -1,8 +1,9 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, RenderResult } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TripDetail } from '../TripDetail';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import * as firestore from 'firebase/firestore';
+import { Activity, ActivityStreams, Trip } from '../../types';
 
 // Mock Firebase
 vi.mock('firebase/firestore', () => ({
@@ -17,9 +18,18 @@ vi.mock('firebase/firestore', () => ({
   orderBy: vi.fn(),
 }));
 
+interface TripMapProps {
+  animationState: {
+    isPlaying: boolean;
+    speed: number;
+    activityId: number | null;
+  };
+  onAnimationComplete: () => void;
+}
+
 // Mock components that use Google Maps
 vi.mock('../../components/Map/TripMap', () => ({
-  TripMap: ({ animationState, onAnimationComplete }: any) => (
+  TripMap: ({ animationState, onAnimationComplete }: TripMapProps) => (
     <div data-testid="trip-map">
       {animationState.isPlaying && (
         <button onClick={onAnimationComplete} data-testid="complete-animation">
@@ -41,15 +51,15 @@ vi.mock('../../components/ElevationChart', () => ({
 }));
 
 describe('TripDetail Animation Controls', () => {
-  const mockTrip = {
+  const mockTrip: Trip = {
     id: 'test-trip',
     hashtag: 'test-trip',
     name: 'Test Trip',
     dateRange: { start: '2024-01-01', end: '2024-01-01' },
-    activityIds: ['123'],
+    activityIds: [123],
   };
 
-  const mockActivity = {
+  const mockActivity: Partial<Activity> = {
     id: 123,
     name: 'Day 1 Ride',
     distance: 10000,
@@ -58,48 +68,47 @@ describe('TripDetail Animation Controls', () => {
     start_date: '2024-01-01T08:00:00Z',
   };
 
-  const mockStream = {
-    exists: () => true,
-    data: () => ({
-      latlng: [[37, -122], [37.1, -122.1]],
-      altitude: [100, 200],
-      distance: [0, 10000],
-    }),
+  const mockStream: ActivityStreams = {
+    latlng: [[37, -122], [37.1, -122.1]],
+    altitude: [100, 200],
+    distance: [0, 10000],
+    time: [0, 3600],
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     // Setup Firestore mocks
-    (firestore.getDoc as any).mockImplementation((docRef: any) => {
-      console.log('getDoc for path:', docRef.path);
+    vi.mocked(firestore.getDoc).mockImplementation((docRef: unknown) => {
+      const ref = docRef as { path: string; id: string };
+      console.log('getDoc for path:', ref.path);
       return Promise.resolve({
         exists: () => true,
-        id: docRef.id || 'test-trip',
+        id: ref.id || 'test-trip',
         data: () => {
-          if (docRef.path?.includes('streams')) return mockStream.data();
-          if (docRef.path?.includes('activities')) return mockActivity;
+          if (ref.path?.includes('streams')) return mockStream;
+          if (ref.path?.includes('activities')) return mockActivity;
           return mockTrip;
         },
-      });
+      } as unknown as firestore.DocumentSnapshot);
     });
 
-    (firestore.doc as any).mockImplementation((db: any, collection: string, id: string) => {
-      return { id, path: `${collection}/${id}` };
+    vi.mocked(firestore.doc).mockImplementation((_db: unknown, collection: string, id: string) => {
+      return { id, path: `${collection}/${id}` } as unknown as firestore.DocumentReference;
     });
 
-    (firestore.getDocs as any).mockImplementation((query: any) => {
+    vi.mocked(firestore.getDocs).mockImplementation(() => {
       return Promise.resolve({
         docs: [{
           id: '123',
           data: () => mockActivity,
         }],
-      });
+      } as unknown as firestore.QuerySnapshot);
     });
   });
 
-  const renderTripDetail = async () => {
-    let result: any;
+  const renderTripDetail = async (): Promise<RenderResult> => {
+    let result: RenderResult = {} as RenderResult;
     await act(async () => {
       result = render(
         <MemoryRouter initialEntries={['/trip/test-trip']}>

@@ -28,29 +28,29 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
   // Let's make it complete a 20km ride in about 20 seconds. 1000m/s.
   const BASE_SPEED = 500; 
 
-  const animate = (time: number) => {
-    if (lastTimeRef.current === null) {
-      lastTimeRef.current = time;
-    }
-
-    const deltaTime = (time - lastTimeRef.current) / 1000; // in seconds
-    lastTimeRef.current = time;
-
-    const distanceDelta = BASE_SPEED * speed * deltaTime;
-    
-    setCurrentDistance(prev => {
-      const next = prev + distanceDelta;
-      if (next >= totalLength) {
-        onComplete();
-        return totalLength;
-      }
-      return next;
-    });
-
-    requestRef.current = requestAnimationFrame(animate);
-  };
-
   useEffect(() => {
+    const animate = (time: number) => {
+      if (lastTimeRef.current === null) {
+        lastTimeRef.current = time;
+      }
+
+      const deltaTime = (time - lastTimeRef.current) / 1000; // in seconds
+      lastTimeRef.current = time;
+
+      const distanceDelta = BASE_SPEED * speed * deltaTime;
+      
+      setCurrentDistance(prev => {
+        const next = prev + distanceDelta;
+        if (next >= totalLength) {
+          onComplete();
+          return totalLength;
+        }
+        return next;
+      });
+
+      requestRef.current = requestAnimationFrame(animate);
+    };
+
     if (isPlaying && currentDistance < totalLength) {
       requestRef.current = requestAnimationFrame(animate);
     } else {
@@ -65,7 +65,7 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, currentDistance, totalLength, speed]);
+  }, [isPlaying, currentDistance, totalLength, speed, onComplete]);
 
   useEffect(() => {
     if (!map || path.length === 0) return;

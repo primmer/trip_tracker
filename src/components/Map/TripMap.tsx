@@ -169,7 +169,7 @@ const MapAutoZoom: React.FC<{
         left: 100
       });
     }
-  }, [map, activityStreams, highlightedActivityId]);
+  }, [map, activityStreams, highlightedActivityId, isAnimationPlaying]);
 
   return null;
 };

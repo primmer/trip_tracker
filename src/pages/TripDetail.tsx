@@ -226,6 +226,7 @@ export const TripDetail: React.FC = () => {
                               ? 'bg-red-100 text-red-600 hover:bg-red-200'
                               : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
                           }`}
+                          title={animationState.activityId === activity.id && animationState.isPlaying ? 'Pause' : 'Play'}
                         >
                           {animationState.activityId === activity.id && animationState.isPlaying ? (
                             <Pause className="w-5 h-5" />
