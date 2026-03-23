@@ -1,0 +1,46 @@
+{
+  "milestone": "maps-and-routes",
+  "round": 2,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "npx vitest run --reporter=verbose",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "npm run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "failedFeatures": [
+      "fix-maps-scrutiny-issues"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "fix-maps-scrutiny-issues",
+      "severity": "blocking",
+      "description": "RouteAnimation resets currentDistance whenever the path prop identity changes. TripMap rebuilds animationPath when animation state toggles, causing play/pause/speed changes to reset to 0 and breaking required pause/resume semantics."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [],
+  "rejectedObservations": [
+    {
+      "observation": "The fullstack-worker skill mandates manual browser verification for every run, while some remediation runs complete with validator-only evidence.",
+      "reason": "duplicate-prior-synthesis"
+    }
+  ],
+  "previousRound": ".factory/validation/maps-and-routes/scrutiny/synthesis.round1.json"
+}

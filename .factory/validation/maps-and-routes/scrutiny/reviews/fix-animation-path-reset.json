@@ -1,0 +1,21 @@
+{
+  "featureId": "fix-animation-path-reset",
+  "reviewedAt": "2026-03-23T09:27:49Z",
+  "commitId": "1a74ca5",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The fix fully addresses the prior blocking route-animation reset defect. `TripMap` now memoizes `animationPath` by `animationState.activityId` (not the full animation state), and `RouteAnimation` reset logic is keyed to `activityId` rather than `path` identity. This preserves progress across play/pause and speed toggles while still resetting on true activity changes and on completion.",
+    "issues": []
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "`fullstack-worker` still requires mandatory manual verification entries, but this run reported `followedProcedure: true` with no interactive checks.",
+      "evidence": ".factory/skills/fullstack-worker/SKILL.md step 7 requires manual verification + interactive checks; handoff 2026-03-23T09-23-12-060Z__fix-animation-path-reset__0b60d8a5-8c76-493e-9831-a17e02dd92a0.json has `verification.interactiveChecks: []` and transcript skeleton shows no agent-browser/curl interactive validation."
+    }
+  ],
+  "addressesFailureFrom": "/Users/primmer/trip_tracker/.factory/validation/maps-and-routes/scrutiny/reviews/fix-maps-scrutiny-issues.json",
+  "summary": "Pass: the rerun fix resolves the original failure by eliminating path-identity-driven resets, so pause/resume and speed changes no longer restart animation while route changes/completion still reset as required."
+}
