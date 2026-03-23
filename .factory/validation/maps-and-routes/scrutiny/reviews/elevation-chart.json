@@ -1,0 +1,39 @@
+{
+  "featureId": "elevation-chart",
+  "reviewedAt": "2026-03-23T09:09:18Z",
+  "commitId": "b26d531",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The feature adds a compact SVG elevation profile and wires it into TripDetail with day-aware filtering, but it does not fully satisfy the axis-label/unit requirements from the feature contract.",
+    "issues": [
+      {
+        "file": "src/components/ElevationChart.tsx",
+        "line": 72,
+        "severity": "blocking",
+        "description": "The chart does not provide full labeled axes as specified (elevation in ft/m on Y and distance on X). It renders corner value badges only, and only in imperial units (ft/mi), with no metric elevation/distance labeling on the chart axes."
+      },
+      {
+        "file": "src/components/ElevationChart.tsx",
+        "line": 36,
+        "severity": "non_blocking",
+        "description": "getX() divides by (maxX - minX) without guarding the zero-range case. If a stream has constant/invalid distance values, the chart emits NaN coordinates and breaks rendering."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The worker attempted AskUser in a non-interactive execution context, which failed. Skill/procedure guidance should explicitly discourage AskUser usage in Exec-mode feature runs.",
+      "evidence": "Transcript skeleton for session 398af245-6616-460d-be33-bb7dad5756b6 shows 'Tool: AskUser' followed by 'Error: AskUser failed'."
+    },
+    {
+      "area": "skills",
+      "observation": "Manual browser verification is mandated by the skill, but this run completed without true interactive verification. The procedure may need an explicit fallback path for non-interactive runs.",
+      "evidence": "fullstack-worker SKILL.md step 7 requires agent-browser manual verification; handoff.whatWasLeftUndone states manual verification was not performed."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review failed: elevation chart integration is functional, but axis labeling/units are incomplete versus the feature contract, with one additional edge-case robustness issue in coordinate scaling."
+}

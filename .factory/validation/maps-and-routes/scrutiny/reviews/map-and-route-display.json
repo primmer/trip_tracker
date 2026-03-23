@@ -1,0 +1,39 @@
+{
+  "featureId": "map-and-route-display",
+  "reviewedAt": "2026-03-23T09:09:49Z",
+  "commitId": "4f4209d",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The feature largely implements the required Trip Detail + Google Maps flow, but it misses the expected initial full-route fit behavior for multi-day trips.",
+    "issues": [
+      {
+        "file": "src/pages/TripDetail.tsx",
+        "line": 49,
+        "severity": "blocking",
+        "description": "Multi-day trips initialize `activeActivityId` to day 1, and MapAutoZoom only fits the highlighted activity (`src/components/Map/TripMap.tsx:109`). On first load, bounds fit only day 1 instead of the full trip route, which violates the expected behavior to auto-zoom to the entire route on load."
+      },
+      {
+        "file": "src/pages/TripDetail.tsx",
+        "line": 171,
+        "severity": "non_blocking",
+        "description": "Stats are filtered to the active day by default (`activeActivityId` starts as day 1), so per-activity stats for the full trip are hidden unless the user manually selects 'All'. This is slightly misaligned with the requirement wording of showing stats for each activity."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The skill mandates TDD red/green (write failing tests first), but the transcript shows tests were created and then run passing, with no demonstrated failing red phase; however handoff `skillFeedback.followedProcedure` is still `true`.",
+      "evidence": "Transcript skeleton sequence shows `Create src/utils/__tests__/units.test.ts` + `Create src/utils/units.ts` followed by `Execute npx vitest run src/utils/__tests__/units.test.ts` (passing), and no failing-test run before implementation."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Environment guidance did not prevent repeated key-discovery churn for `VITE_GOOGLE_MAPS_API_KEY`; worker spent many calls searching for a missing key before proceeding.",
+      "evidence": "Transcript shows repeated checks of `.env`, `secrets-export.txt`, environment vars (`env | grep VITE_GOOGLE_MAPS_API_KEY`), and `Grep` for `AIza` before implementation/verification continued."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review result: fail. Core map/trip functionality was implemented, but initial multi-day viewport fitting does not satisfy the full-route auto-fit expectation; one additional non-blocking stats UX mismatch was noted."
+}

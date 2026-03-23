@@ -1,0 +1,28 @@
+{
+  "featureId": "route-animation",
+  "reviewedAt": "2026-03-23T09:09:11Z",
+  "commitId": "3cdc8aa",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Core animation controls were implemented, but replay/start semantics are broken after reaching route end (and when switching routes) because animation distance state is never reset.",
+    "issues": [
+      {
+        "file": "src/components/Map/RouteAnimation.tsx",
+        "line": 54,
+        "severity": "blocking",
+        "description": "Animation only starts when `currentDistance < totalLength`, but `currentDistance` is never reset after completion or route change. Once line 45 clamps distance to `totalLength`, pressing Play again (or starting a different activity with shorter route) does not restart from the route start, violating expected Play/start behavior."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The fullstack-worker procedure requires full validators (`npm run typecheck`, `npm run lint`, `npx vitest run --reporter=verbose`) but this worker run only recorded a targeted interpolation test and typecheck.",
+      "evidence": "Transcript skeleton for session 20e6fdbb-9d58-40e0-8a53-c9715a1ccf2d shows commands: `npx vitest run src/utils/__tests__/interpolation.test.ts` and `npm run typecheck`; no lint/full test command entries."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review failed route-animation due to a blocking state-reset bug: animation cannot reliably restart after finishing (or when path context changes). Report saved to scrutiny reviews."
+}
