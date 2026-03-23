@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions/v2';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import express from 'express';
 import cors from 'cors';
 import { router } from './router.js';
