@@ -1,0 +1,21 @@
+{
+  "featureId": "fix-strava-test-url",
+  "reviewedAt": "2026-03-23T05:27:00Z",
+  "commitId": "204686a",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The fix commit updates `Trips.test.tsx` to assert the relative sync route (`/api/strava/sync`), matching the current `Trips` implementation path construction and removing the brittle localhost assumption.",
+    "issues": []
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The `fullstack-worker` skill mandates manual verification with `interactiveChecks`, but this fix handoff marks `followedProcedure` true while reporting command-only verification and no interactive checks. The skill likely needs a documented lightweight path for test-only fixes.",
+      "evidence": "Skill requirement: /Users/primmer/trip_tracker/.factory/skills/fullstack-worker/SKILL.md:69-76. Fix handoff: /Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-23T05-24-17-897Z__fix-strava-test-url__ba7915c3-5b52-422b-8350-f1cb4a3e868b.json:13-14 and :46."
+    }
+  ],
+  "addressesFailureFrom": "/Users/primmer/trip_tracker/.factory/validation/strava-integration/scrutiny/reviews/trip-list-ui.json",
+  "summary": "PASS: Reviewed transcript skeleton, handoff, and commit 204686a. The test expectation now correctly targets `/api/strava/sync`, aligns with the route contract, and removes hardcoded localhost coupling; no code-level regressions found in this fix."
+}

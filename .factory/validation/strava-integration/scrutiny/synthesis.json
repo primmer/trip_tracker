@@ -1,72 +1,46 @@
 {
   "milestone": "strava-integration",
-  "round": 1,
-  "status": "fail",
+  "round": 2,
+  "status": "pass",
   "validatorsRun": {
     "test": {
       "passed": true,
-      "command": "npx vitest run --reporter=verbose",
+      "command": "\"/Users/primmer/trip_tracker/node_modules/.bin/vitest\" run --reporter=verbose",
       "exitCode": 0
     },
     "typecheck": {
       "passed": true,
-      "command": "npm run typecheck",
+      "command": "npm --prefix \"/Users/primmer/trip_tracker\" run typecheck",
       "exitCode": 0
     },
     "lint": {
       "passed": true,
-      "command": "npm run lint",
+      "command": "npm --prefix \"/Users/primmer/trip_tracker\" run lint",
       "exitCode": 0
     }
   },
   "reviewsSummary": {
     "total": 2,
-    "passed": 0,
-    "failed": 2,
-    "failedFeatures": [
-      "strava-oauth-and-sync",
-      "trip-list-ui"
-    ]
+    "passed": 2,
+    "failed": 0,
+    "failedFeatures": []
   },
-  "blockingIssues": [
-    {
-      "featureId": "strava-oauth-and-sync",
-      "severity": "blocking",
-      "description": "Sync endpoint fetches only one Strava activities page (`per_page=100`) with no pagination loop, so it does not fetch all athlete activities as required."
-    },
-    {
-      "featureId": "trip-list-ui",
-      "severity": "blocking",
-      "description": "Trip sync call is hardcoded to `http://localhost:5001/api/strava/sync` instead of the required `/api/strava/sync` route contract."
-    }
-  ],
+  "blockingIssues": [],
   "appliedUpdates": [],
   "suggestedGuidanceUpdates": [
     {
       "target": "skills/fullstack-worker",
-      "suggestion": "Fail handoff procedure checks when `followedProcedure=true` but required manual `interactiveChecks` are missing for features with UI/manual verification requirements.",
-      "evidence": "trip-list-ui review found no interactive checks recorded in handoff despite the skill requiring manual verification evidence.",
+      "suggestion": "Clarify and enforce how `interactiveChecks` should be handled for non-UI or test-only fixes so `followedProcedure` cannot be marked true when required procedure evidence is missing.",
+      "evidence": "Both fix reviews (`fix-strava-scrutiny`, `fix-strava-test-url`) observed handoffs with `followedProcedure: true` but no interactive checks, despite skill text requiring manual verification entries.",
       "isSystemic": true
     },
     {
       "target": "AGENTS.md",
-      "suggestion": "Add an explicit frontend API-call convention: client code must call relative `/api/...` routes and must not hardcode `localhost` hosts.",
-      "evidence": "trip-list-ui implemented `fetch('http://localhost:5001/api/strava/sync')`, violating the feature contract and environment-port assumptions.",
+      "suggestion": "Add guidance that when introducing new environment variables used by runtime code, workers must also update shared environment knowledge (`.factory/library/environment.md`) in the same feature.",
+      "evidence": "`VITE_API_BASE_URL` is now used by frontend API helper code but was not recorded in shared environment knowledge, which can cause setup drift across workers.",
       "isSystemic": true
-    },
-    {
-      "target": "mission handoff/state validation",
-      "suggestion": "Prevent marking a feature completed unless `completedWorkerSessionId`, transcript skeleton, and handoff artifacts all exist and are internally consistent.",
-      "evidence": "strava-oauth-and-sync is marked completed while `completedWorkerSessionId` is null and no matching transcript/handoff artifact exists for the assigned worker session.",
-      "isSystemic": true
-    },
-    {
-      "target": "AGENTS.md",
-      "suggestion": "Document Strava list-endpoint pagination expectation (iterate pages until empty) when requirements state 'fetch all activities'.",
-      "evidence": "strava-oauth-and-sync used a single `per_page=100` request without page iteration and failed the all-activities requirement.",
-      "isSystemic": false
     }
   ],
   "rejectedObservations": [],
-  "previousRound": null
+  "previousRound": ".factory/validation/strava-integration/scrutiny/synthesis.round1.json"
 }
