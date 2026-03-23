@@ -1,40 +1,21 @@
 {
   "milestone": "foundation",
-  "round": 1,
-  "status": "fail",
+  "round": 2,
+  "status": "pass",
   "assertionsSummary": {
-    "total": 5,
-    "passed": 4,
-    "failed": 1,
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
     "blocked": 0
   },
   "passedAssertions": [
-    "VAL-FOUND-001",
-    "VAL-FOUND-002",
-    "VAL-FOUND-003",
-    "VAL-FOUND-005"
+    "VAL-FOUND-004"
   ],
-  "failedAssertions": [
-    {
-      "id": "VAL-FOUND-004",
-      "reason": "Health endpoint returned 404 for /api/health and emulator URL variants; frontend fetch attempts failed and reported CORS error due missing successful endpoint response."
-    }
-  ],
+  "failedAssertions": [],
   "blockedAssertions": [],
-  "appliedUpdates": [
-    {
-      "target": "user-testing.md",
-      "description": "Added flow validator guidance section for the foundation web/API surface, including isolation and failure policy.",
-      "source": "setup"
-    },
-    {
-      "target": "services.yaml",
-      "description": "Updated functions service start command to use local Firebase CLI via npx and expanded healthcheck URL variants for emulator paths.",
-      "source": "setup"
-    }
-  ],
-  "previousRound": null,
+  "appliedUpdates": [],
+  "previousRound": ".factory/validation/foundation/user-testing/synthesis.round1.json",
   "flowReports": [
-    ".factory/validation/foundation/user-testing/flows/foundation-web-api-u1.json"
+    ".factory/validation/foundation/user-testing/flows/foundation-web-api-u1-r2.json"
   ]
 }

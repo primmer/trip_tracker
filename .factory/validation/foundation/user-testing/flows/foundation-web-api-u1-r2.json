@@ -1,0 +1,103 @@
+{
+  "groupId": "foundation-web-api-u1-r2",
+  "testedAt": "2026-03-23T04:37:11Z",
+  "credentials": {
+    "account": "not required (public app shell)",
+    "namespace": "foundation_round2_u1"
+  },
+  "toolsUsed": [
+    "curl",
+    "my-chrome"
+  ],
+  "assertionResults": [
+    {
+      "assertionId": "VAL-FOUND-004",
+      "status": "pass",
+      "reason": "Functions health endpoint returned HTTP 200 with JSON body and frontend-origin request completed without CORS errors.",
+      "evidence": [
+        {
+          "type": "curl",
+          "action": "GET http://localhost:5001/api/health",
+          "observed": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json; charset=utf-8",
+              "access-control-allow-origin": "http://localhost:5173",
+              "vary": "Origin"
+            },
+            "body": {
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "type": "curl",
+          "action": "GET with Origin header (Origin: http://localhost:5173)",
+          "observed": {
+            "status": 200,
+            "headers": {
+              "access-control-allow-origin": "http://localhost:5173"
+            },
+            "body": {
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "type": "curl",
+          "action": "OPTIONS preflight to /api/health",
+          "observed": {
+            "status": 204,
+            "headers": {
+              "access-control-allow-origin": "http://localhost:5173",
+              "access-control-allow-methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+              "vary": "Origin, Access-Control-Request-Headers"
+            },
+            "body": ""
+          }
+        },
+        {
+          "type": "browser-network",
+          "action": "From http://localhost:5173, fetch('http://localhost:5001/api/health')",
+          "observed": {
+            "request": {
+              "origin": "http://localhost:5173",
+              "mode": "cors"
+            },
+            "response": {
+              "status": 200,
+              "body": {
+                "status": "ok"
+              },
+              "headers": {
+                "access-control-allow-origin": "http://localhost:5173",
+                "content-type": "application/json; charset=utf-8"
+              }
+            }
+          }
+        },
+        {
+          "type": "browser-console",
+          "action": "Check error-level console messages after frontend fetch",
+          "observed": "none"
+        },
+        {
+          "type": "screenshot",
+          "path": "/Users/primmer/trip_tracker/.factory/validation/foundation/user-testing/flows/foundation-web-api-u1-r2-home.png"
+        }
+      ]
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Shared browser instance included unrelated tabs/extensions; filtered evidence strictly to localhost:5173 and localhost:5001 requests.",
+      "resolved": true,
+      "resolution": "Opened a dedicated localhost page, captured only relevant request/console evidence, then closed that page.",
+      "affectedAssertions": [
+        "VAL-FOUND-004"
+      ]
+    }
+  ],
+  "blockers": [],
+  "summary": "VAL-FOUND-004 passed: /api/health reachable (200 JSON) and frontend-origin request completed without CORS errors."
+}

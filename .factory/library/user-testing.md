@@ -26,6 +26,7 @@ Testing surface: tools, URLs, setup steps, isolation notes, known quirks.
 - Strava API has rate limits (100 req/15min); sync should be cached
 - Port 5000 is taken by macOS AirPlay -- do not use
 - Firestore is a live instance; test data persists between sessions
+- Browser automation sessions may include unrelated tabs; collect evidence only from dedicated `localhost:5173`/`localhost:5001` tabs.
 
 ## Test Data
 - Strava activity tagged `#otb` on 2026-03-15 (single ride)
