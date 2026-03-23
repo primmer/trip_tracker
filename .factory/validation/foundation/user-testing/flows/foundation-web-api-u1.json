@@ -1,0 +1,190 @@
+{
+  "groupId": "foundation-web-api-u1",
+  "testedAt": "2026-03-23T04:28:15Z",
+  "credentials": {
+    "account": "foundation-validator-u1",
+    "namespace": "foundation_u1"
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "curl",
+    "npm",
+    "python3",
+    "rg"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-FOUND-001",
+      "title": "SPA loads without errors",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Open http://localhost:5173",
+          "expected": "SPA renders visible content within 5 seconds",
+          "observed": "Home page rendered with heading and nav; performance navigation timings: domContentLoaded 63.9ms, loadEventEnd 183.8ms"
+        },
+        {
+          "action": "Inspect console on initial load",
+          "expected": "No uncaught errors or unhandled promise rejections",
+          "observed": "Only React Router future-flag warnings; no error-level messages"
+        },
+        {
+          "action": "Inspect network requests for local assets",
+          "expected": "All local asset requests succeed",
+          "observed": "Local localhost:5173 document/assets returned 200 on initial load; no failed local asset requests"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "foundation-web-api-u1-home.png"
+        ],
+        "domSnapshots": [
+          "foundation-web-api-u1-home.snapshot.txt"
+        ],
+        "consoleErrors": "none on initial load (warnings only)",
+        "network": "GET http://localhost:5173/ [200] and local asset/module requests [200], no failed localhost:5173 requests"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-FOUND-002",
+      "title": "App shell with navigation",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Inspect app shell on home route",
+          "expected": "Persistent header/branding and semantic navigation with at least two links",
+          "observed": "Snapshot shows banner branding link 'Trip Tracker' and navigation element with links 'Home' and 'Trips'"
+        },
+        {
+          "action": "Navigate to /trips and verify shell persistence",
+          "expected": "Shell/nav remains visible across route change",
+          "observed": "After route change to /trips, header and nav remain visible with same links"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "foundation-web-api-u1-home.png",
+          "foundation-web-api-u1-trips.png"
+        ],
+        "domSnapshots": [
+          "foundation-web-api-u1-home.snapshot.txt",
+          "foundation-web-api-u1-trips-forward.snapshot.txt"
+        ],
+        "consoleErrors": "none during nav flow"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-FOUND-003",
+      "title": "Client-side routing",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Click Trips nav link",
+          "expected": "URL/content update without full page reload",
+          "observed": "URL changed from / to /trips and main content changed to 'Your Trips'"
+        },
+        {
+          "action": "Use browser back then forward",
+          "expected": "Back/forward restores route content correctly",
+          "observed": "Back returned to / with home content; forward returned to /trips with trips content"
+        },
+        {
+          "action": "Review network requests after route changes",
+          "expected": "No new document fetch and no module bundle re-fetch during client routing",
+          "observed": "Document requests list remained a single entry GET / [200]; script/module requests were initial-load only"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "foundation-web-api-u1-home.png",
+          "foundation-web-api-u1-trips.png",
+          "foundation-web-api-u1-home-back.png",
+          "foundation-web-api-u1-trips-forward.png"
+        ],
+        "domSnapshots": [
+          "foundation-web-api-u1-home-back.snapshot.txt",
+          "foundation-web-api-u1-trips-forward.snapshot.txt"
+        ],
+        "network": "document requests: only GET http://localhost:5173/ [200] across nav/back/forward; no additional document requests",
+        "consoleErrors": "none during routing checks"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-FOUND-004",
+      "title": "Cloud Functions health endpoint reachable",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "curl http://localhost:5001/api/health",
+          "expected": "HTTP 200 JSON body",
+          "observed": "HTTP 404 Not Found (plain text 'Not Found')"
+        },
+        {
+          "action": "curl emulator-style function URLs",
+          "expected": "One URL returns 200 JSON",
+          "observed": "http://localhost:5001/demo-no-project/us-central1/api/health returned 404 with 'Function us-central1-api does not exist'; primco-trip-tracker/us-central1/api/health returned 404"
+        },
+        {
+          "action": "Fetch endpoint from frontend origin (http://localhost:5173)",
+          "expected": "Successful fetch without CORS errors",
+          "observed": "Fetch failed with TypeError: Failed to fetch; console reported CORS errors (No Access-Control-Allow-Origin)"
+        }
+      ],
+      "evidence": {
+        "curl": [
+          "curl -i http://localhost:5001/api/health -> 404",
+          "curl -i http://localhost:5001/demo-no-project/us-central1/api/health -> 404 Function us-central1-api does not exist",
+          "curl -i http://localhost:5001/primco-trip-tracker/us-central1/api/health -> 404"
+        ],
+        "consoleErrors": "Access to fetch ... blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present",
+        "network": "health endpoint requests did not return expected 200 JSON"
+      },
+      "issues": "Functions health endpoint is not reachable as specified; current local functions surface returns 404 and frontend fetch is blocked by CORS for tested URLs."
+    },
+    {
+      "id": "VAL-FOUND-005",
+      "title": "No secrets in client bundle",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run npm run build",
+          "expected": "Production bundle generated in dist/",
+          "observed": "Build succeeded (vite build completed, dist artifacts produced)"
+        },
+        {
+          "action": "Scan dist/ for actual configured secret values",
+          "expected": "Zero matches for Strava/Google client secrets and refresh tokens",
+          "observed": "Programmatic scan found 0 matches in dist/ for STRAVA_CLIENT_SECRET, STRAVA_REFRESH_TOKEN, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN"
+        }
+      ],
+      "evidence": {
+        "build": "npm run build -> success; dist/index.html, dist/assets/index-*.css, dist/assets/index-*.js emitted",
+        "secretScan": {
+          "STRAVA_CLIENT_SECRET": 0,
+          "STRAVA_REFRESH_TOKEN": 0,
+          "GOOGLE_CLIENT_SECRET": 0,
+          "GOOGLE_REFRESH_TOKEN": 0
+        },
+        "grepOutput": "rg search for STRAVA_CLIENT_SECRET|STRAVA_REFRESH_TOKEN|GOOGLE_CLIENT_SECRET|GOOGLE_REFRESH_TOKEN|VITE_ in dist -> NO_MATCHES"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Shared browser environment had unrelated extension requests/tabs; filtered evidence to localhost routes and opened a dedicated localhost:5173 page for this flow.",
+      "resolved": true,
+      "resolution": "Captured assertion evidence from the dedicated localhost page and closed that page after testing.",
+      "affectedAssertions": [
+        "VAL-FOUND-001",
+        "VAL-FOUND-002",
+        "VAL-FOUND-003"
+      ]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 5 assertions: 4 passed (VAL-FOUND-001/002/003/005), 1 failed (VAL-FOUND-004 health endpoint/CORS)."
+}

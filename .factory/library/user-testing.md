@@ -30,3 +30,10 @@ Testing surface: tools, URLs, setup steps, isolation notes, known quirks.
 ## Test Data
 - Strava activity tagged `#otb` on 2026-03-15 (single ride)
 - Two Strava activities tagged `#hmb_jul4` (multi-day trip)
+
+## Flow Validator Guidance: foundation-web-api
+- Surface scope: foundation milestone smoke checks for SPA shell/routing/build-secrets scan and functions health endpoint.
+- Isolation: use read-only checks only (page navigation, console/network inspection, `curl`, and `npm run build` + grep scan). Do not mutate Firestore/Storage data.
+- Shared-state boundaries: do not change `.env`, do not run deployment commands, do not write outside `.factory/validation/foundation/user-testing/flows/`.
+- Service boundaries: frontend must run on `localhost:5173`, functions on `localhost:5001`; avoid port `5000`.
+- Failure policy: if a prerequisite service cannot start or endpoint is unreachable, mark only directly affected assertions as `fail`/`blocked` with concrete error output.

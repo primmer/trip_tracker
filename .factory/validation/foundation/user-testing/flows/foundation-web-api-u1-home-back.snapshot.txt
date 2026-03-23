@@ -1,0 +1,16 @@
+uid=1_0 RootWebArea "Bike Trip Tracker" url="http://localhost:5173/"
+  uid=1_5 banner
+    uid=1_9 link "Trip Tracker" url="http://localhost:5173/"
+      uid=1_10 StaticText "Trip Tracker"
+    uid=1_11 navigation
+      uid=1_12 link "Home" url="http://localhost:5173/"
+        uid=1_13 StaticText "Home"
+      uid=1_14 link "Trips" focusable focused url="http://localhost:5173/trips"
+        uid=1_15 StaticText "Trips"
+  uid=1_16 main
+    uid=3_0 heading "Visualizing your bike adventures." level="1"
+    uid=3_1 StaticText "A hub for tracking bike trips and bikepacking adventures. High-resolution photos, interactive maps, and visual storytelling."
+  uid=1_23 contentinfo
+    uid=1_25 StaticText "© "
+    uid=1_26 StaticText "2026"
+    uid=1_27 StaticText " Bike Trip Tracker"
