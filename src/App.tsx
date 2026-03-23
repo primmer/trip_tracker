@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import Trips from './pages/Trips';
-import Layout from './components/Layout';
+import { Home } from './pages/Home';
+import { Trips } from './pages/Trips';
+import { Layout } from './components/Layout';
 
-function App() {
+export function App() {
   return (
     <Router>
       <Layout>
@@ -17,4 +17,4 @@ function App() {
   );
 }
 
-export default App;
+
