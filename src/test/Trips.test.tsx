@@ -122,7 +122,7 @@ describe('Trips Page', () => {
     expect(syncButton).toBeDisabled();
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:5001/api/strava/sync', expect.anything());
+      expect(global.fetch).toHaveBeenCalledWith('/api/strava/sync', expect.anything());
     });
   });
 });
