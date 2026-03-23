@@ -17,8 +17,8 @@ services:
     depends_on: []
 
   functions:
-    start: npm --prefix functions run build && npx firebase emulators:start --only functions
+    start: cd functions && npm run dev
     stop: lsof -ti :5001 | xargs kill
-    healthcheck: curl -sf http://localhost:5001/api/health || curl -sf http://localhost:5001/demo-no-project/us-central1/api/health || curl -sf http://localhost:5001/primco-trip-tracker/us-central1/api/health
+    healthcheck: curl -sf http://localhost:5001/api/health
     port: 5001
     depends_on: []
