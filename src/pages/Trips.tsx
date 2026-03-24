@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Trip } from '../types';
-import { RefreshCw, MapPin, Calendar } from 'lucide-react';
+import { RefreshCw, MapPin, Calendar, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getApiBaseUrl } from '../utils/api';
 import { ErrorBanner } from '../components/ErrorBanner';
@@ -11,6 +11,7 @@ export const Trips: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
   const fetchTrips = async () => {
@@ -51,6 +52,29 @@ export const Trips: React.FC = () => {
     }
   };
 
+  const handleEnhance = async () => {
+    setEnhancing(true);
+    setSyncError(null);
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/activities/enhance-descriptions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error('Enhancement failed');
+      const data = await response.json();
+      alert(data.message || 'Enhancement complete!');
+      await fetchTrips();
+    } catch (error) {
+      console.error('Error enhancing:', error);
+      setSyncError('Failed to enhance descriptions. Please check your connection and try again.');
+    } finally {
+      setEnhancing(false);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
@@ -63,14 +87,24 @@ export const Trips: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Your Trips</h1>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? 'Syncing...' : 'Sync with Strava'}
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={handleEnhance}
+            disabled={enhancing || syncing}
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:bg-purple-400 transition-colors"
+          >
+            <Sparkles className={`w-4 h-4 ${enhancing ? 'animate-pulse' : ''}`} />
+            {enhancing ? 'Enhancing...' : 'Enhance Titles'}
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={syncing || enhancing}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing...' : 'Sync with Strava'}
+          </button>
+        </div>
       </div>
 
       {syncError && (

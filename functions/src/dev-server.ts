@@ -24,11 +24,11 @@ const port = 5001;
 // Proper CORS for local frontend
 app.use(cors({ origin: 'http://localhost:5173' }));
 
-// The router handles both /health and /api/health
-app.use(router);
-
 // For compatibility with /api prefix often used in frontends
 app.use('/api', router);
+
+// The router handles both /health and /api/health
+app.use(router);
 
 app.listen(port, () => {
   console.log(`Standalone Functions Dev Server listening at http://localhost:${port}`);

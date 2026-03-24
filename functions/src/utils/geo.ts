@@ -67,3 +67,52 @@ export function findNearestLatLng(
   const [lat, lng] = coord;
   return { lat, lng };
 }
+
+/**
+ * Samples MAX 3 points from a route: start, midpoint, and end OR highest elevation.
+ * Returns an array of LatLng objects.
+ */
+export function sampleRoutePoints(streams: ActivityStreams): LatLng[] {
+  if (!streams.latlng || streams.latlng.length === 0) return [];
+
+  const points: LatLng[] = [];
+  
+  // Start point
+  const start = streams.latlng[0];
+  points.push({ lat: start[0], lng: start[1] });
+
+  if (streams.latlng.length > 1) {
+    // End point
+    const end = streams.latlng[streams.latlng.length - 1];
+    const endPoint = { lat: end[0], lng: end[1] };
+
+    // Find highest elevation point index
+    let highestIdx = -1;
+    let maxAlt = -Infinity;
+    if (streams.altitude && streams.altitude.length > 0) {
+      for (let i = 0; i < streams.altitude.length; i++) {
+        if (streams.altitude[i] > maxAlt) {
+          maxAlt = streams.altitude[i];
+          highestIdx = i;
+        }
+      }
+    }
+
+    // Midpoint if no highest elevation point found or if it's start/end
+    if (highestIdx <= 0 || highestIdx >= streams.latlng.length - 1) {
+      highestIdx = Math.floor(streams.latlng.length / 2);
+    }
+
+    const mid = streams.latlng[highestIdx];
+    points.push({ lat: mid[0], lng: mid[1] });
+    
+    // Only add end point if it's distinct from start and mid
+    if (endPoint.lat !== points[0].lat || endPoint.lng !== points[0].lng) {
+      if (endPoint.lat !== points[1].lat || endPoint.lng !== points[1].lng) {
+        points.push(endPoint);
+      }
+    }
+  }
+
+  return points.slice(0, 3);
+}
