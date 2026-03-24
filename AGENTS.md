@@ -30,7 +30,13 @@ GPS streams (latlng, altitude, time, distance) MUST be stored as JSON string fie
 
 ## Visual Design
 
-Dark theme only (no light mode toggle). Use dark gray backgrounds (not pure black) -- e.g., gray-900/gray-800 for surfaces, gray-700 for borders. Dark backgrounds make satellite imagery and photos visually prominent. All text must be legible on dark backgrounds. The overall aesthetic prioritizes visual storytelling over data display.
+Dark theme only (no light mode toggle). Use dark gray backgrounds (not pure black) -- e.g., gray-950/gray-900 for surfaces, gray-800 for borders. The `<body>` element MUST have a dark background color set directly (not just on wrapper divs) to prevent light color leaking during transitions or scroll bounce.
+
+**Design direction: editorial/portfolio, NOT software dashboard.** No rounded corner card boxes. No generic grid-of-cards UI. Think minimal chrome, edge-to-edge imagery, generous whitespace, clean typography. The app should look like a photo portfolio or travel journal, not a SaaS app.
+
+## Architecture: Admin vs Public
+
+Admin operations (Strava sync, batch title enhancement) live at `/admin`. The main site (`/`, `/trips`, `/trip/:id`) is a read-only Firestore-backed viewer that does NOT require the backend server. Per-trip actions like Add Photos stay on the trip detail page. The admin page is not linked in the main navigation.
 
 ## Google Maps API Cost Rules
 
