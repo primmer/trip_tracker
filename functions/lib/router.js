@@ -126,7 +126,7 @@ router.post('/strava/sync', async (req, res) => {
                 // Use detailed description for hashtag grouping
                 const activity = {
                     ...summary,
-                    description: detailed?.description || null,
+                    description: detailed.description || null,
                 };
                 detailedActivities.push(activity);
                 // Fetch GPS streams
@@ -227,9 +227,29 @@ router.post('/api/photos/process-session', async (req, res) => {
                 const streamDoc = await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').get();
                 const activityRaw = activityDoc.data();
                 if (activityRaw) {
+                    let streams = null;
+                    if (streamDoc.exists) {
+                        const data = streamDoc.data();
+                        if (data && data.latlng_json) {
+                            streams = {
+                                latlng: JSON.parse(data.latlng_json),
+                                altitude: JSON.parse(data.altitude_json),
+                                time: JSON.parse(data.time_json),
+                                distance: JSON.parse(data.distance_json),
+                            };
+                        }
+                        else if (data && data.latlng) {
+                            streams = {
+                                latlng: data.latlng,
+                                altitude: data.altitude,
+                                time: data.time,
+                                distance: data.distance,
+                            };
+                        }
+                    }
                     activitiesData.push({
                         ...activityRaw,
-                        streams: streamDoc.exists ? streamDoc.data() : null
+                        streams
                     });
                 }
             }
@@ -308,7 +328,11 @@ async function fetchAndSaveStreams(activityId, accessToken) {
     // Check if streams already exist to be idempotent
     const streamDoc = await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').get();
     if (streamDoc.exists) {
-        return;
+        const data = streamDoc.data();
+        // If it already has the new format, we're done
+        if (data && data.latlng_json) {
+            return;
+        }
     }
     const response = await fetch(`https://www.strava.com/api/v3/activities/${activityId}/streams?keys=latlng,altitude,time,distance&key_by_type=true`, {
         headers: {
@@ -319,14 +343,91 @@ async function fetchAndSaveStreams(activityId, accessToken) {
         console.warn(`Failed to fetch streams for activity ${activityId}: ${response.status}`);
         return;
     }
-    const streams = await response.json();
+    const streams = (await response.json());
+    // Store as JSON strings to avoid Firestore limits
     await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').set({
-        latlng: streams.latlng?.data || [],
-        altitude: streams.altitude?.data || [],
-        time: streams.time?.data || [],
-        distance: streams.distance?.data || [],
+        latlng_json: JSON.stringify(streams.latlng?.data || []),
+        altitude_json: JSON.stringify(streams.altitude?.data || []),
+        time_json: JSON.stringify(streams.time?.data || []),
+        distance_json: JSON.stringify(streams.distance?.data || []),
         fetched_at: admin.firestore.FieldValue.serverTimestamp(),
-    });
+        // Remove old array fields
+        latlng: admin.firestore.FieldValue.delete(),
+        altitude: admin.firestore.FieldValue.delete(),
+        time: admin.firestore.FieldValue.delete(),
+        distance: admin.firestore.FieldValue.delete(),
+    }, { merge: true });
 }
+router.get('/api/activities/:activityId/streams', async (req, res) => {
+    try {
+        const activityId = parseInt(req.params.activityId);
+        if (isNaN(activityId)) {
+            return res.status(400).json({ error: 'Invalid activityId' });
+        }
+        const db = admin.firestore();
+        const streamDoc = await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').get();
+        let streamsData = null;
+        if (streamDoc.exists) {
+            const data = streamDoc.data();
+            if (data && data.latlng_json) {
+                streamsData = {
+                    latlng: JSON.parse(data.latlng_json),
+                    altitude: JSON.parse(data.altitude_json),
+                    time: JSON.parse(data.time_json),
+                    distance: JSON.parse(data.distance_json),
+                };
+            }
+            else if (data && data.latlng) {
+                // Fallback for legacy array format
+                streamsData = {
+                    latlng: data.latlng,
+                    altitude: data.altitude,
+                    time: data.time,
+                    distance: data.distance,
+                };
+            }
+        }
+        if (!streamsData) {
+            // Lazy fetch from Strava if missing
+            console.log(`Lazy fetching streams for activity ${activityId} from Strava...`);
+            const accessToken = await refreshStravaTokenIfNeeded();
+            const response = await fetch(`https://www.strava.com/api/v3/activities/${activityId}/streams?keys=latlng,altitude,time,distance&key_by_type=true`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+            if (!response.ok) {
+                return res.status(response.status).json({ error: `Failed to fetch streams from Strava: ${response.statusText}` });
+            }
+            const streams = (await response.json());
+            streamsData = {
+                latlng: (streams.latlng?.data || []),
+                altitude: (streams.altitude?.data || []),
+                time: (streams.time?.data || []),
+                distance: (streams.distance?.data || []),
+            };
+            // Cache to Firestore in the new JSON string format
+            await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').set({
+                latlng_json: JSON.stringify(streamsData.latlng),
+                altitude_json: JSON.stringify(streamsData.altitude),
+                time_json: JSON.stringify(streamsData.time),
+                distance_json: JSON.stringify(streamsData.distance),
+                fetched_at: admin.firestore.FieldValue.serverTimestamp(),
+                // Ensure old fields are removed if this was an update
+                latlng: admin.firestore.FieldValue.delete(),
+                altitude: admin.firestore.FieldValue.delete(),
+                time: admin.firestore.FieldValue.delete(),
+                distance: admin.firestore.FieldValue.delete(),
+            }, { merge: true });
+        }
+        res.status(200).json(streamsData);
+    }
+    catch (error) {
+        console.error('Error fetching streams:', error);
+        res.status(500).json({
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
 export { router };
 //# sourceMappingURL=router.js.map

@@ -20,6 +20,26 @@
       "collectionGroup": "streams",
       "fieldPath": "distance",
       "indexes": []
+    },
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "latlng_json",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "altitude_json",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "time_json",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "distance_json",
+      "indexes": []
     }
   ]
 }

@@ -164,37 +164,38 @@ export const TripDetail: React.FC = () => {
 
         // Fetch streams for each activity
         const streamsData: Record<number, ActivityStreams> = {};
+        const apiBaseUrl = getApiBaseUrl();
         for (const activity of activitiesData) {
-          const streamDoc = await getDoc(doc(db, 'activities', activity.id.toString(), 'streams', 'data'));
-          if (streamDoc.exists()) {
-            const data = streamDoc.data();
-            // Support both JSON string format and direct array format
-            let latlngRaw = data.latlng_json ? JSON.parse(data.latlng_json) : (data.latlng || []);
-            const altitude = data.altitude_json ? JSON.parse(data.altitude_json) : (data.altitude || []);
-            const time = data.time_json ? JSON.parse(data.time_json) : (data.time || []);
-            const distance = data.distance_json ? JSON.parse(data.distance_json) : (data.distance || []);
-            // Handle both nested and flat arrays from Firestore
-            const latlng: [number, number][] = [];
-            if (latlngRaw.length > 0) {
-              if (Array.isArray(latlngRaw[0])) {
-                latlng.push(...latlngRaw);
-              } else if (typeof latlngRaw[0] === 'object' && 'lat' in latlngRaw[0]) {
-                for (const p of latlngRaw) {
-                  latlng.push([p.lat, p.lng]);
-                }
-              } else {
-                for (let i = 0; i < latlngRaw.length; i += 2) {
-                  latlng.push([latlngRaw[i], latlngRaw[i+1]]);
+          try {
+            const response = await fetch(`${apiBaseUrl}/api/activities/${activity.id}/streams`);
+            if (response.ok) {
+              const data = await response.json();
+              // Support both nested and flat arrays from Firestore
+              const latlngRaw = data.latlng || [];
+              const latlng: [number, number][] = [];
+              if (latlngRaw.length > 0) {
+                if (Array.isArray(latlngRaw[0])) {
+                  latlng.push(...latlngRaw);
+                } else if (typeof latlngRaw[0] === 'object' && 'lat' in latlngRaw[0]) {
+                  for (const p of latlngRaw) {
+                    latlng.push([p.lat, p.lng]);
+                  }
+                } else {
+                  for (let i = 0; i < latlngRaw.length; i += 2) {
+                    latlng.push([latlngRaw[i], latlngRaw[i+1]]);
+                  }
                 }
               }
+              
+              streamsData[activity.id] = {
+                latlng,
+                altitude: data.altitude || [],
+                time: data.time || [],
+                distance: data.distance || [],
+              } as ActivityStreams;
             }
-            
-            streamsData[activity.id] = {
-              latlng,
-              altitude,
-              time,
-              distance,
-            } as ActivityStreams;
+          } catch (err) {
+            console.error(`Error fetching streams for activity ${activity.id}:`, err);
           }
         }
         setStreams(streamsData);

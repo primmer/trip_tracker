@@ -129,9 +129,17 @@ export async function getPickerSession(sessionId: string) {
   return await response.json();
 }
 
-export async function listPickedMediaItems(sessionId: string) {
+export interface MediaItem {
+  id: string;
+  baseUrl: string;
+  mimeType: string;
+  creationTime: string;
+  filename?: string;
+}
+
+export async function listPickedMediaItems(sessionId: string): Promise<MediaItem[]> {
   const accessToken = await refreshGoogleTokenIfNeeded();
-  let mediaItems: any[] = [];
+  let mediaItems: MediaItem[] = [];
   let pageToken: string | undefined;
 
   do {
