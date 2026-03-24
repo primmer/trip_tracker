@@ -1,0 +1,56 @@
+{
+  "featureId": "photos-picker-and-storage",
+  "reviewedAt": "2026-03-24T07:33:55Z",
+  "commitId": "c41cf28",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Core picker/storage flow is mostly present, but the implementation has multiple blocking defects: the process endpoint cannot reliably read JSON bodies, geolocation matching can crash for post-activity timestamps within buffer, and required width/height metadata is not persisted.",
+    "issues": [
+      {
+        "file": "functions/src/router.ts",
+        "line": 232,
+        "severity": "blocking",
+        "description": "`/api/photos/process-session` destructures `req.body` directly (`const { sessionId, tripId } = req.body`), but neither `functions/src/index.ts` nor `functions/src/dev-server.ts` registers `express.json()`. In local/dev-server execution this leaves `req.body` undefined, causing a runtime TypeError before validation and breaking photo processing."
+      },
+      {
+        "file": "functions/src/utils/geo.ts",
+        "line": 55,
+        "severity": "blocking",
+        "description": "Nearest-index calculation can select `low === absoluteTimes.length` for timestamps slightly after the last stream point but still within the 10-minute buffer. The subsequent destructure (`streams.latlng[index]`) can read out of bounds and throw, causing per-photo processing failures instead of returning the last coordinate or null."
+      },
+      {
+        "file": "functions/src/router.ts",
+        "line": 308,
+        "severity": "blocking",
+        "description": "Persisted photo metadata omits `width` and `height`, which are explicitly required by the feature description step (6). Current metadata includes `filename`, `storagePath`, `downloadUrl`, `createdAt`, `lat`, `lng`, `mimeType`, `syncedAt` only."
+      },
+      {
+        "file": "src/pages/TripDetail.tsx",
+        "line": 108,
+        "severity": "non_blocking",
+        "description": "Uses `alert(...)` for error handling, violating mission AGENTS.md convention to avoid blocking browser dialogs in favor of inline UI feedback."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "`fullstack-worker` procedure requires lint + full test execution and interactive checks, but this feature handoff reports only targeted tests/typecheck-build and zero interactive checks while still marking `followedProcedure: true`. Skill/feedback expectations are not aligned with what is practically executed.",
+      "evidence": "SKILL.md sections 'Run Validators' and 'Manual Verification' vs handoff `verification.commandsRun` (`cd functions && npx vitest run src/__tests__/geo.test.ts`, `npm run typecheck && cd functions && npm run build`) and `interactiveChecks: []` in handoff/transcript skeleton."
+    },
+    {
+      "area": "services",
+      "observation": "Shared service command catalog lacks backend-specific test/lint commands, which encourages partial validation for function-heavy features.",
+      "evidence": "`.factory/services.yaml` has `test: npx vitest run --reporter=verbose` and no `test:functions`/`lint:functions`; this feature used ad-hoc `cd functions && npx vitest run src/__tests__/geo.test.ts` from handoff."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Library schema guidance for trip photos omits `width`/`height`, which likely contributed to missing these required fields in implementation.",
+      "evidence": "`.factory/library/architecture.md` Firestore schema for `trips/{tripId}/photos/{photoId}` lists `storagePath, filename, createdAt, lat, lng, downloadUrl` but feature description requires width/height persistence."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed handoff, transcript skeleton, skill doc, and commit c41cf28. The feature is close but does not meet acceptance due to blocking backend/runtime defects and missing required metadata fields; report marked fail with concrete file/line issues and shared-state observations."
+}

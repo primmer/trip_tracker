@@ -1,0 +1,39 @@
+{
+  "featureId": "photo-map-markers-and-gallery",
+  "reviewedAt": "2026-03-24T07:33:30Z",
+  "commitId": "63196a7",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The feature implementation covers the required behavior: geolocated thumbnail markers via AdvancedMarkerElement, single InfoWindow selection, date-grouped chronological gallery, gallery/map toggle without remounting the map, and empty-state handling with null-geolocation photos excluded from markers. No blocking regressions were found in the reviewed diff.",
+    "issues": [
+      {
+        "file": "src/components/__tests__/PhotoGallery.test.tsx",
+        "line": 46,
+        "severity": "non_blocking",
+        "description": "Date heading assertions hard-code English locale output (e.g., 'Monday, March 23, 2026'), which can be flaky across locales/timezones. Prefer deterministic date-format mocking or assertions that do not depend on localized full strings."
+      },
+      {
+        "file": "src/components/PhotoGallery.tsx",
+        "line": 68,
+        "severity": "non_blocking",
+        "description": "Photo cards are click-only <div> elements without keyboard handlers/semantics, so gallery photo opening is not keyboard-accessible. Consider using a semantic <button> or adding keyboard interaction handlers and roles."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "fullstack-worker procedure and adherence reporting appear misaligned: transcript shows implementation edits before test creation and only targeted test execution, while SKILL.md requires TDD plus full-suite vitest and manual interactive checks.",
+      "evidence": "SKILL.md sections 'Write Tests First (TDD)', 'Run Validators' (npx vitest run --reporter=verbose), and 'Manual Verification'; transcript skeleton shows edits to PhotoMarkers/TripDetail before creating PhotoGallery.test.tsx, and handoff verification lists only targeted vitest with interactiveChecks: []."
+    },
+    {
+      "area": "conventions",
+      "observation": "Mission shared-state docs do not capture UI theme conventions, leading to style drift decisions in feature work.",
+      "evidence": "mission AGENTS.md and .factory/library/*.md contain no theme guidance; this feature introduced many light-theme classes (e.g., src/components/PhotoGallery.tsx:52,70,102 and src/pages/TripDetail.tsx:232,252-269), making conventions ambiguous for future workers."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review completed for photo-map-markers-and-gallery (commit 63196a7). Feature behavior is implemented correctly with no blocking defects; two non-blocking quality issues and two shared-state observations were recorded."
+}

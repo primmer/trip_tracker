@@ -33,15 +33,16 @@ trip-tracker/
 ```
 
 ## Data Flow
-1. **Strava Sync**: Cloud Function -> Strava API -> Firestore (activities, streams, trips)
+1. **Strava Sync**: Cloud Function -> Strava API -> Firestore (activities, trips)
 2. **Photo Attachment**: Picker API -> Download -> Firebase Storage + Firestore metadata
 3. **Frontend Display**: Firestore reads -> React state -> Map/Gallery rendering
 4. **Geolocation**: Photo timestamp -> match against Strava GPS stream -> lat/lng
 
 ## Firestore Schema
 - `trips/{tripId}` - hashtag, name, dateRange, activityIds
-- `activities/{activityId}` - Strava activity data + GPS streams
-- `trips/{tripId}/photos/{photoId}` - storagePath, filename, createdAt, lat, lng, downloadUrl
+- `activities/{activityId}` - Strava activity metadata (no large stream arrays)
+- `activities/{activityId}/streams/data` - `latlng_json`, `altitude_json`, `time_json`, `distance_json` (JSON strings)
+- `trips/{tripId}/photos/{photoId}` - storagePath, filename, createdAt, lat, lng, downloadUrl, width, height
 
 ## Key Patterns
 - All Strava/Google API calls go through Cloud Functions (secrets stay server-side)
