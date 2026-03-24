@@ -58,7 +58,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Content Section */}
-      <div ref={contentRef} className="bg-gray-900 min-h-screen">
+      <div ref={contentRef} className="bg-gray-900 min-h-screen pt-12">
         <Trips />
       </div>
     </div>

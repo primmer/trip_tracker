@@ -11,6 +11,7 @@ vi.mock('lucide-react', () => ({
   Calendar: () => <div data-testid="calendar-icon" />,
   AlertCircle: () => <div data-testid="alert-circle-icon" />,
   X: () => <div data-testid="x-icon" />,
+  Sparkles: () => <div data-testid="sparkles-icon" />,
 }));
 
 // Mock Firebase

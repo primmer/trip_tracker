@@ -89,13 +89,13 @@ export const ElevationChart: React.FC<ElevationChartProps> = ({
       </div>
 
       {/* Axes / Labels */}
-      <div className="absolute top-0 left-0 text-[9px] font-bold text-gray-500 bg-white/50 px-1 rounded pointer-events-none">
+      <div className="absolute top-0 left-0 text-[9px] font-bold text-gray-400 bg-gray-900/60 px-1 rounded pointer-events-none">
         {Math.round(metersToFeet(maxY)).toLocaleString()} ft / {Math.round(maxY).toLocaleString()} m
       </div>
-      <div className="absolute bottom-0 left-0 text-[9px] font-bold text-gray-500 bg-white/50 px-1 rounded pointer-events-none">
+      <div className="absolute bottom-0 left-0 text-[9px] font-bold text-gray-400 bg-gray-900/60 px-1 rounded pointer-events-none">
         {Math.round(metersToFeet(minY)).toLocaleString()} ft / {Math.round(minY).toLocaleString()} m
       </div>
-      <div className="absolute bottom-0 right-0 text-[9px] font-bold text-gray-500 bg-white/50 px-1 rounded pointer-events-none">
+      <div className="absolute bottom-0 right-0 text-[9px] font-bold text-gray-400 bg-gray-900/60 px-1 rounded pointer-events-none">
         {metersToMiles(maxX).toFixed(1)} mi / {metersToKm(maxX).toFixed(1)} km
       </div>
     </div>

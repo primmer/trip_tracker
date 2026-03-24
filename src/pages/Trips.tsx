@@ -84,25 +84,25 @@ export const Trips: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-900 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-white">Your Trips</h1>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <button
             onClick={handleEnhance}
             disabled={enhancing || syncing}
-            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:bg-purple-400 transition-colors"
+            className="flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 disabled:bg-purple-400 transition-all min-h-[44px] min-w-[44px] font-bold shadow-lg"
           >
-            <Sparkles className={`w-4 h-4 ${enhancing ? 'animate-pulse' : ''}`} />
-            {enhancing ? 'Enhancing...' : 'Enhance Titles'}
+            <Sparkles className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
+            <span>{enhancing ? 'Enhancing...' : 'Enhance Titles'}</span>
           </button>
           <button
             onClick={handleSync}
             disabled={syncing || enhancing}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-all min-h-[44px] min-w-[44px] font-bold shadow-lg"
           >
-            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Syncing...' : 'Sync with Strava'}
+            <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
+            <span>{syncing ? 'Syncing...' : 'Sync with Strava'}</span>
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { Trip, Activity, ActivityStreams } from '../types';
 import { Photo } from '../components/Map/PhotoMarkers';
 import { ChevronLeft, Calendar, Play, Pause, FastForward, ImagePlus, Loader2, Map as MapIcon, Grid } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { metersToFeet, metersToMiles, metersToKm, secondsToDuration } from '../utils/units';
 import { TripMap } from '../components/Map/TripMap';
 import { PhotoGallery } from '../components/PhotoGallery';
@@ -222,235 +223,264 @@ export const TripDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-screen bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error || !trip) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">{error || 'Trip not found'}</h2>
-        <Link to="/trips" className="text-blue-600 hover:underline">Back to Trips</Link>
+      <div className="max-w-7xl mx-auto px-4 py-12 text-center bg-gray-900 h-screen">
+        <h2 className="text-2xl font-bold text-white mb-4">{error || 'Trip not found'}</h2>
+        <Link to="/trips" className="text-blue-400 hover:underline">Back to Trips</Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <Link to="/trips" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ChevronLeft className="w-6 h-6" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {trip.hashtag ? `#${trip.hashtag}` : trip.name}
-            </h1>
-            <div className="flex items-center text-sm text-gray-500 gap-2">
-              <Calendar className="w-4 h-4" />
-              <span>
-                {new Date(trip.dateRange.start).toLocaleDateString()}
-                {trip.dateRange.start !== trip.dateRange.end && ` - ${new Date(trip.dateRange.end).toLocaleDateString()}`}
-              </span>
+    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-gray-900 text-gray-100">
+      <AnimatePresence mode="wait">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-900 border-b border-gray-800 px-4 py-4 flex items-center justify-between flex-shrink-0 z-30"
+        >
+          <div className="flex items-center gap-4">
+            <Link to="/trips" className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <ChevronLeft className="w-6 h-6" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {trip.hashtag ? `#${trip.hashtag}` : trip.name}
+              </h1>
+              <div className="flex items-center text-sm text-gray-400 gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>
+                  {new Date(trip.dateRange.start).toLocaleDateString()}
+                  {trip.dateRange.start !== trip.dateRange.end && ` - ${new Date(trip.dateRange.end).toLocaleDateString()}`}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200">
-            <button
-              onClick={() => setActiveView('map')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                activeView === 'map'
-                  ? 'bg-white text-blue-600 shadow-md'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <MapIcon className="w-4 h-4" />
-              <span>Map</span>
-            </button>
-            <button
-              onClick={() => setActiveView('gallery')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                activeView === 'gallery'
-                  ? 'bg-white text-blue-600 shadow-md'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Grid className="w-4 h-4" />
-              <span>Gallery</span>
-            </button>
-          </div>
-
-          <div className="h-8 w-px bg-gray-200 mx-2" />
-
-          {pickProgress && (
-            <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>{pickProgress}</span>
-            </div>
-          )}
-          <button
-            onClick={handleAddPhotos}
-            disabled={isPickingPhotos}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-bold shadow-md transition-all active:scale-95"
-          >
-            <ImagePlus className="w-5 h-5" />
-            <span>Add Photos</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content: Map/Gallery and Stats */}
-      <div className="flex flex-grow overflow-hidden relative">
-        <div className={`flex-grow bg-gray-200 relative ${activeView === 'gallery' ? 'hidden' : 'block'}`}>
-          <TripMap 
-            activityStreams={streams}
-            mapId="trip_map"
-            highlightedActivityId={activeActivityId}
-            animationState={animationState}
-            onAnimationComplete={() => setAnimationState(prev => ({ ...prev, isPlaying: false }))}
-            photos={photos}
-          />
           
-          {/* Overlay Day Navigation (if multi-day) */}
-          {activities.length > 1 && (
-            <div className="absolute top-4 left-4 z-20 flex gap-2 pointer-events-auto">
-              {activities.map((activity, index) => (
-                <button
-                  key={activity.id}
-                  onClick={() => setActiveActivityId(activity.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transition-all ${
-                    activeActivityId === activity.id
-                      ? 'bg-blue-600 text-white scale-105'
-                      : 'bg-white/90 text-gray-700 hover:bg-white backdrop-blur-sm'
-                  }`}
-                >
-                  Day {index + 1}
-                </button>
-              ))}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center bg-gray-800 p-1 rounded-xl shadow-inner border border-gray-700">
               <button
-                onClick={() => setActiveActivityId(null)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transition-all ${
-                  activeActivityId === null
-                    ? 'bg-blue-600 text-white scale-105'
-                    : 'bg-white/90 text-gray-700 hover:bg-white backdrop-blur-sm'
+                onClick={() => setActiveView('map')}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all min-h-[40px] ${
+                  activeView === 'map'
+                    ? 'bg-gray-700 text-blue-400 shadow-md'
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
-                All
+                <MapIcon className="w-4 h-4" />
+                <span>Map</span>
+              </button>
+              <button
+                onClick={() => setActiveView('gallery')}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all min-h-[40px] ${
+                  activeView === 'gallery'
+                    ? 'bg-gray-700 text-blue-400 shadow-md'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <Grid className="w-4 h-4" />
+                <span>Gallery</span>
               </button>
             </div>
-          )}
 
-          {/* Overlay Stats Panel */}
-          <div className="absolute bottom-6 right-6 z-10 w-80 max-h-[calc(100%-48px)] overflow-y-auto pointer-events-none">
-            {activities
-              .filter(a => activeActivityId === null || a.id === activeActivityId)
-              .map((activity) => {
-                const dayIndex = activities.findIndex(a => a.id === activity.id);
-                return (
-                  <div 
-                    key={activity.id} 
-                    className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-5 mb-4 pointer-events-auto border border-white/20 transition-all duration-300 transform"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-gray-900 text-base leading-tight">
-                        {activities.length > 1 ? `Day ${dayIndex + 1}: ` : ''}{activity.name}
-                      </h3>
-                      
-                      {/* Animation Controls */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => toggleSpeed()}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            animationState.speed > 1 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400 hover:text-gray-600'
-                          }`}
-                          title="Toggle Speed (1x/2x)"
-                        >
-                          <FastForward className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handlePlayPause(activity.id)}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            animationState.activityId === activity.id && animationState.isPlaying
-                              ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                              : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                          }`}
-                          title={animationState.activityId === activity.id && animationState.isPlaying ? 'Pause' : 'Play'}
-                        >
-                          {animationState.activityId === activity.id && animationState.isPlaying ? (
-                            <Pause className="w-5 h-5" />
-                          ) : (
-                            <Play className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-6">
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Distance</p>
-                        <div className="flex flex-col">
-                          <span className="text-lg font-bold text-gray-900 leading-none">
-                            {metersToMiles(activity.distance).toFixed(1)} <span className="text-xs font-medium text-gray-500">mi</span>
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {metersToKm(activity.distance).toFixed(1)} km
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Elevation</p>
-                        <div className="flex flex-col">
-                          <span className="text-lg font-bold text-gray-900 leading-none">
-                            {Math.round(metersToFeet(activity.total_elevation_gain)).toLocaleString()} <span className="text-xs font-medium text-gray-500">ft</span>
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {Math.round(activity.total_elevation_gain).toLocaleString()} m
-                          </span>
-                        </div>
-                      </div>
+            <div className="h-8 w-px bg-gray-800 mx-2 hidden sm:block" />
 
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Time</p>
-                        <p className="text-lg font-bold text-gray-900 leading-none">
-                          {secondsToDuration(activity.elapsed_time)}
-                        </p>
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Date</p>
-                        <p className="text-sm font-bold text-gray-900">
-                          {new Date(activity.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Elevation Chart */}
-                    {streams[activity.id] && streams[activity.id].altitude && (
-                      <div className="mt-4 pt-4 border-t border-gray-100">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Elevation Profile</p>
-                        <ElevationChart 
-                          distance={streams[activity.id].distance} 
-                          altitude={streams[activity.id].altitude} 
-                          height={80}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            {pickProgress && (
+              <div className="flex items-center gap-2 text-sm text-blue-400 font-medium hidden sm:flex">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>{pickProgress}</span>
+              </div>
+            )}
+            <button
+              onClick={handleAddPhotos}
+              disabled={isPickingPhotos}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-bold shadow-md transition-all active:scale-95 min-h-[44px]"
+            >
+              <ImagePlus className="w-5 h-5" />
+              <span className="hidden sm:inline">Add Photos</span>
+            </button>
           </div>
-        </div>
+        </motion.div>
+      </AnimatePresence>
 
-        {/* Gallery View */}
-        <div className={`flex-grow overflow-hidden ${activeView === 'gallery' ? 'block' : 'hidden'}`}>
-          <PhotoGallery photos={photos} onPhotoClick={setSelectedGalleryPhoto} />
-        </div>
+      {/* Main Content: Map/Gallery and Stats */}
+      <div className="flex flex-col flex-grow overflow-hidden relative">
+        <AnimatePresence mode="wait">
+          {activeView === 'map' ? (
+            <motion.div 
+              key="map-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col flex-grow overflow-hidden"
+            >
+              <div className="h-[75%] min-h-[400px] relative">
+                <TripMap 
+                  activityStreams={streams}
+                  mapId="trip_map"
+                  highlightedActivityId={activeActivityId}
+                  animationState={animationState}
+                  onAnimationComplete={() => setAnimationState(prev => ({ ...prev, isPlaying: false }))}
+                  photos={photos}
+                />
+                
+                {/* Overlay Day Navigation (if multi-day) */}
+                {activities.length > 1 && (
+                  <div className="absolute top-4 left-4 z-20 flex gap-2 pointer-events-auto">
+                    {activities.map((activity, index) => (
+                      <button
+                        key={activity.id}
+                        onClick={() => setActiveActivityId(activity.id)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                          activeActivityId === activity.id
+                            ? 'bg-blue-600 text-white scale-105'
+                            : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
+                        }`}
+                      >
+                        Day {index + 1}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setActiveActivityId(null)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                        activeActivityId === null
+                          ? 'bg-blue-600 text-white scale-105'
+                          : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
+                      }`}
+                    >
+                      All
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Stats Section below map */}
+              <div className="flex-grow bg-gray-950 overflow-y-auto p-6 border-t border-gray-800">
+                <div className="max-w-7xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activities
+                      .filter(a => activeActivityId === null || a.id === activeActivityId)
+                      .map((activity) => {
+                        const dayIndex = activities.findIndex(a => a.id === activity.id);
+                        return (
+                          <div 
+                            key={activity.id} 
+                            className="bg-gray-900 rounded-xl shadow-lg p-5 border border-gray-800 transition-all duration-300 hover:border-gray-700"
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="font-bold text-white text-base leading-tight">
+                                {activities.length > 1 ? `Day ${dayIndex + 1}: ` : ''}{activity.name}
+                              </h3>
+                              
+                              {/* Animation Controls */}
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => toggleSpeed()}
+                                  className={`p-2.5 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                                    animationState.speed > 1 ? 'bg-amber-900/40 text-amber-400' : 'bg-gray-800 text-gray-400 hover:text-gray-200'
+                                  }`}
+                                  title="Toggle Speed (1x/2x)"
+                                >
+                                  <FastForward className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => handlePlayPause(activity.id)}
+                                  className={`p-2.5 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                                    animationState.activityId === activity.id && animationState.isPlaying
+                                      ? 'bg-red-900/40 text-red-400 hover:bg-red-900/60'
+                                      : 'bg-blue-900/40 text-blue-400 hover:bg-blue-900/60'
+                                  }`}
+                                  title={animationState.activityId === activity.id && animationState.isPlaying ? 'Pause' : 'Play'}
+                                >
+                                  {animationState.activityId === activity.id && animationState.isPlaying ? (
+                                    <Pause className="w-6 h-6" />
+                                  ) : (
+                                    <Play className="w-6 h-6" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Distance</p>
+                                <div className="flex flex-col">
+                                  <span className="text-lg font-bold text-white leading-none">
+                                    {metersToMiles(activity.distance).toFixed(1)} <span className="text-xs font-medium text-gray-500">mi</span>
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {metersToKm(activity.distance).toFixed(1)} km
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Elevation</p>
+                                <div className="flex flex-col">
+                                  <span className="text-lg font-bold text-white leading-none">
+                                    {Math.round(metersToFeet(activity.total_elevation_gain)).toLocaleString()} <span className="text-xs font-medium text-gray-500">ft</span>
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {Math.round(activity.total_elevation_gain).toLocaleString()} m
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Time</p>
+                                <p className="text-lg font-bold text-white leading-none">
+                                  {secondsToDuration(activity.elapsed_time)}
+                                </p>
+                              </div>
+
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Date</p>
+                                <p className="text-sm font-bold text-white">
+                                  {new Date(activity.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Elevation Chart */}
+                            {streams[activity.id] && streams[activity.id].altitude && (
+                              <div className="mt-4 pt-4 border-t border-gray-800">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Elevation Profile</p>
+                                <ElevationChart 
+                                  distance={streams[activity.id].distance} 
+                                  altitude={streams[activity.id].altitude} 
+                                  height={60}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="gallery-view"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+              className="flex-grow overflow-hidden"
+            >
+              <PhotoGallery photos={photos} onPhotoClick={setSelectedGalleryPhoto} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Fullscreen Photo Overlay */}
         {selectedGalleryPhoto && (
