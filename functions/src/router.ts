@@ -5,6 +5,7 @@ import admin from 'firebase-admin';
 import { createPickerSession, getPickerSession, listPickedMediaItems } from './services/google.js';
 import { findNearestLatLng, sampleRoutePoints } from './utils/geo.js';
 import { reverseGeocode, searchNearby } from './services/maps.js';
+import { isGenericTitle } from './services/enhancer.js';
 
 const router = Router();
 
@@ -110,9 +111,18 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
         const activityData = activityDoc.data();
         if (!activityData) continue;
 
-        // Skip if already enhanced
-        if (activityData.enhanced_description) {
-          results.push({ id, status: 'skipped', reason: 'already enhanced' });
+        const title = activityData.name || '';
+        const isGeneric = isGenericTitle(title);
+
+        // Skip if already enhanced or has terminal marker
+        if (activityData.enhanced_description || activityData.enhancement_attempted) {
+          results.push({ id, status: 'skipped', reason: 'already enhanced or attempted' });
+          continue;
+        }
+
+        // Even with explicit activityId, skip non-generic titles
+        if (!isGeneric) {
+          results.push({ id, status: 'skipped', reason: 'not a generic title' });
           continue;
         }
 
@@ -165,7 +175,12 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
 
         const uniquePois = Array.from(new Set(allPois)).slice(0, 5);
         if (uniquePois.length === 0) {
-          results.push({ id, status: 'skipped', reason: 'no POIs found' });
+          // Terminal marker: persist enhancement_attempted if no POIs found
+          await db.collection('activities').doc(id).update({
+            enhancement_attempted: true,
+            enhancement_attempted_at: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          results.push({ id, status: 'skipped', reason: 'no POIs found, marked as attempted' });
           continue;
         }
 

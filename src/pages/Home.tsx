@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Trips } from './Trips';
+import heroImage from '../assets/hero-bike.png';
 
 export const Home: React.FC = () => {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -16,7 +17,7 @@ export const Home: React.FC = () => {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1541625602330-2277a4c46182?auto=format&fit=crop&q=80&w=1920"
+            src={heroImage}
             alt="Biking in the mountains"
             className="w-full h-full object-cover"
             onLoad={(e) => (e.currentTarget.style.opacity = '1')}
@@ -37,7 +38,7 @@ export const Home: React.FC = () => {
           <div className="mt-10">
             <button
               onClick={scrollToContent}
-              className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 transition-all transform hover:scale-105 shadow-xl"
+              className="inline-flex items-center px-8 py-3.5 border border-transparent text-base font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 transition-all transform hover:scale-105 shadow-xl min-h-[44px]"
             >
               View Trips
               <ChevronDown className="ml-2 w-5 h-5 animate-bounce" />

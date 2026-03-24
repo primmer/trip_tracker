@@ -99,7 +99,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick
                   </div>
 
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                    <button className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg transform scale-90 group-hover:scale-100 transition-transform min-h-[44px]">
                       View Large
                     </button>
                   </div>
