@@ -1,6 +1,6 @@
 {
   "milestone": "polish",
-  "round": 1,
+  "round": 2,
   "status": "fail",
   "validatorsRun": {
     "test": {
@@ -20,94 +20,63 @@
     }
   },
   "reviewsSummary": {
-    "total": 4,
+    "total": 1,
     "passed": 0,
-    "failed": 4,
+    "failed": 1,
     "failedFeatures": [
-      "splash-and-hero",
-      "enhanced-descriptions",
-      "ux-polish",
-      "cross-area-integration"
+      "fix-polish-scrutiny"
     ]
   },
   "blockingIssues": [
     {
-      "featureId": "splash-and-hero",
+      "featureId": "fix-polish-scrutiny",
       "severity": "blocking",
-      "description": "Hero image is hardcoded to an external Unsplash URL instead of a bundled static asset or first trip photo as required."
-    },
-    {
-      "featureId": "enhanced-descriptions",
-      "severity": "blocking",
-      "description": "Explicit activityId requests bypass the generic-title-only constraint, allowing enhancement of non-generic titles."
-    },
-    {
-      "featureId": "enhanced-descriptions",
-      "severity": "blocking",
-      "description": "No-POI activities are skipped without terminal persistence, allowing repeated Geocoding/Places recomputation and violating cost-control intent."
-    },
-    {
-      "featureId": "ux-polish",
-      "severity": "blocking",
-      "description": "Trip detail map/gallery segmented controls use 40px minimum height, below the required 44px touch target at tablet width."
+      "description": "Fullscreen overlay close button in src/pages/TripDetail.tsx remains below the >=44px touch target requirement at tablet width (still approximately 40px target)."
     },
     {
       "featureId": "cross-area-integration",
       "severity": "blocking",
-      "description": "Missing quantitative evidence for VAL-CROSS-004: no marker-to-route distance proof showing all markers within 500m."
+      "description": "VAL-CROSS-004 remains unresolved: no marker-to-route distance proof demonstrating all photo markers are within 500m of the route."
     },
     {
       "featureId": "cross-area-integration",
       "severity": "blocking",
-      "description": "Missing VAL-CROSS-008 end-to-end evidence for Add Photos -> Picker -> download -> marker + gallery verification in one session."
+      "description": "VAL-CROSS-008 remains unresolved: missing explicit Add Photos -> Picker -> download -> markers/gallery end-to-end evidence in one session."
     },
     {
       "featureId": "cross-area-integration",
       "severity": "blocking",
-      "description": "Missing VAL-CROSS-005 network evidence proving hard-refresh loads from Firebase without Strava or Google Photos API calls."
+      "description": "VAL-CROSS-005 remains unresolved: missing hard-refresh network proof showing Firebase-only reload with no Strava or Google Photos API calls."
     }
   ],
-  "appliedUpdates": [
-    {
-      "target": "library",
-      "description": "Updated .factory/library/architecture.md project structure to remove non-existent public/ directory reference.",
-      "sourceFeature": "splash-and-hero"
-    },
-    {
-      "target": "library",
-      "description": "Added local route-prefix guidance to .factory/library/user-testing.md to prefer /api/... and avoid accidental /api/api/... endpoint confusion.",
-      "sourceFeature": "enhanced-descriptions"
-    }
-  ],
+  "appliedUpdates": [],
   "suggestedGuidanceUpdates": [
     {
       "target": "fullstack-worker skill",
-      "suggestion": "Require explicit deviation logging when workers skip prescribed validation steps (typecheck/lint/vitest and agent-browser checks), and add a verification-only pathway if some feature classes intentionally differ.",
-      "evidence": "Multiple polish reviews reported handoffs marked followedProcedure=true while transcripts showed missing required steps (splash-and-hero, enhanced-descriptions, cross-area-integration).",
-      "isSystemic": true
-    },
-    {
-      "target": "AGENTS.md",
-      "suggestion": "Add enforceable guidance for dialog bans by requiring a lint rule (e.g., no-alert) or equivalent CI check to prevent alert/confirm/prompt regressions.",
-      "evidence": "Mission AGENTS bans browser dialogs, but review observations found alert() usage in active pages (Trips and TripDetail).",
+      "suggestion": "Enforce explicit deviation logging when required validation/manual steps are skipped (including required agent-browser checks), or provide a distinct verification-only procedure variant.",
+      "evidence": "Both cross-area-integration and fix-polish-scrutiny reviews observed handoffs marked followedProcedure=true without required agent-browser/manual evidence and without recorded deviations.",
       "isSystemic": true
     },
     {
       "target": "scrutiny/fullstack skill procedure",
-      "suggestion": "Add a pre-handoff check that recorded commitId resolves via git rev-parse/git show to prevent non-resolving full SHA metadata.",
-      "evidence": "cross-area-integration review found a handoff full commitId that did not resolve while short hash resolved.",
-      "isSystemic": false
+      "suggestion": "Add a mandatory pre-handoff commit-id validity check so recorded commit SHAs resolve via git show/git rev-parse before completion.",
+      "evidence": "Cross-area-integration and fix-polish-scrutiny handoffs both recorded non-resolving full SHAs while short hashes resolved.",
+      "isSystemic": true
     }
   ],
   "rejectedObservations": [
     {
-      "observation": "fullstack-worker procedure mismatch observation repeated across multiple reviews",
-      "reason": "duplicate"
+      "observation": "Route-prefix local endpoint ambiguity between /api/... and /api/api/...",
+      "reason": "already-documented"
     },
     {
-      "observation": "Implementation-before-tests noted as a required violation in enhanced-descriptions",
-      "reason": "ambiguous"
+      "observation": "Architecture docs listed non-existent public/ directory",
+      "reason": "already-documented"
+    },
+    {
+      "observation": "Suggestion to add no-alert lint guard in AGENTS/CI",
+      "reason": "duplicate"
     }
   ],
-  "previousRound": null
+  "previousRound": ".factory/validation/polish/scrutiny/synthesis.round1.json"
 }

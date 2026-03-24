@@ -1,0 +1,113 @@
+{
+  "milestone": "polish",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "cd /Users/primmer/trip_tracker && npx vitest run --reporter=verbose",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "npm --prefix /Users/primmer/trip_tracker run typecheck",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "npm --prefix /Users/primmer/trip_tracker run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 4,
+    "passed": 0,
+    "failed": 4,
+    "failedFeatures": [
+      "splash-and-hero",
+      "enhanced-descriptions",
+      "ux-polish",
+      "cross-area-integration"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "splash-and-hero",
+      "severity": "blocking",
+      "description": "Hero image is hardcoded to an external Unsplash URL instead of a bundled static asset or first trip photo as required."
+    },
+    {
+      "featureId": "enhanced-descriptions",
+      "severity": "blocking",
+      "description": "Explicit activityId requests bypass the generic-title-only constraint, allowing enhancement of non-generic titles."
+    },
+    {
+      "featureId": "enhanced-descriptions",
+      "severity": "blocking",
+      "description": "No-POI activities are skipped without terminal persistence, allowing repeated Geocoding/Places recomputation and violating cost-control intent."
+    },
+    {
+      "featureId": "ux-polish",
+      "severity": "blocking",
+      "description": "Trip detail map/gallery segmented controls use 40px minimum height, below the required 44px touch target at tablet width."
+    },
+    {
+      "featureId": "cross-area-integration",
+      "severity": "blocking",
+      "description": "Missing quantitative evidence for VAL-CROSS-004: no marker-to-route distance proof showing all markers within 500m."
+    },
+    {
+      "featureId": "cross-area-integration",
+      "severity": "blocking",
+      "description": "Missing VAL-CROSS-008 end-to-end evidence for Add Photos -> Picker -> download -> marker + gallery verification in one session."
+    },
+    {
+      "featureId": "cross-area-integration",
+      "severity": "blocking",
+      "description": "Missing VAL-CROSS-005 network evidence proving hard-refresh loads from Firebase without Strava or Google Photos API calls."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "description": "Updated .factory/library/architecture.md project structure to remove non-existent public/ directory reference.",
+      "sourceFeature": "splash-and-hero"
+    },
+    {
+      "target": "library",
+      "description": "Added local route-prefix guidance to .factory/library/user-testing.md to prefer /api/... and avoid accidental /api/api/... endpoint confusion.",
+      "sourceFeature": "enhanced-descriptions"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "fullstack-worker skill",
+      "suggestion": "Require explicit deviation logging when workers skip prescribed validation steps (typecheck/lint/vitest and agent-browser checks), and add a verification-only pathway if some feature classes intentionally differ.",
+      "evidence": "Multiple polish reviews reported handoffs marked followedProcedure=true while transcripts showed missing required steps (splash-and-hero, enhanced-descriptions, cross-area-integration).",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add enforceable guidance for dialog bans by requiring a lint rule (e.g., no-alert) or equivalent CI check to prevent alert/confirm/prompt regressions.",
+      "evidence": "Mission AGENTS bans browser dialogs, but review observations found alert() usage in active pages (Trips and TripDetail).",
+      "isSystemic": true
+    },
+    {
+      "target": "scrutiny/fullstack skill procedure",
+      "suggestion": "Add a pre-handoff check that recorded commitId resolves via git rev-parse/git show to prevent non-resolving full SHA metadata.",
+      "evidence": "cross-area-integration review found a handoff full commitId that did not resolve while short hash resolved.",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "fullstack-worker procedure mismatch observation repeated across multiple reviews",
+      "reason": "duplicate"
+    },
+    {
+      "observation": "Implementation-before-tests noted as a required violation in enhanced-descriptions",
+      "reason": "ambiguous"
+    }
+  ],
+  "previousRound": null
+}
