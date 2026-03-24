@@ -27,6 +27,7 @@ Testing surface: tools, URLs, setup steps, isolation notes, known quirks.
 - Port 5000 is taken by macOS AirPlay -- do not use
 - Firestore is a live instance; test data persists between sessions
 - Browser automation sessions may include unrelated tabs; collect evidence only from dedicated `localhost:5173`/`localhost:5001` tabs.
+- Functions dev server mounts routes at both `/api/*` and root for compatibility; prefer `/api/...` in frontend/tests to avoid accidental `/api/api/...` calls during manual curl checks.
 
 ## Test Data
 - Strava activity tagged `#otb` on 2026-03-15 (single ride)

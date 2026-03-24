@@ -1,0 +1,51 @@
+{
+  "featureId": "cross-area-integration",
+  "reviewedAt": "2026-03-24T08:36:49Z",
+  "commitId": "760670c670ce46849842f1f54497554d3101859c",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The feature handoff claims full cross-area integration verification, but required coverage is incomplete for key blocking assertions (spatial accuracy, photo-attachment e2e, and refresh network-source proof).",
+    "issues": [
+      {
+        "file": "/Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-24T08-31-27-190Z__cross-area-integration__4f3763a0-eb06-4d06-8607-c2cf557863da.json",
+        "line": 31,
+        "severity": "blocking",
+        "description": "Interactive checks do not provide the required marker-to-route distance evidence for VAL-CROSS-004 (within 500m). Validation contract requires coordinate/distance proof, but handoff only states qualitative map/gallery observations. See required assertion at validation-contract.md:199-201."
+      },
+      {
+        "file": "/Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-24T08-31-27-190Z__cross-area-integration__4f3763a0-eb06-4d06-8607-c2cf557863da.json",
+        "line": 31,
+        "severity": "blocking",
+        "description": "No explicit Add Photos -> Google Photos Picker -> download -> map markers + gallery verification is recorded for #otb. VAL-CROSS-008 requires this end-to-end flow in a single session with screenshot sequence evidence (validation-contract.md:215-217)."
+      },
+      {
+        "file": "/Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-24T08-31-27-190Z__cross-area-integration__4f3763a0-eb06-4d06-8607-c2cf557863da.json",
+        "line": 45,
+        "severity": "blocking",
+        "description": "Hard-refresh verification lacks required network evidence that no Strava or Google Photos API calls occurred on reload. VAL-CROSS-005 requires network-log proof of Firebase-only data loads (validation-contract.md:203-205)."
+      },
+      {
+        "file": "/Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-24T08-31-27-190Z__cross-area-integration__4f3763a0-eb06-4d06-8607-c2cf557863da.json",
+        "line": 6,
+        "severity": "non_blocking",
+        "description": "Handoff commitId does not resolve in git (`git show` fails for 760670c670ce46849842f1f54497554d3101859c). The resolvable commit is short hash 760670c -> 760670c764833b5d789304b079591928076a353c, which weakens traceability for automated review tooling."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "fullstack-worker procedure requires typecheck + lint + vitest, but this run recorded only vitest/curl while still marking followedProcedure=true with no deviations. Either the skill needs a verification-only variant or handoff guidance should require explicit deviations.",
+      "evidence": "/Users/primmer/trip_tracker/.factory/skills/fullstack-worker/SKILL.md:62-66 (required validators) vs /Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-24T08-31-27-190Z__cross-area-integration__4f3763a0-eb06-4d06-8607-c2cf557863da.json:14-27 (commandsRun) and :60-62 (skillFeedback)"
+    },
+    {
+      "area": "skills",
+      "observation": "No procedural check appears to enforce that handoff commitId is a resolvable full SHA before completion.",
+      "evidence": "/Users/primmer/.factory/missions/b37bfdb0-a19a-4ba3-9913-acdba761a2d3/handoffs/2026-03-24T08-31-27-190Z__cross-area-integration__4f3763a0-eb06-4d06-8607-c2cf557863da.json:6"
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review failed: core cross-area assertions were not fully evidenced in the handoff (spatial accuracy threshold, photo-attachment e2e, and refresh network-source proof). Commit traceability metadata is also inconsistent due to a non-resolving full commit hash."
+}

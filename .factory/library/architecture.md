@@ -27,7 +27,6 @@ trip-tracker/
 │   └── firebase.ts         # Firebase client initialization
 ├── functions/              # Cloud Functions backend
 │   └── src/                # Functions source (TypeScript)
-├── public/                 # Static assets
 ├── dist/                   # Vite build output
 └── firebase.json           # Firebase config
 ```
