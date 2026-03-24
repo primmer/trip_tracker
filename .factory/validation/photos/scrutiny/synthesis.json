@@ -1,7 +1,7 @@
 {
   "milestone": "photos",
-  "round": 1,
-  "status": "fail",
+  "round": 2,
+  "status": "pass",
   "validatorsRun": {
     "test": {
       "passed": true,
@@ -20,54 +20,26 @@
     }
   },
   "reviewsSummary": {
-    "total": 3,
-    "passed": 2,
-    "failed": 1,
-    "failedFeatures": [
-      "photos-picker-and-storage"
-    ]
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
   },
-  "blockingIssues": [
-    {
-      "featureId": "photos-picker-and-storage",
-      "severity": "blocking",
-      "description": "functions/src/router.ts:232 `/api/photos/process-session` destructures req.body without JSON body parsing middleware enabled, causing runtime failure when req.body is undefined."
-    },
-    {
-      "featureId": "photos-picker-and-storage",
-      "severity": "blocking",
-      "description": "functions/src/utils/geo.ts:55 nearest-index selection can go out of bounds for timestamps just after activity end (within buffer), causing per-photo processing failures."
-    },
-    {
-      "featureId": "photos-picker-and-storage",
-      "severity": "blocking",
-      "description": "functions/src/router.ts:308 persisted photo metadata omits required width/height fields."
-    }
-  ],
-  "appliedUpdates": [
-    {
-      "target": "library",
-      "description": "Updated .factory/library/architecture.md Firestore schema to document stream storage at activities/{activityId}/streams/data with *_json fields and photo metadata width/height fields.",
-      "sourceFeature": "fix-stream-storage-format"
-    }
-  ],
+  "blockingIssues": [],
+  "appliedUpdates": [],
   "suggestedGuidanceUpdates": [
     {
       "target": "skills",
-      "suggestion": "Align fullstack-worker SKILL.md enforcement with real validation expectations: either require explicit evidence for tests-first + interactive checks before allowing `followedProcedure: true`, or relax those mandatory steps when not applicable.",
-      "evidence": "Multiple photo milestone reviews reported `followedProcedure: true` while handoffs lacked interactive checks and full-scope validator evidence, indicating systemic mismatch between skill requirements and actual worker behavior.",
+      "suggestion": "Align fullstack-worker skill adherence criteria with reporting expectations: require explicit manual verification evidence when interactive checks are mandatory, or relax the requirement when a feature cannot reasonably provide UI interaction evidence.",
+      "evidence": "Across multiple photos milestone reviews (photos-picker-and-storage, fix-stream-storage-format, fix-photos-scrutiny), workers marked followedProcedure=true while handoffs repeatedly contained empty interactiveChecks despite skill-level requirements for manual verification.",
       "isSystemic": true
     }
   ],
   "rejectedObservations": [
     {
-      "observation": "Mission AGENTS.md should add dark-theme guidance to prevent style drift.",
-      "reason": "already-documented"
-    },
-    {
-      "observation": "Add backend-specific test/lint commands to services.yaml.",
+      "observation": "Add backend-specific validator commands to .factory/services.yaml.",
       "reason": "ambiguous"
     }
   ],
-  "previousRound": null
+  "previousRound": ".factory/validation/photos/scrutiny/synthesis.round1.json"
 }
