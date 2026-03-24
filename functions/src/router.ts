@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { refreshStravaTokenIfNeeded } from './services/strava.js';
 import { groupActivitiesIntoTrips, type Activity, type ActivityStreams } from './utils/trips.js';
 import admin from 'firebase-admin';
@@ -6,6 +6,9 @@ import { createPickerSession, getPickerSession, listPickedMediaItems } from './s
 import { findNearestLatLng } from './utils/geo.js';
 
 const router = Router();
+
+// Add JSON body parsing middleware for all routes in this router
+router.use(express.json());
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -333,6 +336,8 @@ router.post('/api/photos/process-session', async (req, res) => {
           createdAt: item.creationTime,
           lat,
           lng,
+          width: item.mediaMetadata?.width ? parseInt(item.mediaMetadata.width) : null,
+          height: item.mediaMetadata?.height ? parseInt(item.mediaMetadata.height) : null,
           mimeType: item.mimeType,
           syncedAt: admin.firestore.FieldValue.serverTimestamp(),
         };

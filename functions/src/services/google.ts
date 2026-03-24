@@ -135,6 +135,12 @@ export interface MediaItem {
   mimeType: string;
   creationTime: string;
   filename?: string;
+  mediaMetadata?: {
+    width: string;
+    height: string;
+    video?: Record<string, unknown>;
+    photo?: Record<string, unknown>;
+  };
 }
 
 export async function listPickedMediaItems(sessionId: string): Promise<MediaItem[]> {

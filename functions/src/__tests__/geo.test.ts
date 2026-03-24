@@ -32,6 +32,12 @@ describe('findNearestLatLng', () => {
     expect(result).toEqual({ lat: 37.7749, lng: -122.4194 });
   });
 
+  it('handles timestamp just after activity within buffer', () => {
+    const photoTime = '2026-03-15T10:05:00Z'; // +3min (activity ends at 10:02:00)
+    const result = findNearestLatLng(photoTime, activityStartDate, streams);
+    expect(result).toEqual({ lat: 37.7751, lng: -122.4196 });
+  });
+
   it('returns null for timestamp far before activity', () => {
     const photoTime = '2026-03-15T09:40:00Z'; // -20min
     const result = findNearestLatLng(photoTime, activityStartDate, streams);

@@ -52,9 +52,18 @@ export function findNearestLatLng(
   }
   
   // After binary search, low/high are the bounding indices
-  const index = high < 0 ? 0 : high >= absoluteTimes.length ? absoluteTimes.length - 1 : 
-                (photoTime - absoluteTimes[high] < absoluteTimes[low] - photoTime ? high : low);
+  let index: number;
+  if (high < 0) {
+    index = 0;
+  } else if (low >= absoluteTimes.length) {
+    index = absoluteTimes.length - 1;
+  } else {
+    index = (photoTime - absoluteTimes[high] < absoluteTimes[low] - photoTime) ? high : low;
+  }
                 
-  const [lat, lng] = streams.latlng[index];
+  const coord = streams.latlng[index];
+  if (!coord) return null;
+
+  const [lat, lng] = coord;
   return { lat, lng };
 }
