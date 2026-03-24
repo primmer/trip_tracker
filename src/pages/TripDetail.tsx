@@ -496,8 +496,12 @@ export const TripDetail: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               />
               <button 
-                className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full transition-colors"
-                onClick={() => setSelectedGalleryPhoto(null)}
+                className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2.5 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center z-[110]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedGalleryPhoto(null);
+                }}
+                aria-label="Close fullscreen view"
               >
                 <ChevronLeft className="w-6 h-6 rotate-180" />
               </button>
