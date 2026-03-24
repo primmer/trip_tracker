@@ -1,4 +1,25 @@
 {
   "indexes": [],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "latlng",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "altitude",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "time",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "streams",
+      "fieldPath": "distance",
+      "indexes": []
+    }
+  ]
 }
