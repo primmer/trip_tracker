@@ -2,18 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Trip } from '../types';
-import { RefreshCw, MapPin, Calendar, Sparkles, X } from 'lucide-react';
+import { MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getApiBaseUrl } from '../utils/api';
-import { ErrorBanner } from '../components/ErrorBanner';
 
 export const Trips: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [enhancing, setEnhancing] = useState(false);
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const [enhanceSuccess, setEnhanceSuccess] = useState<string | null>(null);
 
   const fetchTrips = async () => {
     setLoading(true);
@@ -36,46 +30,6 @@ export const Trips: React.FC = () => {
     fetchTrips();
   }, []);
 
-  const handleSync = async () => {
-    setSyncing(true);
-    setSyncError(null);
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/strava/sync`, {
-        method: 'POST',
-      });
-      if (!response.ok) throw new Error('Sync failed');
-      await fetchTrips();
-    } catch (error) {
-      console.error('Error syncing:', error);
-      setSyncError('Failed to sync with Strava. Please check your connection and try again.');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleEnhance = async () => {
-    setEnhancing(true);
-    setSyncError(null);
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/activities/enhance-descriptions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      });
-      if (!response.ok) throw new Error('Enhancement failed');
-      const data = await response.json();
-      setEnhanceSuccess(data.message || 'Enhancement complete!');
-      await fetchTrips();
-    } catch (error) {
-      console.error('Error enhancing:', error);
-      setSyncError('Failed to enhance descriptions. Please check your connection and try again.');
-    } finally {
-      setEnhancing(false);
-    }
-  };
-
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
@@ -88,54 +42,7 @@ export const Trips: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-900 min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-white">Your Trips</h1>
-        <div className="flex flex-wrap gap-4">
-          <button
-            onClick={handleEnhance}
-            disabled={enhancing || syncing}
-            className="flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 disabled:bg-purple-400 transition-all min-h-[44px] min-w-[44px] font-bold shadow-lg"
-          >
-            <Sparkles className={`w-5 h-5 ${enhancing ? 'animate-pulse' : ''}`} />
-            <span>{enhancing ? 'Enhancing...' : 'Enhance Titles'}</span>
-          </button>
-          <button
-            onClick={handleSync}
-            disabled={syncing || enhancing}
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-all min-h-[44px] min-w-[44px] font-bold shadow-lg"
-          >
-            <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
-            <span>{syncing ? 'Syncing...' : 'Sync with Strava'}</span>
-          </button>
-        </div>
       </div>
-
-      {syncError && (
-        <ErrorBanner 
-          message={syncError} 
-          onDismiss={() => setSyncError(null)} 
-        />
-      )}
-
-      {enhanceSuccess && (
-        <div className="bg-green-900/20 border-l-4 border-green-500 p-4 mb-6 flex justify-between items-start animate-in fade-in slide-in-from-top duration-300 rounded-r-md">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <Sparkles className="h-5 w-5 text-green-500" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-green-200 font-medium">
-                {enhanceSuccess}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setEnhanceSuccess(null)}
-            className="ml-auto pl-3 text-green-400 hover:text-green-300 transition-colors"
-          >
-            <span className="sr-only">Dismiss</span>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-64" role="status">

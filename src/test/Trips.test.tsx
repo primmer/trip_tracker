@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Trips } from '../pages/Trips';
 import { MemoryRouter } from 'react-router-dom';
 import * as firestore from 'firebase/firestore';
@@ -105,55 +105,5 @@ describe('Trips Page', () => {
     await waitFor(() => {
       expect(screen.getByText(/no trips yet/i)).toBeInTheDocument();
     });
-  });
-
-  it('triggers sync when button is clicked', async () => {
-    render(
-      <MemoryRouter>
-        <Trips />
-      </MemoryRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    });
-
-    const syncButton = screen.getByRole('button', { name: /sync with strava/i });
-    fireEvent.click(syncButton);
-
-    expect(screen.getByText(/syncing.../i)).toBeInTheDocument();
-    expect(syncButton).toBeDisabled();
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
-    });
-  });
-
-  it('shows error banner when sync fails', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-    } as Response);
-
-    render(
-      <MemoryRouter>
-        <Trips />
-      </MemoryRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    });
-
-    const syncButton = screen.getByRole('button', { name: /sync with strava/i });
-    fireEvent.click(syncButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/failed to sync with strava/i)).toBeInTheDocument();
-    });
-
-    const dismissButton = screen.getByLabelText(/dismiss error/i);
-    fireEvent.click(dismissButton);
-
-    expect(screen.queryByText(/failed to sync with strava/i)).not.toBeInTheDocument();
   });
 });

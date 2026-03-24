@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Settings } from 'lucide-react';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -50,6 +51,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 className="text-gray-400 hover:text-white px-4 py-2 text-sm font-medium transition-colors min-h-[44px] flex items-center"
               >
                 Trips
+              </Link>
+              <Link
+                to="/admin"
+                className="text-gray-400 hover:text-white px-2 py-2 text-sm font-medium transition-colors min-h-[44px] flex items-center"
+                title="Admin Dashboard"
+              >
+                <Settings className="w-5 h-5" />
               </Link>
             </nav>
           </div>

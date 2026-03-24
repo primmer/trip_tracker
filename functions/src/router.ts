@@ -220,6 +220,107 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
   }
 });
 
+async function enhanceActivity(id: string, db: admin.firestore.Firestore): Promise<string | null> {
+  try {
+    const activityDoc = await db.collection('activities').doc(id).get();
+    if (!activityDoc.exists) return null;
+
+    const activityData = activityDoc.data();
+    if (!activityData) return null;
+
+    const title = activityData.name || '';
+    const isGeneric = isGenericTitle(title);
+
+    // Skip if already enhanced or has terminal marker
+    if (activityData.enhanced_description || activityData.enhancement_attempted) {
+      return null;
+    }
+
+    // Skip non-generic titles
+    if (!isGeneric) {
+      return null;
+    }
+
+    // Load streams
+    const streamDoc = await db.collection('activities').doc(id).collection('streams').doc('data').get();
+    if (!streamDoc.exists) {
+      return null;
+    }
+
+    const streamData = streamDoc.data();
+    if (!streamData || !streamData.latlng_json) {
+      return null;
+    }
+
+    const streams: ActivityStreams = {
+      latlng: JSON.parse(streamData.latlng_json),
+      altitude: JSON.parse(streamData.altitude_json),
+      time: JSON.parse(streamData.time_json),
+      distance: JSON.parse(streamData.distance_json),
+    };
+
+    const samplePoints = sampleRoutePoints(streams);
+    const allPois: string[] = [];
+
+    // Geocoding and Places calls (MAX 3 each as per samplePoints)
+    for (const point of samplePoints) {
+      // Reverse geocode
+      const geocode = await reverseGeocode(point.lat, point.lng);
+      if (geocode) {
+        const area = geocode.address_components.find(c => 
+          c.types.includes('neighborhood') || 
+          c.types.includes('sublocality') ||
+          c.types.includes('locality') ||
+          c.types.includes('natural_feature') ||
+          c.types.includes('park')
+        );
+        if (area) allPois.push(area.long_name);
+      }
+
+      // Nearby search
+      const places = await searchNearby(point.lat, point.lng);
+      for (const place of places) {
+        if (place.displayName?.text) {
+          allPois.push(place.displayName.text);
+        }
+      }
+    }
+
+    const uniquePois = Array.from(new Set(allPois)).slice(0, 5);
+    if (uniquePois.length === 0) {
+      // Terminal marker: persist enhancement_attempted if no POIs found
+      await db.collection('activities').doc(id).update({
+        enhancement_attempted: true,
+        enhancement_attempted_at: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return null;
+    }
+
+    let enhancedTitle = '';
+    if (uniquePois.length >= 2) {
+      enhancedTitle = `Ride through ${uniquePois[0]} and ${uniquePois[1]}`;
+    } else {
+      enhancedTitle = `Ride near ${uniquePois[0]}`;
+    }
+
+    // Update Firestore
+    await db.collection('activities').doc(id).update({
+      enhanced_description: {
+        title: enhancedTitle,
+        original_title: activityData.name,
+        pois: uniquePois,
+        enhanced_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      name: enhancedTitle, 
+    });
+
+    return enhancedTitle;
+  } catch (err) {
+    console.error(`Error enhancing activity ${id}:`, err);
+    return null;
+  }
+}
+
 router.post('/api/strava/sync', async (req, res) => {
   try {
     const accessToken = await refreshStravaTokenIfNeeded();
@@ -329,6 +430,15 @@ router.post('/api/strava/sync', async (req, res) => {
       }
     }
 
+    // 4. Automatically enhance generic titles for NEWLY synced activities
+    let enhancedCount = 0;
+    for (const activity of detailedActivities) {
+      if (isGenericTitle(activity.name)) {
+        const enhancedTitle = await enhanceActivity(activity.id.toString(), db);
+        if (enhancedTitle) enhancedCount++;
+      }
+    }
+
     const hasCriticalFailures = (allStravaActivities.length > 0 && activitiesSaved === 0) || 
                                (trips.length > 0 && tripsSaved === 0);
     
@@ -342,6 +452,7 @@ router.post('/api/strava/sync', async (req, res) => {
       activities_failed: activitiesFailed,
       trips_saved: tripsSaved,
       trips_failed: tripsFailed,
+      enhanced_count: enhancedCount,
     });
   } catch (error) {
     console.error('Error syncing with Strava:', error);
