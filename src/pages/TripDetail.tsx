@@ -4,11 +4,12 @@ import { doc, getDoc, collection, getDocs, query, where, documentId } from 'fire
 import { db } from '../firebase';
 import { Trip, Activity, ActivityStreams } from '../types';
 import { Photo } from '../components/Map/PhotoMarkers';
-import { ChevronLeft, Calendar, Play, Pause, FastForward, ImagePlus, Loader2, Map as MapIcon, Grid } from 'lucide-react';
+import { ChevronLeft, Calendar, Play, Pause, FastForward, ImagePlus, Loader2, Map as MapIcon, Grid, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { metersToFeet, metersToMiles, metersToKm, secondsToDuration } from '../utils/units';
 import { TripMap } from '../components/Map/TripMap';
 import { PhotoGallery } from '../components/PhotoGallery';
+import { ErrorBanner } from '../components/ErrorBanner';
 import { ElevationChart } from '../components/ElevationChart';
 import { getApiBaseUrl } from '../utils/api';
 
@@ -34,6 +35,9 @@ export const TripDetail: React.FC = () => {
   const [pickProgress, setPickProgress] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'map' | 'gallery'>('map');
   const [selectedGalleryPhoto, setSelectedGalleryPhoto] = useState<Photo | null>(null);
+  const [fetchingStreams, setFetchingStreams] = useState<Record<number, boolean>>({});
+  const [streamErrors, setStreamErrors] = useState<Record<number, string | null>>({});
+  const [addPhotoError, setAddPhotoError] = useState<string | null>(null);
 
   const handleAddPhotos = async () => {
     if (!tripId) return;
@@ -109,7 +113,7 @@ export const TripDetail: React.FC = () => {
 
     } catch (err) {
       console.error('Error adding photos:', err);
-      alert(err instanceof Error ? err.message : 'Failed to add photos');
+      setAddPhotoError(err instanceof Error ? err.message : 'Failed to add photos');
       setIsPickingPhotos(false);
       setPickProgress(null);
     }
@@ -167,6 +171,8 @@ export const TripDetail: React.FC = () => {
         const streamsData: Record<number, ActivityStreams> = {};
         const apiBaseUrl = getApiBaseUrl();
         for (const activity of activitiesData) {
+          setFetchingStreams(prev => ({ ...prev, [activity.id]: true }));
+          setStreamErrors(prev => ({ ...prev, [activity.id]: null }));
           try {
             const response = await fetch(`${apiBaseUrl}/api/activities/${activity.id}/streams`);
             if (response.ok) {
@@ -194,9 +200,36 @@ export const TripDetail: React.FC = () => {
                 time: data.time || [],
                 distance: data.distance || [],
               } as ActivityStreams;
+            } else {
+              // Try falling back to reading directly from Firestore if API fails
+              console.log(`API failed for activity ${activity.id}, falling back to Firestore...`);
+              const streamDoc = await getDoc(doc(db, 'activities', activity.id.toString(), 'streams', 'data'));
+              if (streamDoc.exists()) {
+                const data = streamDoc.data();
+                if (data.latlng_json) {
+                  streamsData[activity.id] = {
+                    latlng: JSON.parse(data.latlng_json),
+                    altitude: JSON.parse(data.altitude_json),
+                    time: JSON.parse(data.time_json),
+                    distance: JSON.parse(data.distance_json),
+                  } as ActivityStreams;
+                } else if (data.latlng) {
+                  streamsData[activity.id] = {
+                    latlng: data.latlng,
+                    altitude: data.altitude,
+                    time: data.time,
+                    distance: data.distance,
+                  } as ActivityStreams;
+                }
+              } else {
+                throw new Error(`Failed to fetch streams: ${response.statusText}`);
+              }
             }
           } catch (err) {
             console.error(`Error fetching streams for activity ${activity.id}:`, err);
+            setStreamErrors(prev => ({ ...prev, [activity.id]: err instanceof Error ? err.message : 'Failed to load route data' }));
+          } finally {
+            setFetchingStreams(prev => ({ ...prev, [activity.id]: false }));
           }
         }
         setStreams(streamsData);
@@ -239,7 +272,7 @@ export const TripDetail: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-gray-900 text-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100">
       <AnimatePresence mode="wait">
         {/* Header */}
         <motion.div 
@@ -309,10 +342,19 @@ export const TripDetail: React.FC = () => {
             </button>
           </div>
         </motion.div>
+
+        {addPhotoError && (
+          <div className="px-4 py-2 bg-gray-900 z-30">
+            <ErrorBanner 
+              message={addPhotoError} 
+              onDismiss={() => setAddPhotoError(null)} 
+            />
+          </div>
+        )}
       </AnimatePresence>
 
       {/* Main Content: Map/Gallery and Stats */}
-      <div className="flex flex-col flex-grow overflow-hidden relative">
+      <div className="flex flex-col flex-grow relative">
         <AnimatePresence mode="wait">
           {activeView === 'map' ? (
             <motion.div 
@@ -321,9 +363,9 @@ export const TripDetail: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col flex-grow overflow-hidden"
+              className="flex flex-col flex-grow"
             >
-              <div className="h-[75%] min-h-[400px] relative">
+              <div className="h-[60vh] min-h-[400px] relative">
                 <TripMap 
                   activityStreams={streams}
                   mapId="trip_map"
@@ -364,7 +406,7 @@ export const TripDetail: React.FC = () => {
               </div>
 
               {/* Stats Section below map */}
-              <div className="flex-grow bg-gray-950 overflow-y-auto p-6 border-t border-gray-800">
+              <div className="flex-grow bg-gray-950 p-6 border-t border-gray-800">
                 <div className="max-w-7xl mx-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {activities
@@ -459,6 +501,20 @@ export const TripDetail: React.FC = () => {
                                   altitude={streams[activity.id].altitude} 
                                   height={60}
                                 />
+                              </div>
+                            )}
+
+                            {fetchingStreams[activity.id] && (
+                              <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-center gap-2 text-blue-400">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span className="text-xs font-medium">Loading route data...</span>
+                              </div>
+                            )}
+
+                            {streamErrors[activity.id] && (
+                              <div className="mt-4 pt-4 border-t border-gray-800 flex items-center gap-2 text-red-400">
+                                <AlertCircle className="w-4 h-4" />
+                                <span className="text-xs font-medium">{streamErrors[activity.id]}</span>
                               </div>
                             )}
                           </div>

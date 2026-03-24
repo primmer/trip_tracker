@@ -44,6 +44,7 @@ export const TripMap: React.FC<TripMapProps> = ({
       gestureHandling="greedy"
       disableDefaultUI={false}
     >
+      <MapTypeIdEnforcer />
       <RoutePolylines 
         activityStreams={activityStreams} 
         highlightedActivityId={highlightedActivityId} 
@@ -84,6 +85,21 @@ export const TripMap: React.FC<TripMapProps> = ({
       )}
     </Map>
   );
+};
+
+const MapTypeIdEnforcer: React.FC = () => {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    const enforcer = () => {
+      if (map.getMapTypeId() !== 'hybrid') {
+        map.setMapTypeId('hybrid');
+      }
+    };
+    const listener = map.addListener('maptypeid_changed', enforcer);
+    return () => google.maps.event.removeListener(listener);
+  }, [map]);
+  return null;
 };
 
 const RoutePolylines: React.FC<{ 

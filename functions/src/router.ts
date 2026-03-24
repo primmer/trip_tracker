@@ -220,7 +220,7 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
   }
 });
 
-router.post('/strava/sync', async (req, res) => {
+router.post('/api/strava/sync', async (req, res) => {
   try {
     const accessToken = await refreshStravaTokenIfNeeded();
     

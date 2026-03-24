@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Trip } from '../types';
-import { RefreshCw, MapPin, Calendar, Sparkles } from 'lucide-react';
+import { RefreshCw, MapPin, Calendar, Sparkles, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getApiBaseUrl } from '../utils/api';
 import { ErrorBanner } from '../components/ErrorBanner';
@@ -13,6 +13,7 @@ export const Trips: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [enhanceSuccess, setEnhanceSuccess] = useState<string | null>(null);
 
   const fetchTrips = async () => {
     setLoading(true);
@@ -65,7 +66,7 @@ export const Trips: React.FC = () => {
       });
       if (!response.ok) throw new Error('Enhancement failed');
       const data = await response.json();
-      alert(data.message || 'Enhancement complete!');
+      setEnhanceSuccess(data.message || 'Enhancement complete!');
       await fetchTrips();
     } catch (error) {
       console.error('Error enhancing:', error);
@@ -112,6 +113,28 @@ export const Trips: React.FC = () => {
           message={syncError} 
           onDismiss={() => setSyncError(null)} 
         />
+      )}
+
+      {enhanceSuccess && (
+        <div className="bg-green-900/20 border-l-4 border-green-500 p-4 mb-6 flex justify-between items-start animate-in fade-in slide-in-from-top duration-300 rounded-r-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Sparkles className="h-5 w-5 text-green-500" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-green-200 font-medium">
+                {enhanceSuccess}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setEnhanceSuccess(null)}
+            className="ml-auto pl-3 text-green-400 hover:text-green-300 transition-colors"
+          >
+            <span className="sr-only">Dismiss</span>
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       )}
 
       {loading ? (
