@@ -14,20 +14,24 @@ interface SyncResult {
 }
 
 export const Admin: React.FC = () => {
-  const [syncing, setSyncing] = useState(false);
+  const [syncing, setSyncing] = useState<false | 'quick' | 'full'>(false);
   const [syncStep, setSyncStep] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSync = async () => {
-    setSyncing(true);
-    setSyncStep('Fetching activities from Strava...');
+  const handleSync = async (mode: 'quick' | 'full' = 'quick') => {
+    setSyncing(mode);
+    setSyncStep(mode === 'quick' ? 'Quick syncing new activities...' : 'Full re-syncing all activities...');
     setSyncResult(null);
     setError(null);
 
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/strava/sync`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mode }),
       });
 
       if (!response.ok) {
@@ -52,25 +56,41 @@ export const Admin: React.FC = () => {
       <h1 className="text-3xl font-bold text-white mb-8">Admin Dashboard</h1>
 
       <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
           <div>
             <h2 className="text-xl font-bold text-white">Strava Synchronization</h2>
-            <p className="text-gray-400 text-sm mt-1">
-              Fetch new activities, group them into trips, and auto-enhance titles.
+            <p className="text-gray-400 text-sm mt-1 max-w-md">
+              <strong className="text-gray-300">Quick Sync</strong> picks up new rides only.
+              <br />
+              <strong className="text-gray-300">Full Sync</strong> re-fetches all descriptions and re-groups all trips.
             </p>
           </div>
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-all font-bold shadow-lg min-h-[44px]"
-          >
-            {syncing ? (
-              <RefreshCw className="w-5 h-5 animate-spin" />
-            ) : (
-              <RefreshCw className="w-5 h-5" />
-            )}
-            <span>{syncing ? 'Syncing...' : 'Start Full Sync'}</span>
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => handleSync('quick')}
+              disabled={!!syncing}
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-all font-bold shadow-lg min-h-[44px] flex-1"
+            >
+              {syncing === 'quick' ? (
+                <RefreshCw className="w-5 h-5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-5 h-5" />
+              )}
+              <span>{syncing === 'quick' ? 'Syncing...' : 'Quick Sync'}</span>
+            </button>
+            <button
+              onClick={() => handleSync('full')}
+              disabled={!!syncing}
+              className="flex items-center justify-center gap-2 bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-600 border border-gray-600 disabled:bg-gray-800 transition-all font-bold shadow-lg min-h-[44px] flex-1"
+            >
+              {syncing === 'full' ? (
+                <RefreshCw className="w-5 h-5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-5 h-5" />
+              )}
+              <span>{syncing === 'full' ? 'Syncing...' : 'Full Sync'}</span>
+            </button>
+          </div>
         </div>
 
         {syncing && syncStep && (

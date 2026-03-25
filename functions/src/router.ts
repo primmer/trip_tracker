@@ -323,6 +323,9 @@ async function enhanceActivity(id: string, db: admin.firestore.Firestore): Promi
 
 router.post('/api/strava/sync', async (req, res) => {
   try {
+    const { mode = 'quick' } = req.body;
+    const isFullSync = mode === 'full';
+    
     const accessToken = await refreshStravaTokenIfNeeded();
     
     // 1. Fetch ALL activities from Strava via pagination
@@ -359,55 +362,70 @@ router.post('/api/strava/sync', async (req, res) => {
     
     const db = admin.firestore();
 
-    for (let i = 0; i < allStravaActivities.length; i++) {
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < allStravaActivities.length; i += BATCH_SIZE) {
       if (rateLimitReached) break;
 
-      const summary = allStravaActivities[i];
-      try {
-        // Check if we already have this activity with a description in Firestore
-        const doc = await db.collection('activities').doc(summary.id.toString()).get();
-        let detailed: Activity | Record<string, unknown> | undefined;
-        
-        if (doc.exists && doc.data()?.description !== undefined && doc.data()?.description !== null) {
-          console.log(`Activity ${summary.id} already has description in Firestore. Skipping detail fetch.`);
-          detailed = doc.data() as Activity;
-        } else {
-          console.log(`Fetching detailed activity ${summary.id} (${i + 1}/${allStravaActivities.length})...`);
-          detailed = await fetchDetailedActivity(summary.id, accessToken);
+      const batch = allStravaActivities.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(async (summary, batchIndex) => {
+        try {
+          // Check if we already have this activity with a description in Firestore
+          const doc = await db.collection('activities').doc(summary.id.toString()).get();
+          let detailed: Activity | Record<string, unknown> | undefined;
           
-          // Save detailed activity to Firestore
-          const activityRef = db.collection('activities').doc(summary.id.toString());
-          const cleanedData = prepareActivityForFirestore(detailed);
-          
-          await activityRef.set({
-            ...(cleanedData as Record<string, unknown>),
-            synced_at: admin.firestore.FieldValue.serverTimestamp(),
-          }, { merge: true });
-          activitiesSaved++;
+          const existingData = doc.data();
+          const hasDescription = typeof existingData?.description === 'string' && existingData.description.length > 0;
 
-          // Small delay to respect rate limits
-          if (allStravaActivities.length > 10) {
-            await sleep(200);
+          if (!isFullSync && doc.exists && hasDescription) {
+            console.log(`Activity ${summary.id} already has description in Firestore. Skipping detail fetch.`);
+            detailed = existingData as Activity;
+          } else {
+            console.log(`Fetching detailed activity ${summary.id} (${i + batchIndex + 1}/${allStravaActivities.length})...`);
+            detailed = await fetchDetailedActivity(summary.id, accessToken);
+            
+            // Save detailed activity to Firestore
+            const activityRef = db.collection('activities').doc(summary.id.toString());
+            const cleanedData = prepareActivityForFirestore(detailed);
+            
+            await activityRef.set({
+              ...(cleanedData as Record<string, unknown>),
+              synced_at: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+            activitiesSaved++;
           }
+          
+          // Use detailed description for hashtag grouping
+          const activity: Activity = {
+            ...summary,
+            description: (detailed as Activity).description || null,
+          };
+
+          // Fetch GPS streams
+          await fetchAndSaveStreams(activity.id, accessToken);
+
+          return { success: true, activity };
+        } catch (error) {
+          console.error(`Failed to sync activity ${summary.id}:`, error);
+          if (error instanceof Error && error.message.includes('rate limit')) {
+            return { success: false, rateLimit: true };
+          }
+          return { success: false, error };
         }
-        
-        // Use detailed description for hashtag grouping
-        const activity: Activity = {
-          ...summary,
-          description: (detailed as Activity).description || null,
-        };
-        detailedActivities.push(activity);
+      }));
 
-        // Fetch GPS streams
-        await fetchAndSaveStreams(activity.id, accessToken);
-
-      } catch (error) {
-        console.error(`Failed to sync activity ${summary.id}:`, error);
-        if (error instanceof Error && error.message.includes('rate limit')) {
+      for (const result of batchResults) {
+        if (result.success && result.activity) {
+          detailedActivities.push(result.activity);
+        } else if (result.rateLimit) {
           rateLimitReached = true;
         } else {
           activitiesFailed++;
         }
+      }
+
+      // Delay between batches to respect rate limits
+      if (allStravaActivities.length > BATCH_SIZE) {
+        await sleep(isFullSync ? 500 : 100);
       }
     }
 
@@ -415,6 +433,8 @@ router.post('/api/strava/sync', async (req, res) => {
     const trips = groupActivitiesIntoTrips(detailedActivities);
     let tripsSaved = 0;
     let tripsFailed = 0;
+    const newTripIds = new Set(trips.map(t => t.id));
+
     for (const trip of trips) {
       try {
         const tripRef = db.collection('trips').doc(trip.id);
@@ -430,7 +450,17 @@ router.post('/api/strava/sync', async (req, res) => {
       }
     }
 
-    // 4. Automatically enhance generic titles for NEWLY synced activities
+    // 4. Delete stale trip documents
+    const allTripsSnapshot = await db.collection('trips').get();
+    const staleTripDeletions = allTripsSnapshot.docs
+      .filter(doc => !newTripIds.has(doc.id))
+      .map(doc => {
+        console.log(`Deleting stale trip: ${doc.id}`);
+        return doc.ref.delete();
+      });
+    await Promise.all(staleTripDeletions);
+
+    // 5. Automatically enhance generic titles for NEWLY synced activities
     let enhancedCount = 0;
     for (const activity of detailedActivities) {
       if (isGenericTitle(activity.name)) {

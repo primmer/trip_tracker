@@ -20,12 +20,16 @@ export function groupActivitiesIntoTrips(activities) {
     const sortedActivities = [...activities].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
     for (const activity of sortedActivities) {
         const hashtags = extractHashtags(activity.description);
+        const polyline = activity.map?.summary_polyline;
         if (hashtags.length > 0) {
             for (const tag of hashtags) {
                 const existingTrip = tripMap.get(tag);
                 if (existingTrip) {
                     existingTrip.activityIds.push(activity.id);
                     existingTrip.dateRange.end = activity.start_date;
+                    if (polyline) {
+                        existingTrip.summaryPolylines.push(polyline);
+                    }
                 }
                 else {
                     tripMap.set(tag, {
@@ -37,6 +41,7 @@ export function groupActivitiesIntoTrips(activities) {
                             end: activity.start_date,
                         },
                         activityIds: [activity.id],
+                        summaryPolylines: polyline ? [polyline] : [],
                     });
                 }
             }
@@ -52,6 +57,7 @@ export function groupActivitiesIntoTrips(activities) {
                     end: activity.start_date,
                 },
                 activityIds: [activity.id],
+                summaryPolylines: polyline ? [polyline] : [],
             });
         }
     }
