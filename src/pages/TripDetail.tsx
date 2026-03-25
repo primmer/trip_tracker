@@ -42,10 +42,21 @@ export const TripDetail: React.FC = () => {
   const handleAddPhotos = async () => {
     if (!tripId) return;
     setIsPickingPhotos(true);
-    setPickProgress('Creating session...');
+    setPickProgress('Checking connection...');
     const apiBaseUrl = getApiBaseUrl();
     try {
+      // 0. Pre-check backend health
+      try {
+        const healthResponse = await fetch(`${apiBaseUrl}/health`, {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!healthResponse.ok) throw new Error('Backend health check failed');
+      } catch (err) {
+        throw new Error('Backend server not running. Start it with: cd functions && node lib/dev-server.js');
+      }
+
       // 1. Create Picker Session
+      setPickProgress('Creating session...');
       const response = await fetch(`${apiBaseUrl}/api/photos/picker-session`, {
         method: 'POST',
       });
@@ -375,36 +386,36 @@ export const TripDetail: React.FC = () => {
                     onAnimationComplete={() => setAnimationState(prev => ({ ...prev, isPlaying: false }))}
                     photos={photos}
                   />
-                  
-                  {/* Overlay Day Navigation (if multi-day) */}
-                  {activities.length > 1 && (
-                    <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-auto">
-                      {activities.map((activity, index) => (
-                        <button
-                          key={activity.id}
-                          onClick={() => setActiveActivityId(activity.id)}
-                          className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                            activeActivityId === activity.id
-                              ? 'bg-blue-600 text-white scale-105'
-                              : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
-                          }`}
-                        >
-                          Day {index + 1}
-                        </button>
-                      ))}
+                </div>
+                
+                {/* Day Navigation below map */}
+                {activities.length > 1 && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {activities.map((activity, index) => (
                       <button
-                        onClick={() => setActiveActivityId(null)}
+                        key={activity.id}
+                        onClick={() => setActiveActivityId(activity.id)}
                         className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                          activeActivityId === null
+                          activeActivityId === activity.id
                             ? 'bg-blue-600 text-white scale-105'
                             : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
                         }`}
                       >
-                        All
+                        Day {index + 1}
                       </button>
-                    </div>
-                  )}
-                </div>
+                    ))}
+                    <button
+                      onClick={() => setActiveActivityId(null)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                        activeActivityId === null
+                          ? 'bg-blue-600 text-white scale-105'
+                          : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
+                      }`}
+                    >
+                      All
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Stats Section below map */}

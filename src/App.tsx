@@ -4,10 +4,12 @@ import { Trips } from './pages/Trips';
 import { TripDetail } from './pages/TripDetail';
 import { Admin } from './pages/Admin';
 import { Layout } from './components/Layout';
+import { ScrollToTop } from './components/ScrollToTop';
 
 export function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />

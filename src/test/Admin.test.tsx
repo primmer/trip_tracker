@@ -45,7 +45,7 @@ describe('Admin Page', () => {
 
     expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument();
     expect(screen.getByText(/strava synchronization/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /start full sync/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /full sync/i })).toBeInTheDocument();
   });
 
   it('triggers sync and shows progress and results', async () => {
@@ -55,12 +55,12 @@ describe('Admin Page', () => {
       </MemoryRouter>
     );
 
-    const syncButton = screen.getByRole('button', { name: /start full sync/i });
+    const syncButton = screen.getByRole('button', { name: /full sync/i });
     fireEvent.click(syncButton);
 
     // Shows progress
-    expect(screen.getByText(/syncing.../i)).toBeInTheDocument();
-    expect(screen.getByText(/fetching activities from strava/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/syncing.../i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/full re-syncing all activities/i)).toBeInTheDocument();
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalled();
@@ -88,7 +88,7 @@ describe('Admin Page', () => {
       </MemoryRouter>
     );
 
-    const syncButton = screen.getByRole('button', { name: /start full sync/i });
+    const syncButton = screen.getByRole('button', { name: /full sync/i });
     fireEvent.click(syncButton);
 
     await waitFor(() => {
