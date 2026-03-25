@@ -2,7 +2,7 @@ import express, { Router } from 'express';
 import { refreshStravaTokenIfNeeded } from './services/strava.js';
 import { groupActivitiesIntoTrips } from './utils/trips.js';
 import admin from 'firebase-admin';
-import { createPickerSession, getPickerSession, listPickedMediaItems } from './services/google.js';
+import { createPickerSession, getPickerSession, listPickedMediaItems, refreshGoogleTokenIfNeeded } from './services/google.js';
 import { findNearestLatLng, sampleRoutePoints } from './utils/geo.js';
 import { reverseGeocode, searchNearby } from './services/maps.js';
 import { isGenericTitle } from './services/enhancer.js';
@@ -287,6 +287,8 @@ async function enhanceActivity(id, db) {
 }
 router.post('/api/strava/sync', async (req, res) => {
     try {
+        const { mode = 'quick' } = req.body;
+        const isFullSync = mode === 'full';
         const accessToken = await refreshStravaTokenIfNeeded();
         // 1. Fetch ALL activities from Strava via pagination
         const allStravaActivities = [];
@@ -317,57 +319,72 @@ router.post('/api/strava/sync', async (req, res) => {
         let activitiesFailed = 0;
         let rateLimitReached = false;
         const db = admin.firestore();
-        for (let i = 0; i < allStravaActivities.length; i++) {
+        const BATCH_SIZE = 5;
+        for (let i = 0; i < allStravaActivities.length; i += BATCH_SIZE) {
             if (rateLimitReached)
                 break;
-            const summary = allStravaActivities[i];
-            try {
-                // Check if we already have this activity with a description in Firestore
-                const doc = await db.collection('activities').doc(summary.id.toString()).get();
-                let detailed;
-                if (doc.exists && doc.data()?.description !== undefined && doc.data()?.description !== null) {
-                    console.log(`Activity ${summary.id} already has description in Firestore. Skipping detail fetch.`);
-                    detailed = doc.data();
-                }
-                else {
-                    console.log(`Fetching detailed activity ${summary.id} (${i + 1}/${allStravaActivities.length})...`);
-                    detailed = await fetchDetailedActivity(summary.id, accessToken);
-                    // Save detailed activity to Firestore
-                    const activityRef = db.collection('activities').doc(summary.id.toString());
-                    const cleanedData = prepareActivityForFirestore(detailed);
-                    await activityRef.set({
-                        ...cleanedData,
-                        synced_at: admin.firestore.FieldValue.serverTimestamp(),
-                    }, { merge: true });
-                    activitiesSaved++;
-                    // Small delay to respect rate limits
-                    if (allStravaActivities.length > 10) {
-                        await sleep(200);
+            const batch = allStravaActivities.slice(i, i + BATCH_SIZE);
+            const batchResults = await Promise.all(batch.map(async (summary, batchIndex) => {
+                try {
+                    // Check if we already have this activity with a description in Firestore
+                    const doc = await db.collection('activities').doc(summary.id.toString()).get();
+                    let detailed;
+                    const existingData = doc.data();
+                    const hasDescription = typeof existingData?.description === 'string' && existingData.description.length > 0;
+                    if (!isFullSync && doc.exists && hasDescription) {
+                        console.log(`Activity ${summary.id} already has description in Firestore. Skipping detail fetch.`);
+                        detailed = existingData;
                     }
+                    else {
+                        console.log(`Fetching detailed activity ${summary.id} (${i + batchIndex + 1}/${allStravaActivities.length})...`);
+                        detailed = await fetchDetailedActivity(summary.id, accessToken);
+                        // Save detailed activity to Firestore
+                        const activityRef = db.collection('activities').doc(summary.id.toString());
+                        const cleanedData = prepareActivityForFirestore(detailed);
+                        await activityRef.set({
+                            ...cleanedData,
+                            synced_at: admin.firestore.FieldValue.serverTimestamp(),
+                        }, { merge: true });
+                        activitiesSaved++;
+                    }
+                    // Use detailed description for hashtag grouping
+                    const activity = {
+                        ...summary,
+                        description: detailed.description || null,
+                    };
+                    // Fetch GPS streams
+                    await fetchAndSaveStreams(activity.id, accessToken);
+                    return { success: true, activity };
                 }
-                // Use detailed description for hashtag grouping
-                const activity = {
-                    ...summary,
-                    description: detailed.description || null,
-                };
-                detailedActivities.push(activity);
-                // Fetch GPS streams
-                await fetchAndSaveStreams(activity.id, accessToken);
-            }
-            catch (error) {
-                console.error(`Failed to sync activity ${summary.id}:`, error);
-                if (error instanceof Error && error.message.includes('rate limit')) {
+                catch (error) {
+                    console.error(`Failed to sync activity ${summary.id}:`, error);
+                    if (error instanceof Error && error.message.includes('rate limit')) {
+                        return { success: false, rateLimit: true };
+                    }
+                    return { success: false, error };
+                }
+            }));
+            for (const result of batchResults) {
+                if (result.success && result.activity) {
+                    detailedActivities.push(result.activity);
+                }
+                else if (result.rateLimit) {
                     rateLimitReached = true;
                 }
                 else {
                     activitiesFailed++;
                 }
             }
+            // Delay between batches to respect rate limits
+            if (allStravaActivities.length > BATCH_SIZE) {
+                await sleep(isFullSync ? 500 : 100);
+            }
         }
         // 3. Group into trips and save
         const trips = groupActivitiesIntoTrips(detailedActivities);
         let tripsSaved = 0;
         let tripsFailed = 0;
+        const newTripIds = new Set(trips.map(t => t.id));
         for (const trip of trips) {
             try {
                 const tripRef = db.collection('trips').doc(trip.id);
@@ -383,7 +400,16 @@ router.post('/api/strava/sync', async (req, res) => {
                 tripsFailed++;
             }
         }
-        // 4. Automatically enhance generic titles for NEWLY synced activities
+        // 4. Delete stale trip documents
+        const allTripsSnapshot = await db.collection('trips').get();
+        const staleTripDeletions = allTripsSnapshot.docs
+            .filter(doc => !newTripIds.has(doc.id))
+            .map(doc => {
+            console.log(`Deleting stale trip: ${doc.id}`);
+            return doc.ref.delete();
+        });
+        await Promise.all(staleTripDeletions);
+        // 5. Automatically enhance generic titles for NEWLY synced activities
         let enhancedCount = 0;
         for (const activity of detailedActivities) {
             if (isGenericTitle(activity.name)) {
@@ -486,38 +512,42 @@ router.post('/api/photos/process-session', async (req, res) => {
                 }
             }
         }
+        const accessToken = await refreshGoogleTokenIfNeeded();
         const mediaItems = await listPickedMediaItems(sessionId);
         const results = [];
         for (const item of mediaItems) {
             try {
-                // 1. Download photo (baseUrl + w2048)
-                const photoUrl = `${item.baseUrl}=w2048`;
-                const response = await fetch(photoUrl);
-                if (!response.ok)
+                // 1. Download photo (baseUrl + w2048, requires auth)
+                const photoUrl = `${item.mediaFile.baseUrl}=w2048-h1024`;
+                console.log(`Downloading photo: ${item.id}, URL prefix: ${item.mediaFile.baseUrl?.substring(0, 80)}...`);
+                const response = await fetch(photoUrl, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+                if (!response.ok) {
+                    console.error(`Download failed: ${response.status} ${response.statusText}`);
                     throw new Error(`Failed to download photo ${item.id}`);
+                }
                 const buffer = await response.arrayBuffer();
                 // 2. Upload to Firebase Storage
                 const bucket = admin.storage().bucket();
-                const filename = `${item.id}.jpg`; // Assumption: mostly JPEGs or conversion handled by baseUrl
+                const filename = item.mediaFile.filename || `${item.id}.jpg`;
                 const storagePath = `trips/${tripId}/photos/${filename}`;
                 const file = bucket.file(storagePath);
                 await file.save(Buffer.from(buffer), {
                     metadata: {
-                        contentType: item.mimeType || 'image/jpeg',
+                        contentType: item.mediaFile.mimeType || 'image/jpeg',
                     },
                 });
-                // Get public download URL
-                const [downloadUrl] = await file.getSignedUrl({
-                    action: 'read',
-                    expires: '03-01-2500', // Long-lived
-                });
+                // Make file publicly readable and construct download URL
+                await file.makePublic();
+                const downloadUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
                 // 3. Geolocation derivation
                 let lat = null;
                 let lng = null;
-                if (item.creationTime) {
+                if (item.createTime) {
                     for (const activity of activitiesData) {
                         if (activity.streams) {
-                            const geo = findNearestLatLng(item.creationTime, activity.start_date, activity.streams);
+                            const geo = findNearestLatLng(item.createTime, activity.start_date, activity.streams);
                             if (geo) {
                                 lat = geo.lat;
                                 lng = geo.lng;
@@ -532,12 +562,12 @@ router.post('/api/photos/process-session', async (req, res) => {
                     filename,
                     storagePath,
                     downloadUrl,
-                    createdAt: item.creationTime,
+                    createdAt: item.createTime,
                     lat,
                     lng,
-                    width: item.mediaMetadata?.width ? parseInt(item.mediaMetadata.width) : null,
-                    height: item.mediaMetadata?.height ? parseInt(item.mediaMetadata.height) : null,
-                    mimeType: item.mimeType,
+                    width: item.mediaFile.mediaFileMetadata?.width ?? null,
+                    height: item.mediaFile.mediaFileMetadata?.height ?? null,
+                    mimeType: item.mediaFile.mimeType,
                     syncedAt: admin.firestore.FieldValue.serverTimestamp(),
                 };
                 await db.collection('trips').doc(tripId).collection('photos').doc(item.id).set(photoMetadata);

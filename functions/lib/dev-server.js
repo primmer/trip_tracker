@@ -12,12 +12,13 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 if (!admin.apps.length) {
     admin.initializeApp({
         projectId: 'primco-trip-tracker',
+        storageBucket: 'primco-trip-tracker.firebasestorage.app',
     });
 }
 const app = express();
 const port = 5001;
 // Proper CORS for local frontend
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'] }));
 // For compatibility with /api prefix often used in frontends
 app.use('/api', router);
 // The router handles both /health and /api/health

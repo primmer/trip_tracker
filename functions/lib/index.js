@@ -8,7 +8,7 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'] }));
 app.use(router);
 export const api = functions.https.onRequest({ cors: true, timeoutSeconds: 300, memory: '512MiB' }, app);
 //# sourceMappingURL=index.js.map

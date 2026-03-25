@@ -72,6 +72,8 @@ export const TripDetail: React.FC = () => {
       setPickProgress('Waiting for selection...');
       
       // 3. Poll session for completion
+      let closedPollCount = 0;
+      const MAX_CLOSED_POLLS = 10; // Keep polling up to 30s after window closes
       const pollInterval = setInterval(async () => {
         try {
           const pollResponse = await fetch(`${apiBaseUrl}/api/photos/picker-session/${session.id}`);
@@ -105,14 +107,15 @@ export const TripDetail: React.FC = () => {
             setTimeout(() => {
               setPickProgress(null);
               setIsPickingPhotos(false);
-              // TODO: Refresh photos display (not implemented yet)
             }, 2000);
-          }
-          
-          if (pickerWindow.closed && !pollData.mediaItemsSet) {
-            clearInterval(pollInterval);
-            setPickProgress(null);
-            setIsPickingPhotos(false);
+          } else if (pickerWindow.closed) {
+            closedPollCount++;
+            setPickProgress(`Finalizing (${closedPollCount}/${MAX_CLOSED_POLLS})...`);
+            if (closedPollCount >= MAX_CLOSED_POLLS) {
+              clearInterval(pollInterval);
+              setPickProgress(null);
+              setIsPickingPhotos(false);
+            }
           }
         } catch (err) {
           console.error('Polling error:', err);

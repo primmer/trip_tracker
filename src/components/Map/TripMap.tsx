@@ -40,7 +40,6 @@ export const TripMap: React.FC<TripMapProps> = ({
       style={{ width: '100%', height: '100%' }}
       defaultCenter={{ lat: 0, lng: 0 }}
       defaultZoom={2}
-      mapTypeId="hybrid"
       gestureHandling="greedy"
       disableDefaultUI={false}
       zoomControl={true}
@@ -57,6 +56,7 @@ export const TripMap: React.FC<TripMapProps> = ({
         isAnimationPlaying={animationState?.isPlaying}
       />
       
+      <SetInitialMapType />
       <PhotoMarkers photos={photos} />
 
       {animationPath && animationState && animationState.activityId !== null && (
@@ -184,6 +184,20 @@ const MapAutoZoom: React.FC<{
       isFirstLoad.current = false;
     }
   }, [map, activityStreams, highlightedActivityId, isAnimationPlaying]);
+
+  return null;
+};
+
+const SetInitialMapType: React.FC = () => {
+  const map = useMap();
+  const hasSet = useRef(false);
+
+  useEffect(() => {
+    if (map && !hasSet.current) {
+      map.setMapTypeId('hybrid');
+      hasSet.current = true;
+    }
+  }, [map]);
 
   return null;
 };

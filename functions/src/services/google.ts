@@ -131,15 +131,18 @@ export async function getPickerSession(sessionId: string) {
 
 export interface MediaItem {
   id: string;
-  baseUrl: string;
-  mimeType: string;
-  creationTime: string;
-  filename?: string;
-  mediaMetadata?: {
-    width: string;
-    height: string;
-    video?: Record<string, unknown>;
-    photo?: Record<string, unknown>;
+  createTime: string;
+  type: string;
+  mediaFile: {
+    baseUrl: string;
+    mimeType: string;
+    filename: string;
+    mediaFileMetadata?: {
+      width: number;
+      height: number;
+      cameraMake?: string;
+      cameraModel?: string;
+    };
   };
 }
 

@@ -8,7 +8,8 @@
     "start": "npm run build && node lib/dev-server.js",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "dev": "tsx src/dev-server.ts"
+    "dev": "tsx src/dev-server.ts",
+    "setup:google": "tsx src/scripts/setup-google.ts"
   },
   "engines": {
     "node": "20"

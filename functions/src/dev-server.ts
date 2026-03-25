@@ -15,6 +15,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 if (!admin.apps.length) {
   admin.initializeApp({
     projectId: 'primco-trip-tracker',
+    storageBucket: 'primco-trip-tracker.firebasestorage.app',
   });
 }
 
