@@ -44,7 +44,7 @@ export const TripMap: React.FC<TripMapProps> = ({
       gestureHandling="greedy"
       disableDefaultUI={false}
       zoomControl={true}
-      mapTypeControl={false}
+      mapTypeControl={true}
       backgroundColor="#030712"
     >
       <RoutePolylines 
