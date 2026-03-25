@@ -43,6 +43,7 @@ export const TripMap: React.FC<TripMapProps> = ({
       mapTypeId="hybrid"
       gestureHandling="greedy"
       disableDefaultUI={false}
+      zoomControl={true}
     >
       <MapTypeIdEnforcer />
       <RoutePolylines 

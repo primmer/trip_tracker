@@ -1,10 +1,14 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { refreshStravaTokenIfNeeded } from './services/strava.js';
 import { groupActivitiesIntoTrips } from './utils/trips.js';
 import admin from 'firebase-admin';
 import { createPickerSession, getPickerSession, listPickedMediaItems } from './services/google.js';
-import { findNearestLatLng } from './utils/geo.js';
+import { findNearestLatLng, sampleRoutePoints } from './utils/geo.js';
+import { reverseGeocode, searchNearby } from './services/maps.js';
+import { isGenericTitle } from './services/enhancer.js';
 const router = Router();
+// Add JSON body parsing middleware for all routes in this router
+router.use(express.json());
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function fetchDetailedActivity(activityId, accessToken) {
     const response = await fetch(`https://www.strava.com/api/v3/activities/${activityId}`, {
@@ -62,6 +66,135 @@ router.get('/health', (req, res) => {
 // For local dev where we might hit /api/health directly
 router.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
+});
+router.post('/api/activities/enhance-descriptions', async (req, res) => {
+    const { activityId: reqActivityId } = req.body;
+    const db = admin.firestore();
+    try {
+        let activityIds = [];
+        if (reqActivityId) {
+            activityIds = [reqActivityId.toString()];
+        }
+        else {
+            // Fetch all activities with generic titles
+            const snapshot = await db.collection('activities').get();
+            activityIds = snapshot.docs
+                .filter(doc => {
+                const data = doc.data();
+                const title = data.name || '';
+                const genericPattern = /^(Morning|Afternoon|Evening|Lunch|Night) Ride$/;
+                return genericPattern.test(title) && !data.enhanced_description;
+            })
+                .map(doc => doc.id);
+        }
+        if (activityIds.length === 0) {
+            return res.status(200).json({ message: 'No activities to enhance', enhanced: 0 });
+        }
+        const results = [];
+        for (const id of activityIds) {
+            try {
+                const activityDoc = await db.collection('activities').doc(id).get();
+                if (!activityDoc.exists)
+                    continue;
+                const activityData = activityDoc.data();
+                if (!activityData)
+                    continue;
+                const title = activityData.name || '';
+                const isGeneric = isGenericTitle(title);
+                // Skip if already enhanced or has terminal marker
+                if (activityData.enhanced_description || activityData.enhancement_attempted) {
+                    results.push({ id, status: 'skipped', reason: 'already enhanced or attempted' });
+                    continue;
+                }
+                // Even with explicit activityId, skip non-generic titles
+                if (!isGeneric) {
+                    results.push({ id, status: 'skipped', reason: 'not a generic title' });
+                    continue;
+                }
+                // Load streams
+                const streamDoc = await db.collection('activities').doc(id).collection('streams').doc('data').get();
+                if (!streamDoc.exists) {
+                    results.push({ id, status: 'skipped', reason: 'no streams found' });
+                    continue;
+                }
+                const streamData = streamDoc.data();
+                if (!streamData || !streamData.latlng_json) {
+                    results.push({ id, status: 'skipped', reason: 'invalid streams' });
+                    continue;
+                }
+                const streams = {
+                    latlng: JSON.parse(streamData.latlng_json),
+                    altitude: JSON.parse(streamData.altitude_json),
+                    time: JSON.parse(streamData.time_json),
+                    distance: JSON.parse(streamData.distance_json),
+                };
+                const samplePoints = sampleRoutePoints(streams);
+                const allPois = [];
+                // Geocoding and Places calls (MAX 3 each as per samplePoints)
+                for (const point of samplePoints) {
+                    // Reverse geocode
+                    const geocode = await reverseGeocode(point.lat, point.lng);
+                    if (geocode) {
+                        const area = geocode.address_components.find(c => c.types.includes('neighborhood') ||
+                            c.types.includes('sublocality') ||
+                            c.types.includes('locality') ||
+                            c.types.includes('natural_feature') ||
+                            c.types.includes('park'));
+                        if (area)
+                            allPois.push(area.long_name);
+                    }
+                    // Nearby search
+                    const places = await searchNearby(point.lat, point.lng);
+                    for (const place of places) {
+                        if (place.displayName?.text) {
+                            allPois.push(place.displayName.text);
+                        }
+                    }
+                }
+                const uniquePois = Array.from(new Set(allPois)).slice(0, 5);
+                if (uniquePois.length === 0) {
+                    // Terminal marker: persist enhancement_attempted if no POIs found
+                    await db.collection('activities').doc(id).update({
+                        enhancement_attempted: true,
+                        enhancement_attempted_at: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                    results.push({ id, status: 'skipped', reason: 'no POIs found, marked as attempted' });
+                    continue;
+                }
+                let enhancedTitle = '';
+                if (uniquePois.length >= 2) {
+                    enhancedTitle = `Ride through ${uniquePois[0]} and ${uniquePois[1]}`;
+                }
+                else {
+                    enhancedTitle = `Ride near ${uniquePois[0]}`;
+                }
+                // Update Firestore
+                await db.collection('activities').doc(id).update({
+                    enhanced_description: {
+                        title: enhancedTitle,
+                        original_title: activityData.name,
+                        pois: uniquePois,
+                        enhanced_at: admin.firestore.FieldValue.serverTimestamp(),
+                    },
+                    // Optionally update the name itself if it's generic
+                    name: enhancedTitle,
+                });
+                results.push({ id, status: 'enhanced', title: enhancedTitle });
+            }
+            catch (err) {
+                console.error(`Error enhancing activity ${id}:`, err);
+                results.push({ id, status: 'error', error: err instanceof Error ? err.message : 'Unknown' });
+            }
+        }
+        res.status(200).json({
+            message: `Enhanced ${results.filter(r => r.status === 'enhanced').length} activities`,
+            results
+        });
+    }
+    catch (error) {
+        console.error('Error enhancing descriptions:', error);
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
 });
 router.post('/strava/sync', async (req, res) => {
     try {
@@ -303,6 +436,8 @@ router.post('/api/photos/process-session', async (req, res) => {
                     createdAt: item.creationTime,
                     lat,
                     lng,
+                    width: item.mediaMetadata?.width ? parseInt(item.mediaMetadata.width) : null,
+                    height: item.mediaMetadata?.height ? parseInt(item.mediaMetadata.height) : null,
                     mimeType: item.mimeType,
                     syncedAt: admin.firestore.FieldValue.serverTimestamp(),
                 };

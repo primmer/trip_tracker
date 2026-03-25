@@ -49,7 +49,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick
   }
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-8 bg-gray-950">
+    <div className="px-4 py-8 bg-gray-900">
       <div className="max-w-6xl mx-auto space-y-12">
         {groupedPhotos.map(([date, dayPhotos]) => (
           <section key={date} className="space-y-6">

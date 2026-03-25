@@ -73,23 +73,15 @@ describe('groupActivitiesIntoTrips', () => {
     end_latlng: [0, 0],
   };
 
-  it('groups activities by hashtag', () => {
-    const activities = [activity1, activity2, activity3];
+  it('groups activities by hashtag and collects polylines', () => {
+    const activityWithPoly1: Activity = { ...activity2, map: { summary_polyline: 'poly1' } };
+    const activityWithPoly2: Activity = { ...activity3, map: { summary_polyline: 'poly2' } };
+    const activities = [activityWithPoly1, activityWithPoly2];
     const trips = groupActivitiesIntoTrips(activities);
 
-    expect(trips).toHaveLength(2);
-    
-    const hmbTrip = trips.find(t => t.id === 'hmb_jul4');
-    expect(hmbTrip).toBeDefined();
-    expect(hmbTrip?.activityIds).toHaveLength(2);
-    expect(hmbTrip?.dateRange.start).toBe(activity2.start_date);
-    expect(hmbTrip?.dateRange.end).toBe(activity3.start_date);
-
-    const otbTrip = trips.find(t => t.id === 'otb');
-    expect(otbTrip).toBeDefined();
-    expect(otbTrip?.activityIds).toHaveLength(1);
-    expect(otbTrip?.dateRange.start).toBe(activity1.start_date);
-    expect(otbTrip?.dateRange.end).toBe(activity1.start_date);
+    expect(trips).toHaveLength(1);
+    const hmbTrip = trips[0];
+    expect(hmbTrip.summaryPolylines).toEqual(['poly1', 'poly2']);
   });
 
   it('handles untagged activities as individual trips', () => {

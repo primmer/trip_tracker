@@ -40,6 +40,7 @@ export interface Trip {
     end: string;
   };
   activityIds: number[];
+  summaryPolylines: string[];
 }
 
 /**
@@ -57,6 +58,7 @@ export function groupActivitiesIntoTrips(activities: Activity[]): Trip[] {
 
   for (const activity of sortedActivities) {
     const hashtags = extractHashtags(activity.description);
+    const polyline = activity.map?.summary_polyline;
 
     if (hashtags.length > 0) {
       for (const tag of hashtags) {
@@ -64,6 +66,9 @@ export function groupActivitiesIntoTrips(activities: Activity[]): Trip[] {
         if (existingTrip) {
           existingTrip.activityIds.push(activity.id);
           existingTrip.dateRange.end = activity.start_date;
+          if (polyline) {
+            existingTrip.summaryPolylines.push(polyline);
+          }
         } else {
           tripMap.set(tag, {
             id: tag,
@@ -74,6 +79,7 @@ export function groupActivitiesIntoTrips(activities: Activity[]): Trip[] {
               end: activity.start_date,
             },
             activityIds: [activity.id],
+            summaryPolylines: polyline ? [polyline] : [],
           });
         }
       }
@@ -88,6 +94,7 @@ export function groupActivitiesIntoTrips(activities: Activity[]): Trip[] {
           end: activity.start_date,
         },
         activityIds: [activity.id],
+        summaryPolylines: polyline ? [polyline] : [],
       });
     }
   }

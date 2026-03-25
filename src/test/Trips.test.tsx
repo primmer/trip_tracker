@@ -12,6 +12,7 @@ vi.mock('lucide-react', () => ({
   AlertCircle: () => <div data-testid="alert-circle-icon" />,
   X: () => <div data-testid="x-icon" />,
   Sparkles: () => <div data-testid="sparkles-icon" />,
+  Layers: () => <div data-testid="layers-icon" />,
 }));
 
 // Mock Firebase
@@ -79,14 +80,14 @@ describe('Trips Page', () => {
     );
 
     // Should show loading initially
-    expect(screen.getByRole('heading', { name: /your trips/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /trips/i })).toBeInTheDocument();
     
     await waitFor(() => {
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
     expect(screen.getByText('#hmb_jul4')).toBeInTheDocument();
-    expect(screen.getByText('Individual Ride')).toBeInTheDocument();
+    expect(screen.getByText('Morning Ride')).toBeInTheDocument();
     expect(screen.getByText('2 rides')).toBeInTheDocument();
     expect(screen.getByText('1 ride')).toBeInTheDocument();
   });

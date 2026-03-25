@@ -7,6 +7,7 @@ export interface Trip {
     end: string;
   };
   activityIds: number[];
+  summaryPolylines?: string[];
 }
 
 export interface Activity {

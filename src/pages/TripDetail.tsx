@@ -354,7 +354,7 @@ export const TripDetail: React.FC = () => {
       </AnimatePresence>
 
       {/* Main Content: Map/Gallery and Stats */}
-      <div className="flex flex-col flex-grow relative">
+      <div className="flex flex-col flex-grow">
         <AnimatePresence mode="wait">
           {activeView === 'map' ? (
             <motion.div 
@@ -363,50 +363,52 @@ export const TripDetail: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col flex-grow"
+              className="flex flex-col"
             >
-              <div className="h-[60vh] min-h-[400px] relative">
-                <TripMap 
-                  activityStreams={streams}
-                  mapId="trip_map"
-                  highlightedActivityId={activeActivityId}
-                  animationState={animationState}
-                  onAnimationComplete={() => setAnimationState(prev => ({ ...prev, isPlaying: false }))}
-                  photos={photos}
-                />
-                
-                {/* Overlay Day Navigation (if multi-day) */}
-                {activities.length > 1 && (
-                  <div className="absolute top-4 left-4 z-20 flex gap-2 pointer-events-auto">
-                    {activities.map((activity, index) => (
+              <div className="w-full max-w-5xl mx-auto px-4 mt-6">
+                <div className="aspect-square md:aspect-video max-h-[600px] relative rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
+                  <TripMap 
+                    activityStreams={streams}
+                    mapId="trip_map"
+                    highlightedActivityId={activeActivityId}
+                    animationState={animationState}
+                    onAnimationComplete={() => setAnimationState(prev => ({ ...prev, isPlaying: false }))}
+                    photos={photos}
+                  />
+                  
+                  {/* Overlay Day Navigation (if multi-day) */}
+                  {activities.length > 1 && (
+                    <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-auto">
+                      {activities.map((activity, index) => (
+                        <button
+                          key={activity.id}
+                          onClick={() => setActiveActivityId(activity.id)}
+                          className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                            activeActivityId === activity.id
+                              ? 'bg-blue-600 text-white scale-105'
+                              : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
+                          }`}
+                        >
+                          Day {index + 1}
+                        </button>
+                      ))}
                       <button
-                        key={activity.id}
-                        onClick={() => setActiveActivityId(activity.id)}
+                        onClick={() => setActiveActivityId(null)}
                         className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                          activeActivityId === activity.id
+                          activeActivityId === null
                             ? 'bg-blue-600 text-white scale-105'
                             : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
                         }`}
                       >
-                        Day {index + 1}
+                        All
                       </button>
-                    ))}
-                    <button
-                      onClick={() => setActiveActivityId(null)}
-                      className={`px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                        activeActivityId === null
-                          ? 'bg-blue-600 text-white scale-105'
-                          : 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-700'
-                      }`}
-                    >
-                      All
-                    </button>
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Stats Section below map */}
-              <div className="flex-grow bg-gray-950 p-6 border-t border-gray-800">
+              <div className="bg-gray-900 p-6 mt-6">
                 <div className="max-w-7xl mx-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {activities
@@ -531,7 +533,7 @@ export const TripDetail: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.4 }}
-              className="flex-grow overflow-hidden"
+              className="flex-grow"
             >
               <PhotoGallery photos={photos} onPhotoClick={setSelectedGalleryPhoto} />
             </motion.div>
