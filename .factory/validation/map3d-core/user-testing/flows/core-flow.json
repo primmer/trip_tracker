@@ -1,0 +1,249 @@
+{
+  "assertionResults": [
+    {
+      "id": "VAL-CROSS-010",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-CROSS-012",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-CROSS-013",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-CROSS-017",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-001",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-002",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-003",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-004",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-005",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-006",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-007",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-008",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-009",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-010",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-011",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-012",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-013",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-014",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-015",
+      "status": "blocked",
+      "reason": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/browser-blocker-chrome-devtools-profile-lock.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-016",
+      "status": "pass",
+      "reason": "npm run typecheck exited with code 0 and reported no TypeScript errors.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/VAL-MAP3D-016-typecheck.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-017",
+      "status": "pass",
+      "reason": "npm run lint exited with code 0 and reported no ESLint errors/warnings.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/VAL-MAP3D-017-lint.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-018",
+      "status": "pass",
+      "reason": "npx vite build exited with code 0 and dist/index.html existence check passed.",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/VAL-MAP3D-018-vite-build.txt",
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/VAL-MAP3D-018-dist-index-check.txt"
+      ]
+    },
+    {
+      "id": "VAL-MAP3D-019",
+      "status": "pass",
+      "reason": "npx vitest run exited with code 0 (19 test files passed, 82 tests passed; no new failures introduced).",
+      "evidence": [
+        "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/evidence/map3d-core/core-flow/VAL-MAP3D-019-vitest.txt"
+      ]
+    }
+  ],
+  "toolsUsed": [
+    "chrome-devtools",
+    "shell"
+  ],
+  "frictions": [
+    {
+      "description": "Chrome DevTools MCP browser session was unavailable because chrome-profile was already locked by another running browser instance.",
+      "resolved": false,
+      "resolution": "Retried browser tool calls (list_pages and new_page) without disruptive restarts; remained blocked.",
+      "affectedAssertions": [
+        "VAL-CROSS-010",
+        "VAL-CROSS-012",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017",
+        "VAL-MAP3D-001",
+        "VAL-MAP3D-002",
+        "VAL-MAP3D-003",
+        "VAL-MAP3D-004",
+        "VAL-MAP3D-005",
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-007",
+        "VAL-MAP3D-008",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-010",
+        "VAL-MAP3D-011",
+        "VAL-MAP3D-012",
+        "VAL-MAP3D-013",
+        "VAL-MAP3D-014",
+        "VAL-MAP3D-015"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Browser validation surface unavailable: Chrome DevTools MCP returned profile-lock error and could not open/select pages for localhost UI flows.",
+      "affectedAssertions": [
+        "VAL-CROSS-010",
+        "VAL-CROSS-012",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017",
+        "VAL-MAP3D-001",
+        "VAL-MAP3D-002",
+        "VAL-MAP3D-003",
+        "VAL-MAP3D-004",
+        "VAL-MAP3D-005",
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-007",
+        "VAL-MAP3D-008",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-010",
+        "VAL-MAP3D-011",
+        "VAL-MAP3D-012",
+        "VAL-MAP3D-013",
+        "VAL-MAP3D-014",
+        "VAL-MAP3D-015"
+      ],
+      "quickFixAttempted": "Retried browser calls and attempted direct new_page navigation; no recovery without disruptive browser/process restart."
+    }
+  ],
+  "notes": "Shell gates completed successfully. All UI/map assertions are blocked by Chrome DevTools profile lock, so step to identify a multi-day trip via app UI could not be completed in this run."
+}

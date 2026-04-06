@@ -89,16 +89,9 @@ export const TripMap: React.FC<TripMapProps> = ({
           altitudeMode={AltitudeMode.CLAMP_TO_GROUND}
           zIndex={1000}
         >
-          <div
-            style={{
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              backgroundColor: '#FFFFFF',
-              border: '3px solid #3b82f6',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
-            }}
-          />
+          <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="5" fill="#FFFFFF" stroke="#3b82f6" strokeWidth="3" />
+          </svg>
         </Marker3D>
       )}
 
@@ -108,16 +101,9 @@ export const TripMap: React.FC<TripMapProps> = ({
           altitudeMode={AltitudeMode.CLAMP_TO_GROUND}
           zIndex={999}
         >
-          <div
-            style={{
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              backgroundColor: '#FFFFFF',
-              border: '3px solid #3b82f6',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
-            }}
-          />
+          <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="5" fill="#FFFFFF" stroke="#3b82f6" strokeWidth="3" />
+          </svg>
         </Marker3D>
       )}
     </Map3D>

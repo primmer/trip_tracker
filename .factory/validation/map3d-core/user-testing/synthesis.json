@@ -1,0 +1,167 @@
+{
+  "milestone": "map3d-core",
+  "round": 2,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 19,
+    "passed": 0,
+    "failed": 0,
+    "blocked": 19
+  },
+  "passedAssertions": [],
+  "failedAssertions": [],
+  "blockedAssertions": [
+    {
+      "id": "VAL-CROSS-010",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-CROSS-012",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-CROSS-013",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-CROSS-017",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-001",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-002",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-003",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-004",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-005",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-006",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-007",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-008",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-009",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-010",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-011",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-012",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-013",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-014",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    },
+    {
+      "id": "VAL-MAP3D-015",
+      "blockedBy": "Blocked: Chrome DevTools MCP browser session unavailable because chrome-profile is already in use. Non-disruptive recovery attempted (retry list_pages, retry new_page with isolatedContext, and service reachability checks via curl), but no browser session could be established without disruptive profile/process intervention."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Documented that chrome-devtools `new_page` with isolatedContext does not bypass a global profile lock; browser-surface assertions remain blocked until lock is cleared.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": "/Users/primmer/trip_tracker/.factory/validation/map3d-core/user-testing/synthesis.round1.json",
+  "generatedAt": "2026-04-06T05:49:15.428585+00:00",
+  "flowReports": [
+    "/Users/primmer/trip_tracker/.factory/validation/map3d-core/user-testing/flows/core-flow-round2.json"
+  ],
+  "toolsUsed": [
+    "chrome-devtools",
+    "curl"
+  ],
+  "frictions": [
+    {
+      "description": "Chrome DevTools MCP profile lock (`chrome-profile already in use`) prevented attaching to the browser surface for all assigned UI assertions.",
+      "resolved": false,
+      "resolution": "Not resolved within non-disruptive boundaries; did not kill browser/processes per mission constraints.",
+      "affectedAssertions": [
+        "VAL-CROSS-010",
+        "VAL-CROSS-012",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017",
+        "VAL-MAP3D-001",
+        "VAL-MAP3D-002",
+        "VAL-MAP3D-003",
+        "VAL-MAP3D-004",
+        "VAL-MAP3D-005",
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-007",
+        "VAL-MAP3D-008",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-010",
+        "VAL-MAP3D-011",
+        "VAL-MAP3D-012",
+        "VAL-MAP3D-013",
+        "VAL-MAP3D-014",
+        "VAL-MAP3D-015",
+        "VAL-MAP3D-017"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Browser automation surface unavailable due to shared Chrome profile lock.",
+      "affectedAssertions": [
+        "VAL-CROSS-010",
+        "VAL-CROSS-012",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017",
+        "VAL-MAP3D-001",
+        "VAL-MAP3D-002",
+        "VAL-MAP3D-003",
+        "VAL-MAP3D-004",
+        "VAL-MAP3D-005",
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-007",
+        "VAL-MAP3D-008",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-010",
+        "VAL-MAP3D-011",
+        "VAL-MAP3D-012",
+        "VAL-MAP3D-013",
+        "VAL-MAP3D-014",
+        "VAL-MAP3D-015",
+        "VAL-MAP3D-017"
+      ],
+      "quickFixAttempted": "Retried `list_pages`; retried `new_page` including isolated context; validated local service reachability with curl.",
+      "evidence": [
+        "map3d-core/core-flow-round2/browser-surface-blocker-log.txt"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "milestone": "map3d-core",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 23,
+    "passed": 4,
+    "failed": 0,
+    "blocked": 19
+  },
+  "passedAssertions": [
+    "VAL-MAP3D-016",
+    "VAL-MAP3D-017",
+    "VAL-MAP3D-018",
+    "VAL-MAP3D-019"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [
+    {
+      "id": "VAL-CROSS-010",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-CROSS-012",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-CROSS-013",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-CROSS-017",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-001",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-002",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-003",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-004",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-005",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-006",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-007",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-008",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-009",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-010",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-011",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-012",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-013",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-014",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    },
+    {
+      "id": "VAL-MAP3D-015",
+      "blockedBy": "Blocked: Chrome DevTools MCP could not start a browser session due to profile lock (chrome-profile already in use). Retried list_pages/new_page non-disruptively, but browser assertions could not be executed on localhost UI."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added flow validator guidance sections for chrome-devtools and shell isolation/command constraints.",
+      "source": "setup"
+    },
+    {
+      "target": "user-testing.md",
+      "description": "Documented Chrome DevTools profile-lock friction as a blocker for browser-surface assertions.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null,
+  "generatedAt": "2026-04-06T05:37:09.534092+00:00",
+  "flowReports": [
+    "/Users/primmer/trip_tracker/.factory/validation/map3d-core/user-testing/flows/core-flow.json"
+  ],
+  "toolsUsed": [
+    "chrome-devtools",
+    "shell"
+  ],
+  "frictions": [
+    {
+      "description": "Chrome DevTools MCP browser session was unavailable because chrome-profile was already locked by another running browser instance.",
+      "resolved": false,
+      "resolution": "Retried browser tool calls (list_pages and new_page) without disruptive restarts; remained blocked.",
+      "affectedAssertions": [
+        "VAL-CROSS-010",
+        "VAL-CROSS-012",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017",
+        "VAL-MAP3D-001",
+        "VAL-MAP3D-002",
+        "VAL-MAP3D-003",
+        "VAL-MAP3D-004",
+        "VAL-MAP3D-005",
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-007",
+        "VAL-MAP3D-008",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-010",
+        "VAL-MAP3D-011",
+        "VAL-MAP3D-012",
+        "VAL-MAP3D-013",
+        "VAL-MAP3D-014",
+        "VAL-MAP3D-015"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Browser validation surface unavailable: Chrome DevTools MCP returned profile-lock error and could not open/select pages for localhost UI flows.",
+      "affectedAssertions": [
+        "VAL-CROSS-010",
+        "VAL-CROSS-012",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017",
+        "VAL-MAP3D-001",
+        "VAL-MAP3D-002",
+        "VAL-MAP3D-003",
+        "VAL-MAP3D-004",
+        "VAL-MAP3D-005",
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-007",
+        "VAL-MAP3D-008",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-010",
+        "VAL-MAP3D-011",
+        "VAL-MAP3D-012",
+        "VAL-MAP3D-013",
+        "VAL-MAP3D-014",
+        "VAL-MAP3D-015"
+      ],
+      "quickFixAttempted": "Retried browser calls and attempted direct new_page navigation; no recovery without disruptive browser/process restart."
+    }
+  ]
+}
