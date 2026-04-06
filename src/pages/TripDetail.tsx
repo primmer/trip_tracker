@@ -549,22 +549,22 @@ export const TripDetail: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-900 border-b border-gray-800 px-4 py-4 flex items-center justify-between flex-shrink-0 z-30"
+          className="bg-gray-900 border-b border-gray-800 px-4 py-2 sm:py-4 flex items-center justify-between flex-shrink-0 z-30"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link
               to="/trips"
-              className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0"
             >
               <ChevronLeft className="w-6 h-6" />
             </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-white truncate">
                 {formatTripName(trip.hashtag, trip.name)}
               </h1>
-              <div className="flex items-center text-sm text-gray-400 gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>
+              <div className="flex items-center text-xs sm:text-sm text-gray-400 gap-1 sm:gap-2">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate">
                   {new Date(trip.dateRange.start).toLocaleDateString()}
                   {trip.dateRange.start !== trip.dateRange.end &&
                     ` - ${new Date(trip.dateRange.end).toLocaleDateString()}`}
@@ -573,7 +573,7 @@ export const TripDetail: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <div className="flex items-center bg-gray-800 p-1 rounded-xl shadow-inner border border-gray-700">
               <button
                 onClick={() => setActiveView('map')}
