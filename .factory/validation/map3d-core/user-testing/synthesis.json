@@ -1,99 +1,71 @@
 {
   "milestone": "map3d-core",
-  "round": 3,
+  "round": 4,
   "status": "fail",
   "assertionsSummary": {
-    "total": 19,
-    "passed": 14,
-    "failed": 4,
-    "blocked": 1
+    "total": 5,
+    "passed": 0,
+    "failed": 0,
+    "blocked": 5
   },
-  "passedAssertions": [
-    "VAL-CROSS-010",
-    "VAL-CROSS-012",
-    "VAL-MAP3D-001",
-    "VAL-MAP3D-002",
-    "VAL-MAP3D-003",
-    "VAL-MAP3D-004",
-    "VAL-MAP3D-005",
-    "VAL-MAP3D-007",
-    "VAL-MAP3D-008",
-    "VAL-MAP3D-010",
-    "VAL-MAP3D-011",
-    "VAL-MAP3D-012",
-    "VAL-MAP3D-013",
-    "VAL-MAP3D-015"
-  ],
-  "failedAssertions": [
-    {
-      "id": "VAL-CROSS-013",
-      "reason": "Marker->preview leg could not be completed because map marker elements were not interactable in Chrome DevTools MCP session; downstream gallery/lightbox leg works."
-    },
-    {
-      "id": "VAL-CROSS-017",
-      "reason": "Console is not clean in the tested flow."
-    },
+  "passedAssertions": [],
+  "failedAssertions": [],
+  "blockedAssertions": [
     {
       "id": "VAL-MAP3D-006",
-      "reason": "Photo marker click-to-preview behavior could not be triggered; expected overlay never rendered."
+      "blockedBy": "Blocked: chrome-devtools MCP unavailable due profile contention ('chrome-profile already in use')."
+    },
+    {
+      "id": "VAL-MAP3D-009",
+      "blockedBy": "Blocked: chrome-devtools MCP unavailable due profile contention ('chrome-profile already in use')."
     },
     {
       "id": "VAL-MAP3D-014",
-      "reason": "Pan worked, but tilt/rotate interactions did not produce camera tilt/heading updates in this run."
-    }
-  ],
-  "blockedAssertions": [
-    {
-      "id": "VAL-MAP3D-009",
-      "blockedBy": "Could not verify explicit 1x/2x toggle state in this MCP surface despite control click succeeding."
-    }
-  ],
-  "appliedUpdates": [
-    {
-      "target": "user-testing.md",
-      "description": "Added Flow Validator Guidance: chrome-devtools section with isolation/evidence rules for safe, deterministic browser validation reruns.",
-      "source": "setup"
+      "blockedBy": "Blocked: unable to perform required pan camera-center evaluate_script check because chrome-devtools MCP session was unavailable."
     },
     {
-      "target": "user-testing.md",
-      "description": "Added Testing Notes about non-interactive marker uids in MCP and icon-only speed toggle evidence limitations for future reruns.",
-      "source": "flow-report"
+      "id": "VAL-CROSS-013",
+      "blockedBy": "Blocked: chrome-devtools MCP unavailable due profile contention ('chrome-profile already in use')."
+    },
+    {
+      "id": "VAL-CROSS-017",
+      "blockedBy": "Blocked: unable to inspect console and distinguish application errors from known third-party noise because chrome-devtools MCP was unavailable."
     }
   ],
-  "previousRound": "/Users/primmer/trip_tracker/.factory/validation/map3d-core/user-testing/synthesis.round2.json",
-  "generatedAt": "2026-04-06T06:21:55.854390+00:00",
+  "appliedUpdates": [],
+  "previousRound": "/Users/primmer/trip_tracker/.factory/validation/map3d-core/user-testing/synthesis.round3.json",
+  "generatedAt": "2026-04-06T07:38:02.240157+00:00",
   "flowReports": [
-    "/Users/primmer/trip_tracker/.factory/validation/map3d-core/user-testing/flows/core-flow-round3.json"
+    "/Users/primmer/trip_tracker/.factory/validation/map3d-core/user-testing/flows/core-flow-round5.json"
   ],
   "toolsUsed": [
     "chrome-devtools"
   ],
   "frictions": [
     {
-      "description": "Map marker buttons exposed in a11y tree were frequently non-interactive in MCP click operations (timeout), requiring additional evaluate_script attempts.",
+      "description": "Chrome DevTools MCP session could not be acquired because the shared chrome profile was already in use.",
       "resolved": false,
-      "resolution": "Tried multiple marker uids and direct marker element click dispatch; preview overlay still not triggered.",
+      "resolution": "Retried list_pages twice and new_page once; all attempts returned the same profile-lock error.",
       "affectedAssertions": [
         "VAL-MAP3D-006",
-        "VAL-CROSS-013"
-      ]
-    },
-    {
-      "description": "Speed toggle is icon-only in this surface; no accessible 1x/2x state text found for deterministic validation.",
-      "resolved": false,
-      "resolution": "Validated completion reset separately; left speed-state assertion blocked.",
-      "affectedAssertions": [
-        "VAL-MAP3D-009"
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-014",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017"
       ]
     }
   ],
   "blockers": [
     {
-      "description": "Could not assert explicit 1x/2x speed state transition because state text/value was not exposed through a11y/DOM in this MCP run.",
+      "description": "chrome-devtools MCP unavailable: 'The browser is already running for ... chrome-profile. Use --isolated to run multiple browser instances.'",
       "affectedAssertions": [
-        "VAL-MAP3D-009"
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-014",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017"
       ],
-      "quickFixAttempted": "Clicked speed toggle, inspected button title/class/innerHTML and snapshots before/after; no observable 1x/2x state value found."
+      "quickFixAttempted": "Retried MCP connection attempts (list_pages x2, new_page x1) without modifying shared infrastructure; all attempts failed with the same lock error."
     }
   ]
 }

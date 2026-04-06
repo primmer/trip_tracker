@@ -6,6 +6,15 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      '/storage-proxy': {
+        target: 'https://storage.googleapis.com',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/storage-proxy/, ''),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

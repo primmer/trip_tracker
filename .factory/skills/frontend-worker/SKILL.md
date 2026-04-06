@@ -50,7 +50,8 @@ None. Workers use Chrome DevTools MCP tools (`chrome-devtools___*`) directly for
    - Element properties: `chrome-devtools___evaluate_script` for dimensions, counts, styles
    - Click elements: `chrome-devtools___click` on ride selectors, markers, buttons
    - Console errors: `chrome-devtools___list_console_messages` with types=["error"]
-   - If Chrome DevTools MCP fails to connect, RETURN TO ORCHESTRATOR. Do not use alternative tools.
+   - If Chrome DevTools MCP fails to connect, RETURN TO ORCHESTRATOR immediately. Do not use alternative tools.
+   - **FAST-FAIL RULE**: If you make a visual change but cannot take a screenshot to confirm it looks correct, STOP and return to orchestrator. Never claim visual work is done without screenshot proof. DOM presence alone is NOT visual verification — elements can exist in DOM but render incorrectly (wrong size, invisible, off-screen). You must LOOK at the screenshot and confirm the visual result matches expectations.
 
 9. **Commit with jj**: Use `jj describe -m "..."` then `jj new` to checkpoint. NEVER use git commands.
 

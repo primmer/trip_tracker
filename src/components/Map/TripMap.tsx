@@ -4,7 +4,7 @@ import { ActivityStreams } from '../../types';
 import { RouteAnimation } from './RouteAnimation';
 import { PhotoMarkers, Photo } from './PhotoMarkers';
 import { ROUTE_COLORS } from './routeColors';
-import { calculateRangeFromBounds } from '../../utils/mapUtils';
+import { calculateCameraFromBounds } from '../../utils/mapUtils';
 
 // Local type extension for flyCameraTo — available at runtime but not yet in @types/google.maps 3.58.1
 interface Map3DElementWithFly extends google.maps.maps3d.Map3DElement {
@@ -193,13 +193,12 @@ const MapAutoZoom: React.FC<{
     });
 
     if (hasCoords) {
-      const center = bounds.getCenter();
-      const range = calculateRangeFromBounds(bounds);
+      const { center, range } = calculateCameraFromBounds(bounds);
 
       const map3dWithFly = map3d as unknown as Map3DElementWithFly;
       map3dWithFly.flyCameraTo({
         endCamera: {
-          center: { lat: center.lat(), lng: center.lng(), altitude: 0 },
+          center: { lat: center.lat, lng: center.lng, altitude: 0 },
           range,
           tilt: 0,
           heading: 0,

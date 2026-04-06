@@ -1,0 +1,162 @@
+{
+  "groupId": "core-flow-round5",
+  "testedAt": "2026-04-06T07:36:06Z",
+  "isolation": {
+    "milestone": "map3d-core",
+    "missionDir": "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f",
+    "repoRoot": "/Users/primmer/trip_tracker",
+    "targetUrl": "http://localhost:5173/trip/marin_headlands_hawk_and_haypress_camps",
+    "viewport": "1440x900"
+  },
+  "toolsUsed": ["chrome-devtools"],
+  "assertions": [
+    {
+      "id": "VAL-MAP3D-006",
+      "title": "Clicking photo marker opens dimmed preview overlay",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Initialize Chrome DevTools MCP browser session",
+          "expected": "Browser session available to navigate and click marker",
+          "observed": "MCP returned chrome-profile lock error on all attempts"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": [],
+        "consoleErrors": "not available (browser session could not start)",
+        "network": "not available",
+        "artifacts": [
+          "map3d-core/core-flow-round5/mcp-connection-error.txt"
+        ]
+      },
+      "issues": "Blocked: chrome-devtools MCP unavailable due profile contention ('chrome-profile already in use')."
+    },
+    {
+      "id": "VAL-MAP3D-009",
+      "title": "Speed toggle and animation completion reset",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Open target trip page in Chrome DevTools MCP",
+          "expected": "Interact with play/speed controls and verify completion reset",
+          "observed": "Could not open page because MCP browser session could not be acquired"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": [],
+        "consoleErrors": "not available (browser session could not start)",
+        "network": "not available",
+        "artifacts": [
+          "map3d-core/core-flow-round5/mcp-connection-error.txt"
+        ]
+      },
+      "issues": "Blocked: chrome-devtools MCP unavailable due profile contention ('chrome-profile already in use')."
+    },
+    {
+      "id": "VAL-MAP3D-014",
+      "title": "Map pan/tilt/rotate interaction works",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Acquire Chrome DevTools MCP session to verify pan via camera center change",
+          "expected": "Use evaluate_script before/after pan and record center change",
+          "observed": "Session acquisition failed with chrome-profile lock error"
+        },
+        {
+          "action": "Assess tilt/rotate limitation handling per contract",
+          "expected": "If MCP pan works, record manual limitation note for tilt/rotate",
+          "observed": "Could not reach pan verification step because MCP session was unavailable"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": [],
+        "consoleErrors": "not available",
+        "network": "not available",
+        "artifacts": [
+          "map3d-core/core-flow-round5/mcp-connection-error.txt"
+        ]
+      },
+      "issues": "Blocked: unable to perform required pan camera-center evaluate_script check because chrome-devtools MCP session was unavailable."
+    },
+    {
+      "id": "VAL-CROSS-013",
+      "title": "Photo marker → preview → gallery lightbox flow",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Open target trip page and execute photo marker to lightbox flow",
+          "expected": "Validate preview overlay, lightbox structure, keyboard navigation",
+          "observed": "Could not start MCP browser session to run UI flow"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": [],
+        "consoleErrors": "not available",
+        "network": "not available",
+        "artifacts": [
+          "map3d-core/core-flow-round5/mcp-connection-error.txt"
+        ]
+      },
+      "issues": "Blocked: chrome-devtools MCP unavailable due profile contention ('chrome-profile already in use')."
+    },
+    {
+      "id": "VAL-CROSS-017",
+      "title": "No application console errors across full user flow",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Open Chrome DevTools MCP session and run full trip user flow",
+          "expected": "Collect console errors and filter app errors vs known third-party noise",
+          "observed": "Could not access browser console because MCP browser session failed to start"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": [],
+        "consoleErrors": "not available (unable to run list_console_messages)",
+        "network": "not available",
+        "artifacts": [
+          "map3d-core/core-flow-round5/mcp-connection-error.txt"
+        ]
+      },
+      "issues": "Blocked: unable to inspect console and distinguish application errors from known third-party noise because chrome-devtools MCP was unavailable."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Chrome DevTools MCP session could not be acquired because the shared chrome profile was already in use.",
+      "resolved": false,
+      "resolution": "Retried list_pages twice and new_page once; all attempts returned the same profile-lock error.",
+      "affectedAssertions": [
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-014",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "chrome-devtools MCP unavailable: 'The browser is already running for ... chrome-profile. Use --isolated to run multiple browser instances.'",
+      "affectedAssertions": [
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-014",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017"
+      ],
+      "quickFixAttempted": "Retried MCP connection attempts (list_pages x2, new_page x1) without modifying shared infrastructure; all attempts failed with the same lock error."
+    }
+  ],
+  "summary": "Test execution was blocked before browser interaction began: 5/5 assigned assertions are blocked due to Chrome DevTools MCP profile contention."
+}

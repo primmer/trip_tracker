@@ -20,66 +20,91 @@ interface PhotoMarkerItemProps {
   onPhotoSelect?: (photo: Photo) => void;
 }
 
-// Individual photo marker using the React Marker3D component.
-//
-// Marker3D automatically wraps <img> children in a <template slot="default">
-// as required by the gmp-marker-3d web component API — this is what makes
-// the thumbnail visually render in the 3D scene.
-//
-// CORS workaround: gmp-marker-3d-interactive enforces crossorigin="anonymous"
-// on <img> elements in its shadow DOM, and Chrome sends cookies by default
-// for googleapis.com requests, making them credentialed. Credentialed CORS
-// requests are rejected when the server returns Access-Control-Allow-Origin: *
-// (requires a specific origin). We work around this by pre-fetching each image
-// with credentials:'omit' and using same-origin blob URLs as the img src.
-// Blob URLs bypass the shadow DOM CORS enforcement entirely.
-const PhotoMarkerItem: React.FC<PhotoMarkerItemProps> = ({ photo, onPhotoSelect }) => {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+function toProxyUrl(url: string): string {
+  const prefix = 'https://storage.googleapis.com/';
+  if (url.startsWith(prefix)) {
+    return '/storage-proxy/' + url.slice(prefix.length);
+  }
+  return url;
+}
 
-  // Pre-fetch photo as blob URL to bypass CORS enforcement in shadow DOM.
+function resizeToThumbnail(img: HTMLImageElement, size: number): Promise<string> {
+  const border = 3;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  // White border circle
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  // Clip to inner circle for photo
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - border, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  // Draw photo cover-fit
+  const inner = size - border * 2;
+  const scale = Math.max(inner / img.naturalWidth, inner / img.naturalHeight);
+  const w = img.naturalWidth * scale;
+  const h = img.naturalHeight * scale;
+  ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+  ctx.restore();
+  // Blue camera badge at bottom-right
+  const bx = size - 7;
+  const by = size - 7;
+  ctx.beginPath();
+  ctx.arc(bx, by, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#2563eb';
+  ctx.fill();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = 'white';
+  ctx.fillRect(bx - 2.5, by - 1.5, 5, 3.5);
+  ctx.beginPath();
+  ctx.arc(bx, by, 1, 0, Math.PI * 2);
+  ctx.fillStyle = '#2563eb';
+  ctx.fill();
+
+  return new Promise((resolve) =>
+    canvas.toBlob((b) => resolve(URL.createObjectURL(b!)), 'image/png'),
+  );
+}
+
+const PhotoMarkerItem: React.FC<PhotoMarkerItemProps> = ({ photo, onPhotoSelect }) => {
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+  const onPhotoSelectRef = useRef(onPhotoSelect);
+  useEffect(() => {
+    onPhotoSelectRef.current = onPhotoSelect;
+  });
+
   useEffect(() => {
     let canceled = false;
-
-    const load = async () => {
-      try {
-        const res = await fetch(photo.downloadUrl, {
-          credentials: 'omit',
-          cache: 'reload',
-        });
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        if (canceled) {
-          URL.revokeObjectURL(url);
-          return;
-        }
-        setBlobUrl(url);
-      } catch {
-        // fetch unavailable — marker renders without thumbnail
-      }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = async () => {
+      if (canceled) return;
+      const url = await resizeToThumbnail(img, 44);
+      if (!canceled) setThumbUrl(url);
     };
-    load();
-
+    img.src = toProxyUrl(photo.downloadUrl);
     return () => {
       canceled = true;
-      setBlobUrl((prev) => {
+      setThumbUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         return null;
       });
     };
   }, [photo.downloadUrl]);
 
-  // Stable ref to avoid re-creating the callback (and re-registering event
-  // listeners) on every parent render when onPhotoSelect is an inline lambda.
-  const onPhotoSelectRef = useRef(onPhotoSelect);
-  useEffect(() => {
-    onPhotoSelectRef.current = onPhotoSelect;
-  });
-
   const handleClick = useCallback(() => {
     onPhotoSelectRef.current?.(photo);
   }, [photo]);
 
-  if (!blobUrl) return null;
+  if (!thumbUrl) return null;
 
   return (
     <Marker3D
@@ -88,20 +113,7 @@ const PhotoMarkerItem: React.FC<PhotoMarkerItemProps> = ({ photo, onPhotoSelect 
       onClick={handleClick}
       zIndex={500}
     >
-      <img
-        src={blobUrl}
-        style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          border: '2px solid white',
-          objectFit: 'cover',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
-          cursor: 'pointer',
-          display: 'block',
-        }}
-        alt=""
-      />
+      <img src={thumbUrl} alt="" />
     </Marker3D>
   );
 };
