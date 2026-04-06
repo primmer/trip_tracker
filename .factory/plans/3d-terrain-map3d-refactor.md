@@ -221,10 +221,32 @@ Note: `altitudeMode: "CLAMP_TO_GROUND"` makes the polyline follow terrain surfac
 - Use Chrome DevTools MCP to take screenshots on both desktop and mobile (390x844) viewports
 - Compare against current behavior: same polyline colors, same overlay layout, but now with 3D terrain
 
+## Additional Fix: Mobile Header Vertical Space
+
+As visible in the before-mobile screenshots, the title/heading area consumes over 30% of the viewport on narrow screens. This wastes valuable map real estate. Fix this as part of the same mission.
+
+### File: `src/pages/TripDetail.tsx`
+
+**Approach options (use judgment, combine as needed):**
+- Reduce heading font size on mobile (e.g., `text-2xl sm:text-4xl` or similar)
+- Reduce vertical padding/margins around the title block
+- Collapse the date line into a smaller inline element
+- Make the Map/Gallery toggle buttons smaller on mobile
+- Reduce gap between the back arrow, title, and tab buttons
+- Consider a single-line layout for shorter trip names on mobile
+
+**Goal:** The heading area should take no more than ~15-20% of the mobile viewport, giving the map the maximum possible space.
+
+### Validation: V11 -- Mobile Header Compact
+- On mobile (390x844), the heading/title area (from top of page to start of map) should be visually compact
+- All content still readable: trip name, dates, Map/Gallery tabs, back arrow
+- Compare before-mobile screenshots to confirm improvement
+- Desktop layout should remain unchanged or only minimally affected
+
 ## Estimated Scope
 
-- ~5 files modified, ~1 new utility function
+- ~6 files modified, ~1 new utility function
 - Heaviest change: TripMap.tsx (full rewrite of map container, polylines, markers, auto-zoom)
 - Medium: PhotoMarkers.tsx, RouteAnimation.tsx (swap hooks and components)
-- Light: main.tsx (one line), TripDetail.tsx (minor prop adjustments if needed)
+- Light: main.tsx (one line), TripDetail.tsx (3D prop adjustments + mobile header compact)
 - New: bounds-to-range utility function (either in TripMap.tsx or a shared util)
