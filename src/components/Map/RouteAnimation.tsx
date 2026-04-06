@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { useMap } from '@vis.gl/react-google-maps';
+import { useMap3D } from '@vis.gl/react-google-maps';
 import { getPointAtDistance, computePathLength } from '../../utils/interpolation';
 
 export interface RouteAnimationProps {
@@ -19,7 +19,7 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
   onComplete,
   onPositionChange,
 }) => {
-  const map = useMap();
+  const map3d = useMap3D();
   const [currentDistance, setCurrentDistance] = useState(0);
   const lastTimeRef = useRef<number | null>(null);
   const requestRef = useRef<number | null>(null);
@@ -79,15 +79,22 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
   }, [isPlaying, totalLength, speed, onComplete, currentDistance]);
 
   useEffect(() => {
-    if (!map || path.length === 0) return;
+    if (!map3d || path.length === 0) return;
 
     const point = getPointAtDistance(path, currentDistance);
-    map.panTo(point);
+
+    // Directly assign center for instant per-frame camera updates during 60fps animation.
+    // flyCameraTo() is too slow (introduces animation latency) for frame-by-frame following.
+    (map3d as unknown as { center: google.maps.LatLngAltitudeLiteral }).center = {
+      lat: point.lat,
+      lng: point.lng,
+      altitude: 0,
+    };
 
     if (onPositionChange) {
       onPositionChange(point);
     }
-  }, [map, currentDistance, path, onPositionChange]);
+  }, [map3d, currentDistance, path, onPositionChange]);
 
   return null;
 };

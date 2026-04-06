@@ -33,12 +33,15 @@ Props:
 
 ## Polyline3D Component
 
-Props:
-- `coordinates`: `Array<{lat, lng, altitude}>`
-- `altitudeMode`: same as Marker3D
+**IMPORTANT: Polyline3D is NOT exported as a React component from @vis.gl/react-google-maps v1.8.2.** Use imperative `gmp-polyline-3d` custom elements via `document.createElement('gmp-polyline-3d')` instead.
+
+Props (when using imperative custom element):
+- `coordinates`: Set via JS property — `Array<{lat, lng, altitude}>`
+- `altitudeMode`: `"clamp-to-ground"` (kebab-case as HTML attribute)
 - `strokeColor`: CSS color string
 - `strokeWidth`: number (pixels)
-- `extruded`: boolean (draws wall to ground)
+- `strokeOpacity`: number (0-1)
+- `extruded`: boolean
 
 ## Migration Notes
 

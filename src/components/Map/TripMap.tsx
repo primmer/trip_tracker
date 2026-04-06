@@ -70,8 +70,6 @@ export const TripMap: React.FC<TripMapProps> = ({
         isAnimationPlaying={animationState?.isPlaying}
       />
 
-      {/* PhotoMarkers and RouteAnimation still use useMap/AdvancedMarker — they will be
-          non-functional until the next feature (map3d-photo-animation) migrates them */}
       <PhotoMarkers photos={photos} onPhotoSelect={onPhotoSelect} />
 
       {animationPath && animationState && animationState.activityId !== null && (
