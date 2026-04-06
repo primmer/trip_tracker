@@ -1,5 +1,19 @@
 # Mission: 3D Terrain Map Refactor (Map → Map3D)
 
+## Before Screenshots (Reference Baseline)
+
+These capture the current UX that must be preserved through the refactor. The only visual difference after the refactor should be that mountains show actual 3D terrain relief when tilted.
+
+### Desktop (1440x900)
+- `before-desktop-all-rides.png` -- All rides selected, multi-color polylines, elevation chart, stats overlay
+- `before-desktop-ride1.png` -- Ride 1 selected, zoomed to single activity, blue polyline highlighted
+
+### Mobile (390x844, iPhone 15 Pro)
+- `before-mobile-all-rides.png` -- All rides, responsive stats/overlay layout
+- `before-mobile-ride1.png` -- Ride 1 selected, responsive layout preserved
+
+All screenshots are in `.factory/plans/` alongside this document.
+
 ## Problem
 
 The trip detail map tilts but shows flat terrain -- mountains have no height relief. The standard `<Map>` component with vector rendering only supports 3D buildings in urban areas, not terrain elevation. To get actual mountain relief when tilted, we need to switch to the Photorealistic 3D Maps feature via the `<Map3D>` component.

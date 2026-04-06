@@ -34,8 +34,8 @@ Testing surface: tools, URLs, setup steps, isolation notes, known quirks.
 
 ## Test Data
 
-- Strava activity tagged `#otb` on 2026-03-15 (single ride)
-- Two Strava activities tagged `#hmb_jul4` (multi-day trip)
+- Strava activity tagged `#up_old_colma_road_then_otb_on_fly_amanita` on 2026-03-15 (single ride)
+- Two Strava activities tagged `#pacifica_to_half_moon_bay_july_4` (multi-day trip)
 
 ## Flow Validator Guidance: foundation-web-api
 

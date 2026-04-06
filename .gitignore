@@ -39,8 +39,11 @@ functions/lib
 # secrets
 secrets-export.txt
 
-# screenshots
-*.png
+# screenshots (root level only)
+/*.png
+
+# keep plan screenshots
+!.factory/plans/*.png
 
 # jujutsu
 .jj
