@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Marker3D, AltitudeMode } from '@vis.gl/react-google-maps';
 
 export interface Photo {
@@ -24,13 +24,50 @@ interface PhotoMarkerItemProps {
 //
 // Marker3D automatically wraps <img> children in a <template slot="default">
 // as required by the gmp-marker-3d web component API — this is what makes
-// the thumbnail visually render in the 3D scene. The previous imperative
-// approach had correct DOM structure but no visual output; using the React
-// Marker3D component's built-in content-slot handling fixes this.
+// the thumbnail visually render in the 3D scene.
 //
-// When onClick is provided, Marker3D uses gmp-marker-3d-interactive so the
-// marker fires gmp-click events in response to user gestures in the 3D scene.
+// CORS workaround: gmp-marker-3d-interactive enforces crossorigin="anonymous"
+// on <img> elements in its shadow DOM, and Chrome sends cookies by default
+// for googleapis.com requests, making them credentialed. Credentialed CORS
+// requests are rejected when the server returns Access-Control-Allow-Origin: *
+// (requires a specific origin). We work around this by pre-fetching each image
+// with credentials:'omit' and using same-origin blob URLs as the img src.
+// Blob URLs bypass the shadow DOM CORS enforcement entirely.
 const PhotoMarkerItem: React.FC<PhotoMarkerItemProps> = ({ photo, onPhotoSelect }) => {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+  // Pre-fetch photo as blob URL to bypass CORS enforcement in shadow DOM.
+  useEffect(() => {
+    let canceled = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch(photo.downloadUrl, {
+          credentials: 'omit',
+          cache: 'reload',
+        });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        if (canceled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        setBlobUrl(url);
+      } catch {
+        // fetch unavailable — marker renders without thumbnail
+      }
+    };
+    load();
+
+    return () => {
+      canceled = true;
+      setBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    };
+  }, [photo.downloadUrl]);
+
   // Stable ref to avoid re-creating the callback (and re-registering event
   // listeners) on every parent render when onPhotoSelect is an inline lambda.
   const onPhotoSelectRef = useRef(onPhotoSelect);
@@ -42,6 +79,8 @@ const PhotoMarkerItem: React.FC<PhotoMarkerItemProps> = ({ photo, onPhotoSelect 
     onPhotoSelectRef.current?.(photo);
   }, [photo]);
 
+  if (!blobUrl) return null;
+
   return (
     <Marker3D
       position={{ lat: photo.lat!, lng: photo.lng!, altitude: 0 }}
@@ -50,7 +89,7 @@ const PhotoMarkerItem: React.FC<PhotoMarkerItemProps> = ({ photo, onPhotoSelect 
       zIndex={500}
     >
       <img
-        src={photo.downloadUrl}
+        src={blobUrl}
         style={{
           width: '40px',
           height: '40px',
