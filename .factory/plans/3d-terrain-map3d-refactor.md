@@ -5,8 +5,8 @@
 These capture the current UX that must be preserved through the refactor. The only visual difference after the refactor should be that mountains show actual 3D terrain relief when tilted.
 
 ### Desktop (1440x900)
-- `before-desktop-all-rides.png` -- All rides selected, multi-color polylines, elevation chart, stats overlay
-- `before-desktop-ride1.png` -- Ride 1 selected, zoomed to single activity, blue polyline highlighted
+- `before-desktop-all-rides.jpg` -- All rides selected, multi-color polylines, elevation chart, stats overlay
+- `before-desktop-ride1.jpg` -- Ride 1 selected, zoomed to single activity, blue polyline highlighted
 
 ### Mobile (390x844, iPhone 15 Pro)
 - `before-mobile-all-rides.png` -- All rides, responsive stats/overlay layout

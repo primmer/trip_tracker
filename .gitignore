@@ -41,9 +41,11 @@ secrets-export.txt
 
 # screenshots (root level only)
 /*.png
+/*.jpg
 
 # keep plan screenshots
 !.factory/plans/*.png
+!.factory/plans/*.jpg
 
 # jujutsu
 .jj
