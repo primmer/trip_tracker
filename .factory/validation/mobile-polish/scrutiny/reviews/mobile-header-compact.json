@@ -1,0 +1,33 @@
+{
+  "featureId": "mobile-header-compact",
+  "reviewedAt": "2026-04-06T08:23:37Z",
+  "commitId": "cd0b34d",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The implementation is small, focused, and mostly aligned with the feature intent: mobile-first `sm:` responsive compaction was applied to header spacing and typography while preserving 44px touch targets. I found one non-blocking desktop behavior regression risk.",
+    "issues": [
+      {
+        "file": "src/pages/TripDetail.tsx",
+        "line": 562,
+        "severity": "non_blocking",
+        "description": "Desktop behavior is no longer strictly unchanged because `truncate` is applied unconditionally to both title and date text (`h1` at line 562 and date span at line 567). Before this commit, these fields could wrap; now they are forced to single-line ellipsis at all breakpoints. Consider making truncation mobile-only (e.g., restore non-truncated behavior at `sm:` and above)."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The `frontend-worker` skill procedure is overly map3d-specific for non-map3d features: it mandates reading `.factory/plans/3d-terrain-map3d-refactor.md` as step 1 even when the feature is a simple mobile-header Tailwind change. The reviewed worker did not read that file but still delivered correctly.",
+      "evidence": ".factory/skills/frontend-worker/SKILL.md:20 requires reading the map3d refactor plan; worker-transcripts.jsonl entry for session 95bee174-45c9-4d92-8122-111c43231b3f shows reads of mission/validation/README/services/architecture/TripDetail but no read of .factory/plans/3d-terrain-map3d-refactor.md."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Chrome DevTools viewport behavior for mobile validation (requested 390x844 but reported CSS width 500 due DPR/window constraints) is not captured in shared testing guidance, which can cause confusion when asserting pixel-perfect mobile widths.",
+      "evidence": "Handoff file for this feature notes the mismatch and recommendation: handoffs/2026-04-06T08-20-33-485Z__mobile-header-compact__95bee174-45c9-4d92-8122-111c43231b3f.json:60. Existing guidance still states fixed 390x844 without caveat: .factory/library/user-testing.md:8,22 and .factory/skills/frontend-worker/SKILL.md:47."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed commit cd0b34d and transcript for mobile-header-compact. Feature requirements are met overall; one non-blocking desktop truncation regression risk was identified. Also captured two shared-state gaps in skill specificity and viewport-validation knowledge."
+}
