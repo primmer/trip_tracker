@@ -1,0 +1,198 @@
+{
+  "groupId": "mobile-header",
+  "testedAt": "2026-04-06T08:31:25Z",
+  "isolation": {
+    "url": "http://localhost:5173/trip/marin_headlands_hawk_and_haypress_camps",
+    "missionDir": "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f",
+    "mobileViewport": "390x844",
+    "desktopViewport": "1440x900"
+  },
+  "toolsUsed": ["chrome-devtools"],
+  "assertions": [
+    {
+      "id": "VAL-MOBILE-001",
+      "title": "Header height ≤20% of mobile viewport",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to target trip page and emulate mobile viewport 390x844",
+          "expected": "Trip page loads and mobile header is visible",
+          "observed": "Trip page loaded with visible trip header and controls"
+        },
+        {
+          "action": "Measure header height using evaluate_script",
+          "expected": "Header height ≤169px (20% of 844)",
+          "observed": "Header offsetHeight = 71px (8.41% of viewport)"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-001-mobile-header.jpg"
+        ],
+        "snapshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-002-mobile-header-snapshot.txt"
+        ],
+        "evaluateScript": [
+          "mobile-polish/mobile-header/VAL-MOBILE-metrics.json"
+        ],
+        "consoleErrors": "none",
+        "network": "mobile-polish/mobile-header/network-summary.txt"
+      },
+      "measuredValues": {
+        "viewportHeight": 844,
+        "headerOffsetHeight": 71,
+        "headerPercentViewportHeight": 8.41
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MOBILE-002",
+      "title": "All header content readable on mobile",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Inspect mobile header content at 390x844",
+          "expected": "Trip name, date range, back arrow, Map, Gallery all visible/readable",
+          "observed": "All required elements were visible with non-zero dimensions; no clipping detected"
+        },
+        {
+          "action": "Capture DOM snapshot and screenshot",
+          "expected": "Header element presence and readable layout confirmed",
+          "observed": "Snapshot and screenshot both show complete readable header"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-002-mobile-readable.jpg"
+        ],
+        "snapshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-002-mobile-header-snapshot.txt"
+        ],
+        "evaluateScript": [
+          "mobile-polish/mobile-header/VAL-MOBILE-metrics.json"
+        ],
+        "consoleErrors": "none",
+        "network": "mobile-polish/mobile-header/network-summary.txt"
+      },
+      "measuredValues": {
+        "tripNameVisible": true,
+        "dateVisible": true,
+        "mapButtonVisible": true,
+        "galleryButtonVisible": true,
+        "backLinkVisible": true
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MOBILE-003",
+      "title": "Touch targets ≥44px on mobile",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Measure back link, Map button, Gallery button dimensions via evaluate_script",
+          "expected": "Each touch target has offsetWidth ≥44 and offsetHeight ≥44",
+          "observed": "Back: 44x44, Map: 86x44, Gallery: 105x44"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-003-touch-targets.jpg"
+        ],
+        "snapshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-002-mobile-header-snapshot.txt"
+        ],
+        "evaluateScript": [
+          "mobile-polish/mobile-header/VAL-MOBILE-metrics.json"
+        ],
+        "consoleErrors": "none",
+        "network": "mobile-polish/mobile-header/network-summary.txt"
+      },
+      "measuredValues": {
+        "backLink": {"offsetWidth": 44, "offsetHeight": 44},
+        "mapButton": {"offsetWidth": 86, "offsetHeight": 44},
+        "galleryButton": {"offsetWidth": 105, "offsetHeight": 44}
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MOBILE-004",
+      "title": "Desktop layout unchanged",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Emulate desktop viewport 1440x900 and inspect header styles",
+          "expected": "Desktop baseline retained (text-2xl heading, py-4 padding, gap-4 spacing)",
+          "observed": "Heading class includes sm:text-2xl with computed 24px font; header class includes sm:py-4 with 16px top/bottom padding; header rows include sm:gap-4"
+        },
+        {
+          "action": "Capture desktop screenshot and snapshot",
+          "expected": "No visual regression in desktop header",
+          "observed": "Desktop header rendered normally with baseline layout structure"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-004-desktop-header.jpg"
+        ],
+        "snapshots": [
+          "mobile-polish/mobile-header/VAL-MOBILE-004-desktop-snapshot.txt"
+        ],
+        "evaluateScript": [
+          "mobile-polish/mobile-header/VAL-MOBILE-metrics.json"
+        ],
+        "consoleErrors": "none",
+        "network": "mobile-polish/mobile-header/network-summary.txt"
+      },
+      "measuredValues": {
+        "headingClass": "text-lg sm:text-2xl font-bold text-white truncate",
+        "headingFontSize": "24px",
+        "headerPaddingTop": "16px",
+        "headerPaddingBottom": "16px",
+        "gap4NodesCount": 2
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-014",
+      "title": "Mobile responsive integration at 390x844",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Validate compact header, map fill, overlay visibility, and horizontal overflow at 390x844",
+          "expected": "Header ≤20%, map fills remaining space, overlay usable, no horizontal scroll",
+          "observed": "Header 71px (8.41%); gmp-map-3d rect is 390x708 from y=136 to y=844; overlay visible at bottom; scrollWidth equals clientWidth (390)"
+        },
+        {
+          "action": "Capture full mobile page screenshot and snapshot",
+          "expected": "Visual proof of integrated mobile layout",
+          "observed": "Screenshot/snapshot show header + map + bottom overlay all present in mobile viewport"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "mobile-polish/mobile-header/VAL-CROSS-014-mobile-full-page.jpg"
+        ],
+        "snapshots": [
+          "mobile-polish/mobile-header/VAL-CROSS-014-mobile-full-snapshot.txt"
+        ],
+        "evaluateScript": [
+          "mobile-polish/mobile-header/VAL-MOBILE-metrics.json"
+        ],
+        "consoleErrors": "none",
+        "network": "mobile-polish/mobile-header/network-summary.txt"
+      },
+      "measuredValues": {
+        "headerPercentViewportHeight": 8.41,
+        "map3dRect": {"x": 0, "y": 136, "width": 390, "height": 708, "top": 136, "bottom": 844},
+        "overlayVisible": true,
+        "noHorizontalOverflow": true,
+        "scrollWidth": 390,
+        "clientWidth": 390
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 5 assigned assertions on the real browser surface using Chrome DevTools MCP. Result: 5 passed, 0 failed, 0 blocked. Mobile header compaction, readability, touch targets, and integrated mobile layout passed at 390x844; desktop header baseline checks passed at 1440x900."
+}
