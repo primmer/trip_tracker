@@ -6,7 +6,7 @@ export function extractHashtags(text: string | null | undefined): string[] {
   if (!text) return [];
   const regex = /#(\w+)/g;
   const matches = [...text.matchAll(regex)];
-  return matches.map(match => match[1]);
+  return matches.map((match) => match[1]);
 }
 
 export interface Activity {
@@ -52,8 +52,8 @@ export function groupActivitiesIntoTrips(activities: Activity[]): Trip[] {
   const individualTrips: Trip[] = [];
 
   // Sort activities by date ascending to correctly determine date range
-  const sortedActivities = [...activities].sort((a, b) => 
-    new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+  const sortedActivities = [...activities].sort(
+    (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
   );
 
   for (const activity of sortedActivities) {

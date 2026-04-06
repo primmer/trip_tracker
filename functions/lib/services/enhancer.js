@@ -1,6 +1,10 @@
 import { reverseGeocode, searchNearby } from './maps.js';
 const GENERIC_TITLES = [
-    'Morning Ride', 'Afternoon Ride', 'Evening Ride', 'Lunch Ride', 'Night Ride'
+    'Morning Ride',
+    'Afternoon Ride',
+    'Evening Ride',
+    'Lunch Ride',
+    'Night Ride',
 ];
 export function isGenericTitle(title) {
     return GENERIC_TITLES.includes(title);
@@ -10,7 +14,7 @@ export async function enhanceActivityDescription(lat, lng) {
     const geocode = await reverseGeocode(lat, lng);
     if (geocode) {
         // Extract neighborhood or sub-locality
-        const area = geocode.address_components.find(c => c.types.includes('neighborhood') ||
+        const area = geocode.address_components.find((c) => c.types.includes('neighborhood') ||
             c.types.includes('sublocality') ||
             c.types.includes('locality'));
         if (area) {

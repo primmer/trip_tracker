@@ -9,9 +9,23 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{js,cjs,json,md,css,html}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
+    "@sentry/react": "^10.47.0",
     "@vis.gl/react-google-maps": "^1.1.0",
     "firebase": "^11.0.0",
     "framer-motion": "^12.38.0",
@@ -32,11 +46,16 @@
     "@vitest/coverage-v8": "^2.0.4",
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "husky": "^9.1.7",
     "jsdom": "^24.1.1",
+    "knip": "^6.3.0",
+    "lint-staged": "^16.4.0",
     "postcss": "^8.4.39",
+    "prettier": "^3.8.1",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.2.2",
     "vite": "^5.3.4",

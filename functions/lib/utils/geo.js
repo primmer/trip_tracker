@@ -1,4 +1,21 @@
 /**
+ * Samples up to 3 evenly-spaced points along the route for geocoding/POI lookups.
+ */
+export function sampleRoutePoints(streams) {
+    const points = streams.latlng;
+    if (!points || points.length === 0)
+        return [];
+    if (points.length === 1)
+        return [{ lat: points[0][0], lng: points[0][1] }];
+    const count = Math.min(3, points.length);
+    const result = [];
+    for (let i = 0; i < count; i++) {
+        const idx = Math.round((i / (count - 1)) * (points.length - 1));
+        result.push({ lat: points[idx][0], lng: points[idx][1] });
+    }
+    return result;
+}
+/**
  * Finds the nearest GPS coordinate for a given timestamp.
  * @param createdAt The timestamp of the photo (ISO 8601).
  * @param activityStartDate The start date of the activity (ISO 8601).
@@ -36,61 +53,14 @@ export function findNearestLatLng(createdAt, activityStartDate, streams) {
         }
     }
     // After binary search, low/high are the bounding indices
-    let index;
-    if (high < 0) {
-        index = 0;
-    }
-    else if (low >= absoluteTimes.length) {
-        index = absoluteTimes.length - 1;
-    }
-    else {
-        index = (photoTime - absoluteTimes[high] < absoluteTimes[low] - photoTime) ? high : low;
-    }
-    const coord = streams.latlng[index];
-    if (!coord)
-        return null;
-    const [lat, lng] = coord;
+    const index = high < 0
+        ? 0
+        : high >= absoluteTimes.length
+            ? absoluteTimes.length - 1
+            : photoTime - absoluteTimes[high] < absoluteTimes[low] - photoTime
+                ? high
+                : low;
+    const [lat, lng] = streams.latlng[index];
     return { lat, lng };
-}
-/**
- * Samples MAX 3 points from a route: start, midpoint, and end OR highest elevation.
- * Returns an array of LatLng objects.
- */
-export function sampleRoutePoints(streams) {
-    if (!streams.latlng || streams.latlng.length === 0)
-        return [];
-    const points = [];
-    // Start point
-    const start = streams.latlng[0];
-    points.push({ lat: start[0], lng: start[1] });
-    if (streams.latlng.length > 1) {
-        // End point
-        const end = streams.latlng[streams.latlng.length - 1];
-        const endPoint = { lat: end[0], lng: end[1] };
-        // Find highest elevation point index
-        let highestIdx = -1;
-        let maxAlt = -Infinity;
-        if (streams.altitude && streams.altitude.length > 0) {
-            for (let i = 0; i < streams.altitude.length; i++) {
-                if (streams.altitude[i] > maxAlt) {
-                    maxAlt = streams.altitude[i];
-                    highestIdx = i;
-                }
-            }
-        }
-        // Midpoint if no highest elevation point found or if it's start/end
-        if (highestIdx <= 0 || highestIdx >= streams.latlng.length - 1) {
-            highestIdx = Math.floor(streams.latlng.length / 2);
-        }
-        const mid = streams.latlng[highestIdx];
-        points.push({ lat: mid[0], lng: mid[1] });
-        // Only add end point if it's distinct from start and mid
-        if (endPoint.lat !== points[0].lat || endPoint.lng !== points[0].lng) {
-            if (endPoint.lat !== points[1].lat || endPoint.lng !== points[1].lng) {
-                points.push(endPoint);
-            }
-        }
-    }
-    return points.slice(0, 3);
 }
 //# sourceMappingURL=geo.js.map

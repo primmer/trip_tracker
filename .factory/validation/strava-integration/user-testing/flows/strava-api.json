@@ -5,10 +5,7 @@
     "account": "N/A",
     "namespace": "strava_api_flow_ns"
   },
-  "toolsUsed": [
-    "curl",
-    "python3"
-  ],
+  "toolsUsed": ["curl", "python3"],
   "assertions": [
     {
       "id": "VAL-STRAVA-001",
@@ -54,9 +51,7 @@
         "screenshots": [],
         "consoleErrors": "N/A (API flow)",
         "network": "POST /api/strava/sync -> 500; response reports trips_created exactly equal to activities_synced",
-        "apiCalls": [
-          "curl -X POST http://localhost:5001/api/strava/sync"
-        ]
+        "apiCalls": ["curl -X POST http://localhost:5001/api/strava/sync"]
       },
       "issues": "Expected grouped #hmb_jul4 trip behavior not observed from sync output, and no trip documents were persisted in this run."
     },
@@ -76,9 +71,7 @@
         "screenshots": [],
         "consoleErrors": "N/A (API flow)",
         "network": "POST /api/strava/sync -> 500; trips_saved=0",
-        "apiCalls": [
-          "curl -X POST http://localhost:5001/api/strava/sync"
-        ]
+        "apiCalls": ["curl -X POST http://localhost:5001/api/strava/sync"]
       },
       "issues": "Blocked on missing persisted-output observability for #otb under current failing sync state."
     },
@@ -127,9 +120,7 @@
         "screenshots": [],
         "consoleErrors": "N/A (API flow)",
         "network": "POST /api/strava/sync -> 500 with activities_saved=0",
-        "apiCalls": [
-          "curl -X POST http://localhost:5001/api/strava/sync"
-        ]
+        "apiCalls": ["curl -X POST http://localhost:5001/api/strava/sync"]
       },
       "issues": "Stream persistence validation failed due zero persisted activities in the tested sync runs."
     }
@@ -139,19 +130,13 @@
       "description": "No dedicated evidence endpoint exists to return persisted Firestore activity/trip/stream documents for assertion-level verification in this flow.",
       "resolved": false,
       "resolution": "Used sync response payloads and repeated API calls as closest available observable evidence.",
-      "affectedAssertions": [
-        "VAL-STRAVA-003",
-        "VAL-STRAVA-007"
-      ]
+      "affectedAssertions": ["VAL-STRAVA-003", "VAL-STRAVA-007"]
     },
     {
       "description": "Client Firebase config in local .env uses placeholder values ('...'), preventing direct client-SDK Firestore reads from this validator shell.",
       "resolved": true,
       "resolution": "Pivoted to backend endpoint evidence only (curl against local functions).",
-      "affectedAssertions": [
-        "VAL-STRAVA-003",
-        "VAL-STRAVA-010"
-      ]
+      "affectedAssertions": ["VAL-STRAVA-003", "VAL-STRAVA-010"]
     }
   ],
   "blockers": [

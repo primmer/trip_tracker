@@ -1,6 +1,7 @@
 # Firebase + Vite React Setup Research
 
 ## Project Structure
+
 ```
 trip-tracker/
 ├── firebase.json          # Root config
@@ -18,6 +19,7 @@ trip-tracker/
 ```
 
 ## Firebase Hosting Config
+
 ```json
 {
   "hosting": {
@@ -38,23 +40,27 @@ trip-tracker/
 ```
 
 ## Cloud Functions v2
+
 - Use `firebase-functions/v2/https` for HTTP functions
 - Secrets via Google Cloud Secret Manager: `firebase functions:secrets:set KEY_NAME`
 - Access via `process.env.KEY_NAME` after declaring in `secrets` option
 - v2 supports better concurrency and regional config
 
 ## Firestore Schema (for caching)
+
 - `trips/{tripId}` - trip metadata, hashtag, date range
 - `trips/{tripId}/activities/{activityId}` - activity data, streams
 - `trips/{tripId}/photos/{photoId}` - photo metadata, location, URLs
 - Documents have 1MB limit; use subcollections for large data
 
 ## Local Development
+
 - Firebase Emulator Suite for local dev
 - Connect Vite dev server to emulators in dev mode
 - `firebase emulators:start` runs all emulators
 
 ## Packages
+
 - Frontend: `firebase`
 - Backend: `firebase-admin`, `firebase-functions`
 - Dev: `firebase-tools` (CLI)

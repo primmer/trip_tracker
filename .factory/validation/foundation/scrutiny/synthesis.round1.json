@@ -23,9 +23,7 @@
     "total": 1,
     "passed": 0,
     "failed": 1,
-    "failedFeatures": [
-      "scaffold-project"
-    ]
+    "failedFeatures": ["scaffold-project"]
   },
   "blockingIssues": [
     {

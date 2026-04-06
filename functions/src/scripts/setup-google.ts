@@ -99,7 +99,7 @@ async function setupGoogle() {
       if (!data.refresh_token) {
         throw new Error(
           'No refresh_token returned. Make sure prompt=consent is set and the app has not already been authorized. ' +
-          'Revoke access at https://myaccount.google.com/permissions and try again.'
+            'Revoke access at https://myaccount.google.com/permissions and try again.',
         );
       }
 

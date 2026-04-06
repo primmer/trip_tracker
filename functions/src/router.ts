@@ -2,7 +2,12 @@ import express, { Router } from 'express';
 import { refreshStravaTokenIfNeeded } from './services/strava.js';
 import { groupActivitiesIntoTrips, type Activity, type ActivityStreams } from './utils/trips.js';
 import admin from 'firebase-admin';
-import { createPickerSession, getPickerSession, listPickedMediaItems, refreshGoogleTokenIfNeeded } from './services/google.js';
+import {
+  createPickerSession,
+  getPickerSession,
+  listPickedMediaItems,
+  refreshGoogleTokenIfNeeded,
+} from './services/google.js';
 import { findNearestLatLng, sampleRoutePoints } from './utils/geo.js';
 import { reverseGeocode, searchNearby } from './services/maps.js';
 import { isGenericTitle } from './services/enhancer.js';
@@ -12,12 +17,15 @@ const router = Router();
 // Add JSON body parsing middleware for all routes in this router
 router.use(express.json());
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function fetchDetailedActivity(activityId: number, accessToken: string): Promise<Record<string, unknown>> {
+async function fetchDetailedActivity(
+  activityId: number,
+  accessToken: string,
+): Promise<Record<string, unknown>> {
   const response = await fetch(`https://www.strava.com/api/v3/activities/${activityId}`, {
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 
@@ -28,12 +36,12 @@ async function fetchDetailedActivity(activityId: number, accessToken: string): P
     throw new Error(`Failed to fetch detailed activity ${activityId}: ${response.status}`);
   }
 
-  return await response.json() as Record<string, unknown>;
+  return (await response.json()) as Record<string, unknown>;
 }
 
 function cleanForFirestore(obj: unknown): unknown {
   if (Array.isArray(obj)) {
-    return obj.map(v => {
+    return obj.map((v) => {
       if (Array.isArray(v)) {
         return JSON.stringify(v);
       }
@@ -44,7 +52,9 @@ function cleanForFirestore(obj: unknown): unknown {
     for (const [key, value] of Object.entries(obj)) {
       if (value !== undefined) {
         if (Array.isArray(value)) {
-          result[key] = value.map(v => Array.isArray(v) ? JSON.stringify(v) : cleanForFirestore(v));
+          result[key] = value.map((v) =>
+            Array.isArray(v) ? JSON.stringify(v) : cleanForFirestore(v),
+          );
         } else {
           result[key] = cleanForFirestore(value);
         }
@@ -89,13 +99,13 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
       // Fetch all activities with generic titles
       const snapshot = await db.collection('activities').get();
       activityIds = snapshot.docs
-        .filter(doc => {
+        .filter((doc) => {
           const data = doc.data();
           const title = data.name || '';
           const genericPattern = /^(Morning|Afternoon|Evening|Lunch|Night) Ride$/;
           return genericPattern.test(title) && !data.enhanced_description;
         })
-        .map(doc => doc.id);
+        .map((doc) => doc.id);
     }
 
     if (activityIds.length === 0) {
@@ -127,7 +137,12 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
         }
 
         // Load streams
-        const streamDoc = await db.collection('activities').doc(id).collection('streams').doc('data').get();
+        const streamDoc = await db
+          .collection('activities')
+          .doc(id)
+          .collection('streams')
+          .doc('data')
+          .get();
         if (!streamDoc.exists) {
           results.push({ id, status: 'skipped', reason: 'no streams found' });
           continue;
@@ -154,12 +169,13 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
           // Reverse geocode
           const geocode = await reverseGeocode(point.lat, point.lng);
           if (geocode) {
-            const area = geocode.address_components.find(c => 
-              c.types.includes('neighborhood') || 
-              c.types.includes('sublocality') ||
-              c.types.includes('locality') ||
-              c.types.includes('natural_feature') ||
-              c.types.includes('park')
+            const area = geocode.address_components.find(
+              (c) =>
+                c.types.includes('neighborhood') ||
+                c.types.includes('sublocality') ||
+                c.types.includes('locality') ||
+                c.types.includes('natural_feature') ||
+                c.types.includes('park'),
             );
             if (area) allPois.push(area.long_name);
           }
@@ -192,27 +208,34 @@ router.post('/api/activities/enhance-descriptions', async (req, res) => {
         }
 
         // Update Firestore
-        await db.collection('activities').doc(id).update({
-          enhanced_description: {
-            title: enhancedTitle,
-            original_title: activityData.name,
-            pois: uniquePois,
-            enhanced_at: admin.firestore.FieldValue.serverTimestamp(),
-          },
-          // Optionally update the name itself if it's generic
-          name: enhancedTitle, 
-        });
+        await db
+          .collection('activities')
+          .doc(id)
+          .update({
+            enhanced_description: {
+              title: enhancedTitle,
+              original_title: activityData.name,
+              pois: uniquePois,
+              enhanced_at: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            // Optionally update the name itself if it's generic
+            name: enhancedTitle,
+          });
 
         results.push({ id, status: 'enhanced', title: enhancedTitle });
       } catch (err) {
         console.error(`Error enhancing activity ${id}:`, err);
-        results.push({ id, status: 'error', error: err instanceof Error ? err.message : 'Unknown' });
+        results.push({
+          id,
+          status: 'error',
+          error: err instanceof Error ? err.message : 'Unknown',
+        });
       }
     }
 
-    res.status(200).json({ 
-      message: `Enhanced ${results.filter(r => r.status === 'enhanced').length} activities`,
-      results 
+    res.status(200).json({
+      message: `Enhanced ${results.filter((r) => r.status === 'enhanced').length} activities`,
+      results,
     });
   } catch (error) {
     console.error('Error enhancing descriptions:', error);
@@ -242,7 +265,12 @@ async function enhanceActivity(id: string, db: admin.firestore.Firestore): Promi
     }
 
     // Load streams
-    const streamDoc = await db.collection('activities').doc(id).collection('streams').doc('data').get();
+    const streamDoc = await db
+      .collection('activities')
+      .doc(id)
+      .collection('streams')
+      .doc('data')
+      .get();
     if (!streamDoc.exists) {
       return null;
     }
@@ -267,12 +295,13 @@ async function enhanceActivity(id: string, db: admin.firestore.Firestore): Promi
       // Reverse geocode
       const geocode = await reverseGeocode(point.lat, point.lng);
       if (geocode) {
-        const area = geocode.address_components.find(c => 
-          c.types.includes('neighborhood') || 
-          c.types.includes('sublocality') ||
-          c.types.includes('locality') ||
-          c.types.includes('natural_feature') ||
-          c.types.includes('park')
+        const area = geocode.address_components.find(
+          (c) =>
+            c.types.includes('neighborhood') ||
+            c.types.includes('sublocality') ||
+            c.types.includes('locality') ||
+            c.types.includes('natural_feature') ||
+            c.types.includes('park'),
         );
         if (area) allPois.push(area.long_name);
       }
@@ -304,15 +333,18 @@ async function enhanceActivity(id: string, db: admin.firestore.Firestore): Promi
     }
 
     // Update Firestore
-    await db.collection('activities').doc(id).update({
-      enhanced_description: {
-        title: enhancedTitle,
-        original_title: activityData.name,
-        pois: uniquePois,
-        enhanced_at: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      name: enhancedTitle, 
-    });
+    await db
+      .collection('activities')
+      .doc(id)
+      .update({
+        enhanced_description: {
+          title: enhancedTitle,
+          original_title: activityData.name,
+          pois: uniquePois,
+          enhanced_at: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        name: enhancedTitle,
+      });
 
     return enhancedTitle;
   } catch (err) {
@@ -325,9 +357,9 @@ router.post('/api/strava/sync', async (req, res) => {
   try {
     const { mode = 'quick' } = req.body;
     const isFullSync = mode === 'full';
-    
+
     const accessToken = await refreshStravaTokenIfNeeded();
-    
+
     // 1. Fetch ALL activities from Strava via pagination
     const allStravaActivities: Activity[] = [];
     let page = 1;
@@ -335,17 +367,22 @@ router.post('/api/strava/sync', async (req, res) => {
     let hasMore = true;
 
     while (hasMore) {
-      const activitiesResponse = await fetch(`https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${perPage}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
+      const activitiesResponse = await fetch(
+        `https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${perPage}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
 
       if (!activitiesResponse.ok) {
-        throw new Error(`Failed to fetch activities from Strava (page ${page}): ${activitiesResponse.status}`);
+        throw new Error(
+          `Failed to fetch activities from Strava (page ${page}): ${activitiesResponse.status}`,
+        );
       }
 
-      const pageActivities = await activitiesResponse.json() as Activity[];
+      const pageActivities = (await activitiesResponse.json()) as Activity[];
       if (pageActivities.length === 0) {
         hasMore = false;
       } else {
@@ -353,13 +390,13 @@ router.post('/api/strava/sync', async (req, res) => {
         page++;
       }
     }
-    
+
     // 2. Fetch DETAILED activities to get descriptions and hashtags
     const detailedActivities: Activity[] = [];
     let activitiesSaved = 0;
     let activitiesFailed = 0;
     let rateLimitReached = false;
-    
+
     const db = admin.firestore();
 
     const BATCH_SIZE = 5;
@@ -367,51 +404,61 @@ router.post('/api/strava/sync', async (req, res) => {
       if (rateLimitReached) break;
 
       const batch = allStravaActivities.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(batch.map(async (summary, batchIndex) => {
-        try {
-          // Check if we already have this activity with a description in Firestore
-          const doc = await db.collection('activities').doc(summary.id.toString()).get();
-          let detailed: Activity | Record<string, unknown> | undefined;
-          
-          const existingData = doc.data();
-          const hasDescription = typeof existingData?.description === 'string' && existingData.description.length > 0;
+      const batchResults = await Promise.all(
+        batch.map(async (summary, batchIndex) => {
+          try {
+            // Check if we already have this activity with a description in Firestore
+            const doc = await db.collection('activities').doc(summary.id.toString()).get();
+            let detailed: Activity | Record<string, unknown> | undefined;
 
-          if (!isFullSync && doc.exists && hasDescription) {
-            console.log(`Activity ${summary.id} already has description in Firestore. Skipping detail fetch.`);
-            detailed = existingData as Activity;
-          } else {
-            console.log(`Fetching detailed activity ${summary.id} (${i + batchIndex + 1}/${allStravaActivities.length})...`);
-            detailed = await fetchDetailedActivity(summary.id, accessToken);
-            
-            // Save detailed activity to Firestore
-            const activityRef = db.collection('activities').doc(summary.id.toString());
-            const cleanedData = prepareActivityForFirestore(detailed);
-            
-            await activityRef.set({
-              ...(cleanedData as Record<string, unknown>),
-              synced_at: admin.firestore.FieldValue.serverTimestamp(),
-            }, { merge: true });
-            activitiesSaved++;
+            const existingData = doc.data();
+            const hasDescription =
+              typeof existingData?.description === 'string' && existingData.description.length > 0;
+
+            if (!isFullSync && doc.exists && hasDescription) {
+              console.log(
+                `Activity ${summary.id} already has description in Firestore. Skipping detail fetch.`,
+              );
+              detailed = existingData as Activity;
+            } else {
+              console.log(
+                `Fetching detailed activity ${summary.id} (${i + batchIndex + 1}/${allStravaActivities.length})...`,
+              );
+              detailed = await fetchDetailedActivity(summary.id, accessToken);
+
+              // Save detailed activity to Firestore
+              const activityRef = db.collection('activities').doc(summary.id.toString());
+              const cleanedData = prepareActivityForFirestore(detailed);
+
+              await activityRef.set(
+                {
+                  ...(cleanedData as Record<string, unknown>),
+                  synced_at: admin.firestore.FieldValue.serverTimestamp(),
+                },
+                { merge: true },
+              );
+              activitiesSaved++;
+            }
+
+            // Use detailed description for hashtag grouping
+            const activity: Activity = {
+              ...summary,
+              description: (detailed as Activity).description || null,
+            };
+
+            // Fetch GPS streams
+            await fetchAndSaveStreams(activity.id, accessToken);
+
+            return { success: true, activity };
+          } catch (error) {
+            console.error(`Failed to sync activity ${summary.id}:`, error);
+            if (error instanceof Error && error.message.includes('rate limit')) {
+              return { success: false, rateLimit: true };
+            }
+            return { success: false, error };
           }
-          
-          // Use detailed description for hashtag grouping
-          const activity: Activity = {
-            ...summary,
-            description: (detailed as Activity).description || null,
-          };
-
-          // Fetch GPS streams
-          await fetchAndSaveStreams(activity.id, accessToken);
-
-          return { success: true, activity };
-        } catch (error) {
-          console.error(`Failed to sync activity ${summary.id}:`, error);
-          if (error instanceof Error && error.message.includes('rate limit')) {
-            return { success: false, rateLimit: true };
-          }
-          return { success: false, error };
-        }
-      }));
+        }),
+      );
 
       for (const result of batchResults) {
         if (result.success && result.activity) {
@@ -433,16 +480,19 @@ router.post('/api/strava/sync', async (req, res) => {
     const trips = groupActivitiesIntoTrips(detailedActivities);
     let tripsSaved = 0;
     let tripsFailed = 0;
-    const newTripIds = new Set(trips.map(t => t.id));
+    const newTripIds = new Set(trips.map((t) => t.id));
 
     for (const trip of trips) {
       try {
         const tripRef = db.collection('trips').doc(trip.id);
         const tripDataToSave = { ...trip };
-        await tripRef.set({
-          ...tripDataToSave,
-          synced_at: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
+        await tripRef.set(
+          {
+            ...tripDataToSave,
+            synced_at: admin.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
         tripsSaved++;
       } catch (error) {
         console.error(`Failed to save trip ${trip.id} to Firestore:`, error);
@@ -453,8 +503,8 @@ router.post('/api/strava/sync', async (req, res) => {
     // 4. Delete stale trip documents
     const allTripsSnapshot = await db.collection('trips').get();
     const staleTripDeletions = allTripsSnapshot.docs
-      .filter(doc => !newTripIds.has(doc.id))
-      .map(doc => {
+      .filter((doc) => !newTripIds.has(doc.id))
+      .map((doc) => {
         console.log(`Deleting stale trip: ${doc.id}`);
         return doc.ref.delete();
       });
@@ -469,10 +519,12 @@ router.post('/api/strava/sync', async (req, res) => {
       }
     }
 
-    const hasCriticalFailures = (allStravaActivities.length > 0 && activitiesSaved === 0) || 
-                               (trips.length > 0 && tripsSaved === 0);
-    
-    const responseStatus = hasCriticalFailures || activitiesFailed > 0 || tripsFailed > 0 ? 500 : 200;
+    const hasCriticalFailures =
+      (allStravaActivities.length > 0 && activitiesSaved === 0) ||
+      (trips.length > 0 && tripsSaved === 0);
+
+    const responseStatus =
+      hasCriticalFailures || activitiesFailed > 0 || tripsFailed > 0 ? 500 : 200;
 
     res.status(responseStatus).json({
       status: responseStatus === 200 ? 'success' : 'partial_success_or_error',
@@ -537,7 +589,12 @@ router.post('/api/photos/process-session', async (req, res) => {
     for (const activityId of activityIds) {
       const activityDoc = await db.collection('activities').doc(activityId.toString()).get();
       if (activityDoc.exists) {
-        const streamDoc = await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').get();
+        const streamDoc = await db
+          .collection('activities')
+          .doc(activityId.toString())
+          .collection('streams')
+          .doc('data')
+          .get();
         const activityRaw = activityDoc.data() as Activity;
         if (activityRaw) {
           let streams: ActivityStreams | null = null;
@@ -562,7 +619,7 @@ router.post('/api/photos/process-session', async (req, res) => {
 
           activitiesData.push({
             ...activityRaw,
-            streams
+            streams,
           });
         }
       }
@@ -576,9 +633,11 @@ router.post('/api/photos/process-session', async (req, res) => {
       try {
         // 1. Download photo (baseUrl + w2048, requires auth)
         const photoUrl = `${item.mediaFile.baseUrl}=w2048-h1024`;
-        console.log(`Downloading photo: ${item.id}, URL prefix: ${item.mediaFile.baseUrl?.substring(0, 80)}...`);
+        console.log(
+          `Downloading photo: ${item.id}, URL prefix: ${item.mediaFile.baseUrl?.substring(0, 80)}...`,
+        );
         const response = await fetch(photoUrl, {
-          headers: { 'Authorization': `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!response.ok) {
           console.error(`Download failed: ${response.status} ${response.statusText}`);
@@ -591,7 +650,7 @@ router.post('/api/photos/process-session', async (req, res) => {
         const filename = item.mediaFile.filename || `${item.id}.jpg`;
         const storagePath = `trips/${tripId}/photos/${filename}`;
         const file = bucket.file(storagePath);
-        
+
         await file.save(Buffer.from(buffer), {
           metadata: {
             contentType: item.mediaFile.mimeType || 'image/jpeg',
@@ -633,11 +692,20 @@ router.post('/api/photos/process-session', async (req, res) => {
           syncedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
 
-        await db.collection('trips').doc(tripId).collection('photos').doc(item.id).set(photoMetadata);
+        await db
+          .collection('trips')
+          .doc(tripId)
+          .collection('photos')
+          .doc(item.id)
+          .set(photoMetadata);
         results.push({ id: item.id, success: true });
       } catch (err) {
         console.error(`Error processing photo ${item.id}:`, err);
-        results.push({ id: item.id, success: false, error: err instanceof Error ? err.message : 'Unknown' });
+        results.push({
+          id: item.id,
+          success: false,
+          error: err instanceof Error ? err.message : 'Unknown',
+        });
       }
     }
 
@@ -652,9 +720,14 @@ router.post('/api/photos/process-session', async (req, res) => {
 
 async function fetchAndSaveStreams(activityId: number, accessToken: string) {
   const db = admin.firestore();
-  
+
   // Check if streams already exist to be idempotent
-  const streamDoc = await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').get();
+  const streamDoc = await db
+    .collection('activities')
+    .doc(activityId.toString())
+    .collection('streams')
+    .doc('data')
+    .get();
   if (streamDoc.exists) {
     const data = streamDoc.data();
     // If it already has the new format, we're done
@@ -663,11 +736,14 @@ async function fetchAndSaveStreams(activityId: number, accessToken: string) {
     }
   }
 
-  const response = await fetch(`https://www.strava.com/api/v3/activities/${activityId}/streams?keys=latlng,altitude,time,distance&key_by_type=true`, {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
+  const response = await fetch(
+    `https://www.strava.com/api/v3/activities/${activityId}/streams?keys=latlng,altitude,time,distance&key_by_type=true`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     console.warn(`Failed to fetch streams for activity ${activityId}: ${response.status}`);
@@ -675,20 +751,28 @@ async function fetchAndSaveStreams(activityId: number, accessToken: string) {
   }
 
   const streams = (await response.json()) as Record<string, { data: unknown[] }>;
-  
+
   // Store as JSON strings to avoid Firestore limits
-  await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').set({
-    latlng_json: JSON.stringify(streams.latlng?.data || []),
-    altitude_json: JSON.stringify(streams.altitude?.data || []),
-    time_json: JSON.stringify(streams.time?.data || []),
-    distance_json: JSON.stringify(streams.distance?.data || []),
-    fetched_at: admin.firestore.FieldValue.serverTimestamp(),
-    // Remove old array fields
-    latlng: admin.firestore.FieldValue.delete(),
-    altitude: admin.firestore.FieldValue.delete(),
-    time: admin.firestore.FieldValue.delete(),
-    distance: admin.firestore.FieldValue.delete(),
-  }, { merge: true });
+  await db
+    .collection('activities')
+    .doc(activityId.toString())
+    .collection('streams')
+    .doc('data')
+    .set(
+      {
+        latlng_json: JSON.stringify(streams.latlng?.data || []),
+        altitude_json: JSON.stringify(streams.altitude?.data || []),
+        time_json: JSON.stringify(streams.time?.data || []),
+        distance_json: JSON.stringify(streams.distance?.data || []),
+        fetched_at: admin.firestore.FieldValue.serverTimestamp(),
+        // Remove old array fields
+        latlng: admin.firestore.FieldValue.delete(),
+        altitude: admin.firestore.FieldValue.delete(),
+        time: admin.firestore.FieldValue.delete(),
+        distance: admin.firestore.FieldValue.delete(),
+      },
+      { merge: true },
+    );
 }
 
 router.get('/api/activities/:activityId/streams', async (req, res) => {
@@ -699,8 +783,13 @@ router.get('/api/activities/:activityId/streams', async (req, res) => {
     }
 
     const db = admin.firestore();
-    const streamDoc = await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').get();
-    
+    const streamDoc = await db
+      .collection('activities')
+      .doc(activityId.toString())
+      .collection('streams')
+      .doc('data')
+      .get();
+
     let streamsData: ActivityStreams | null = null;
 
     if (streamDoc.exists) {
@@ -727,14 +816,19 @@ router.get('/api/activities/:activityId/streams', async (req, res) => {
       // Lazy fetch from Strava if missing
       console.log(`Lazy fetching streams for activity ${activityId} from Strava...`);
       const accessToken = await refreshStravaTokenIfNeeded();
-      const response = await fetch(`https://www.strava.com/api/v3/activities/${activityId}/streams?keys=latlng,altitude,time,distance&key_by_type=true`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
+      const response = await fetch(
+        `https://www.strava.com/api/v3/activities/${activityId}/streams?keys=latlng,altitude,time,distance&key_by_type=true`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        return res.status(response.status).json({ error: `Failed to fetch streams from Strava: ${response.statusText}` });
+        return res
+          .status(response.status)
+          .json({ error: `Failed to fetch streams from Strava: ${response.statusText}` });
       }
 
       const streams = (await response.json()) as Record<string, { data: unknown[] }>;
@@ -746,18 +840,26 @@ router.get('/api/activities/:activityId/streams', async (req, res) => {
       };
 
       // Cache to Firestore in the new JSON string format
-      await db.collection('activities').doc(activityId.toString()).collection('streams').doc('data').set({
-        latlng_json: JSON.stringify(streamsData.latlng),
-        altitude_json: JSON.stringify(streamsData.altitude),
-        time_json: JSON.stringify(streamsData.time),
-        distance_json: JSON.stringify(streamsData.distance),
-        fetched_at: admin.firestore.FieldValue.serverTimestamp(),
-        // Ensure old fields are removed if this was an update
-        latlng: admin.firestore.FieldValue.delete(),
-        altitude: admin.firestore.FieldValue.delete(),
-        time: admin.firestore.FieldValue.delete(),
-        distance: admin.firestore.FieldValue.delete(),
-      }, { merge: true });
+      await db
+        .collection('activities')
+        .doc(activityId.toString())
+        .collection('streams')
+        .doc('data')
+        .set(
+          {
+            latlng_json: JSON.stringify(streamsData.latlng),
+            altitude_json: JSON.stringify(streamsData.altitude),
+            time_json: JSON.stringify(streamsData.time),
+            distance_json: JSON.stringify(streamsData.distance),
+            fetched_at: admin.firestore.FieldValue.serverTimestamp(),
+            // Ensure old fields are removed if this was an update
+            latlng: admin.firestore.FieldValue.delete(),
+            altitude: admin.firestore.FieldValue.delete(),
+            time: admin.firestore.FieldValue.delete(),
+            distance: admin.firestore.FieldValue.delete(),
+          },
+          { merge: true },
+        );
     }
 
     res.status(200).json(streamsData);

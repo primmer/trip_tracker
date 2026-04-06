@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Photo } from './Map/PhotoMarkers';
-import { Calendar, Image as ImageIcon, MapPin, Clock } from 'lucide-react';
+import { Image as ImageIcon, MapPin, Clock } from 'lucide-react';
 
 interface PhotoGalleryProps {
   photos: Photo[];
@@ -10,18 +10,17 @@ interface PhotoGalleryProps {
 export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick }) => {
   const groupedPhotos = useMemo(() => {
     const groups: Record<string, Photo[]> = {};
-    
-    // Sort photos chronologically first
-    const sortedPhotos = [...photos].sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+
+    const sortedPhotos = [...photos].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
-    sortedPhotos.forEach(photo => {
+    sortedPhotos.forEach((photo) => {
       const date = new Date(photo.createdAt).toLocaleDateString(undefined, {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
       if (!groups[date]) {
         groups[date] = [];
@@ -29,8 +28,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick
       groups[date].push(photo);
     });
 
-    return Object.entries(groups).sort((a, b) => 
-      new Date(a[1][0].createdAt).getTime() - new Date(b[1][0].createdAt).getTime()
+    return Object.entries(groups).sort(
+      (a, b) => new Date(a[1][0].createdAt).getTime() - new Date(b[1][0].createdAt).getTime(),
     );
   }, [photos]);
 
@@ -54,37 +53,39 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick
         {groupedPhotos.map(([date, dayPhotos]) => (
           <section key={date} className="space-y-6">
             <div className="flex items-center gap-3 pb-2 border-b border-gray-800">
-              <div className="bg-blue-900/30 p-2 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-400" />
-              </div>
-              <h2 className="text-xl font-bold text-white">{date}</h2>
-              <span className="text-sm font-medium text-gray-400 bg-gray-800 px-2.5 py-0.5 rounded-full border border-gray-700">
+              <h2 className="text-sm font-medium text-gray-400">{date}</h2>
+              <span className="text-xs text-gray-500">
                 {dayPhotos.length} {dayPhotos.length === 1 ? 'photo' : 'photos'}
               </span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {dayPhotos.map((photo) => (
-                <div 
+                <div
                   key={photo.id}
-                  className="group relative bg-gray-900 rounded-xl shadow-sm border border-gray-800 overflow-hidden transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer hover:border-gray-600"
+                  className="group relative bg-gray-800 rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1"
                   onClick={() => onPhotoClick?.(photo)}
                 >
                   <div className="aspect-square w-full bg-gray-800 overflow-hidden">
-                    <img 
-                      src={photo.downloadUrl} 
-                      alt={photo.filename}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    <img
+                      src={photo.downloadUrl}
+                      alt=""
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
                   </div>
-                  
-                  <div className="p-3 space-y-2">
+
+                  <div className="px-3 py-2 flex items-center gap-3">
                     <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
                       <Clock className="w-3 h-3" />
-                      <span>{new Date(photo.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>
+                        {new Date(photo.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
                     </div>
-                    
+
                     {photo.lat !== null && photo.lng !== null ? (
                       <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
                         <MapPin className="w-3 h-3" />
@@ -96,12 +97,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick
                         <span>No location</span>
                       </div>
                     )}
-                  </div>
-
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg transform scale-90 group-hover:scale-100 transition-transform min-h-[44px]">
-                      View Large
-                    </button>
                   </div>
                 </div>
               ))}

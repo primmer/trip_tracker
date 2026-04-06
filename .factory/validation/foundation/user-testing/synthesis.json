@@ -8,14 +8,10 @@
     "failed": 0,
     "blocked": 0
   },
-  "passedAssertions": [
-    "VAL-FOUND-004"
-  ],
+  "passedAssertions": ["VAL-FOUND-004"],
   "failedAssertions": [],
   "blockedAssertions": [],
   "appliedUpdates": [],
   "previousRound": ".factory/validation/foundation/user-testing/synthesis.round1.json",
-  "flowReports": [
-    ".factory/validation/foundation/user-testing/flows/foundation-web-api-u1-r2.json"
-  ]
+  "flowReports": [".factory/validation/foundation/user-testing/flows/foundation-web-api-u1-r2.json"]
 }

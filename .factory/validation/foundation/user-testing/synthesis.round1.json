@@ -8,12 +8,7 @@
     "failed": 1,
     "blocked": 0
   },
-  "passedAssertions": [
-    "VAL-FOUND-001",
-    "VAL-FOUND-002",
-    "VAL-FOUND-003",
-    "VAL-FOUND-005"
-  ],
+  "passedAssertions": ["VAL-FOUND-001", "VAL-FOUND-002", "VAL-FOUND-003", "VAL-FOUND-005"],
   "failedAssertions": [
     {
       "id": "VAL-FOUND-004",
@@ -34,7 +29,5 @@
     }
   ],
   "previousRound": null,
-  "flowReports": [
-    ".factory/validation/foundation/user-testing/flows/foundation-web-api-u1.json"
-  ]
+  "flowReports": [".factory/validation/foundation/user-testing/flows/foundation-web-api-u1.json"]
 }

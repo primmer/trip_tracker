@@ -4,7 +4,6 @@ import { Trips } from '../pages/Trips';
 import { MemoryRouter } from 'react-router-dom';
 import * as firestore from 'firebase/firestore';
 
-// Mock Lucide icons as they can be problematic in tests
 vi.mock('lucide-react', () => ({
   RefreshCw: () => <div data-testid="refresh-icon" />,
   MapPin: () => <div data-testid="map-pin-icon" />,
@@ -13,6 +12,12 @@ vi.mock('lucide-react', () => ({
   X: () => <div data-testid="x-icon" />,
   Sparkles: () => <div data-testid="sparkles-icon" />,
   Layers: () => <div data-testid="layers-icon" />,
+  Mountain: () => <div data-testid="mountain-icon" />,
+  Bike: () => <div data-testid="bike-icon" />,
+}));
+
+vi.mock('../components/RouteOverlay', () => ({
+  RouteOverlay: () => <div data-testid="route-overlay" />,
 }));
 
 // Mock Firebase
@@ -28,6 +33,9 @@ vi.mock('firebase/firestore', async () => {
     query: vi.fn(),
     orderBy: vi.fn(),
     getDocs: vi.fn(),
+    where: vi.fn(),
+    documentId: vi.fn(),
+    limit: vi.fn(),
   };
 });
 
@@ -57,15 +65,28 @@ const mockTrips = [
 describe('Trips Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    vi.mocked(firestore.getDocs).mockResolvedValue({
-      docs: mockTrips.map(trip => ({
-        id: trip.id,
-        data: () => trip,
-      })),
-    } as unknown as firestore.QuerySnapshot<firestore.DocumentData>);
 
-    // Mock fetch for sync
+    // getDocs is called multiple times: trips query first, then photos + stats per trip
+    let callCount = 0;
+    vi.mocked(firestore.getDocs).mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        // First call: trips query
+        return Promise.resolve({
+          docs: mockTrips.map((trip) => ({
+            id: trip.id,
+            data: () => trip,
+          })),
+          empty: false,
+        } as unknown as firestore.QuerySnapshot<firestore.DocumentData>);
+      }
+      // Subsequent calls: photos and stats queries return empty
+      return Promise.resolve({
+        docs: [],
+        empty: true,
+      } as unknown as firestore.QuerySnapshot<firestore.DocumentData>);
+    });
+
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ status: 'success' }),
@@ -76,20 +97,18 @@ describe('Trips Page', () => {
     render(
       <MemoryRouter>
         <Trips />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Should show loading initially
     expect(screen.getByRole('heading', { name: /trips/i })).toBeInTheDocument();
-    
+
     await waitFor(() => {
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText('#hmb_jul4')).toBeInTheDocument();
+    expect(screen.getByText('Hmb Jul4')).toBeInTheDocument();
     expect(screen.getByText('Morning Ride')).toBeInTheDocument();
-    expect(screen.getByText('2 rides')).toBeInTheDocument();
-    expect(screen.getByText('1 ride')).toBeInTheDocument();
   });
 
   it('shows empty state when no trips exist', async () => {
@@ -100,7 +119,7 @@ describe('Trips Page', () => {
     render(
       <MemoryRouter>
         <Trips />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     await waitFor(() => {

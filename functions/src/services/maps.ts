@@ -16,7 +16,10 @@ export interface PlaceResult {
   types: string[];
 }
 
-export async function reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodeResult | null> {
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<ReverseGeocodeResult | null> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     throw new Error('GOOGLE_MAPS_API_KEY not set in environment.');
@@ -39,7 +42,11 @@ export async function reverseGeocode(lat: number, lng: number): Promise<ReverseG
   return null;
 }
 
-export async function searchNearby(lat: number, lng: number, radius: number = 5000): Promise<PlaceResult[]> {
+export async function searchNearby(
+  lat: number,
+  lng: number,
+  radius: number = 5000,
+): Promise<PlaceResult[]> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     throw new Error('GOOGLE_MAPS_API_KEY not set in environment.');

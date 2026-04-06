@@ -23,11 +23,7 @@
     "total": 4,
     "passed": 1,
     "failed": 3,
-    "failedFeatures": [
-      "map-and-route-display",
-      "elevation-chart",
-      "route-animation"
-    ]
+    "failedFeatures": ["map-and-route-display", "elevation-chart", "route-animation"]
   },
   "blockingIssues": [
     {

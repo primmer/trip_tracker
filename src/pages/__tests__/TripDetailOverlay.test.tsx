@@ -31,16 +31,18 @@ interface PhotoGalleryProps {
 vi.mock('../../components/PhotoGallery', () => ({
   PhotoGallery: ({ onPhotoClick }: PhotoGalleryProps) => (
     <div data-testid="photo-gallery">
-      <button 
-        data-testid="photo-item" 
-        onClick={() => onPhotoClick({
-          id: 'photo1',
-          downloadUrl: 'http://example.com/photo1.jpg',
-          filename: 'photo1.jpg',
-          createdAt: '2024-01-01T10:00:00Z',
-          lat: 37,
-          lng: -122
-        } as Photo)}
+      <button
+        data-testid="photo-item"
+        onClick={() =>
+          onPhotoClick({
+            id: 'photo1',
+            downloadUrl: 'http://example.com/photo1.jpg',
+            filename: 'photo1.jpg',
+            createdAt: '2024-01-01T10:00:00Z',
+            lat: 37,
+            lng: -122,
+          } as Photo)
+        }
       >
         Photo 1
       </button>
@@ -63,7 +65,7 @@ describe('TripDetail Fullscreen Overlay', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup Firestore mocks
     vi.mocked(firestore.getDoc).mockResolvedValue({
       exists: () => true,
@@ -95,7 +97,7 @@ describe('TripDetail Fullscreen Overlay', () => {
           <Routes>
             <Route path="/trip/:tripId" element={<TripDetail />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -116,7 +118,7 @@ describe('TripDetail Fullscreen Overlay', () => {
     // Verify Tailwind classes for size (min-h-[44px] min-w-[44px])
     expect(closeButton.className).toContain('min-h-[44px]');
     expect(closeButton.className).toContain('min-w-[44px]');
-    
+
     // Verify it's a flex container for centering
     expect(closeButton.className).toContain('flex');
     expect(closeButton.className).toContain('items-center');
@@ -126,6 +128,8 @@ describe('TripDetail Fullscreen Overlay', () => {
     fireEvent.click(closeButton);
 
     // Verify overlay is closed
-    expect(screen.queryByRole('button', { name: /close fullscreen view/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /close fullscreen view/i }),
+    ).not.toBeInTheDocument();
   });
 });

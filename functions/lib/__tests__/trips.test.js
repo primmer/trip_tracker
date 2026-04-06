@@ -77,8 +77,8 @@ describe('groupActivitiesIntoTrips', () => {
         const activities = [activity1, activityNoTag];
         const trips = groupActivitiesIntoTrips(activities);
         expect(trips).toHaveLength(2);
-        expect(trips.find(t => t.hashtag === null)).toBeDefined();
-        expect(trips.find(t => t.hashtag === 'otb')).toBeDefined();
+        expect(trips.find((t) => t.hashtag === null)).toBeDefined();
+        expect(trips.find((t) => t.hashtag === 'otb')).toBeDefined();
     });
 });
 //# sourceMappingURL=trips.test.js.map

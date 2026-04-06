@@ -11,24 +11,24 @@ export interface RouteAnimationProps {
   onPositionChange?: (position: { lat: number; lng: number }) => void;
 }
 
-export const RouteAnimation: React.FC<RouteAnimationProps> = ({ 
+export const RouteAnimation: React.FC<RouteAnimationProps> = ({
   activityId,
-  path, 
-  isPlaying, 
-  speed, 
+  path,
+  isPlaying,
+  speed,
   onComplete,
-  onPositionChange
+  onPositionChange,
 }) => {
   const map = useMap();
   const [currentDistance, setCurrentDistance] = useState(0);
   const lastTimeRef = useRef<number | null>(null);
   const requestRef = useRef<number | null>(null);
-  
+
   const totalLength = useMemo(() => computePathLength(path), [path]);
-  
+
   // Base speed in meters per second (approx 20km/h = 5.5m/s, but we want it faster for animation)
   // Let's make it complete a 20km ride in about 20 seconds. 1000m/s.
-  const BASE_SPEED = 500; 
+  const BASE_SPEED = 500;
 
   useEffect(() => {
     setCurrentDistance(0);
@@ -49,8 +49,8 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
       lastTimeRef.current = time;
 
       const distanceDelta = BASE_SPEED * speed * deltaTime;
-      
-      setCurrentDistance(prev => {
+
+      setCurrentDistance((prev) => {
         const next = prev + distanceDelta;
         if (next >= totalLength) {
           onComplete();
@@ -83,7 +83,7 @@ export const RouteAnimation: React.FC<RouteAnimationProps> = ({
 
     const point = getPointAtDistance(path, currentDistance);
     map.panTo(point);
-    
+
     if (onPositionChange) {
       onPositionChange(point);
     }

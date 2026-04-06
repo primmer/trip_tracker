@@ -5,13 +5,7 @@
     "account": "foundation-validator-u1",
     "namespace": "foundation_u1"
   },
-  "toolsUsed": [
-    "agent-browser",
-    "curl",
-    "npm",
-    "python3",
-    "rg"
-  ],
+  "toolsUsed": ["agent-browser", "curl", "npm", "python3", "rg"],
   "assertions": [
     {
       "id": "VAL-FOUND-001",
@@ -35,12 +29,8 @@
         }
       ],
       "evidence": {
-        "screenshots": [
-          "foundation-web-api-u1-home.png"
-        ],
-        "domSnapshots": [
-          "foundation-web-api-u1-home.snapshot.txt"
-        ],
+        "screenshots": ["foundation-web-api-u1-home.png"],
+        "domSnapshots": ["foundation-web-api-u1-home.snapshot.txt"],
         "consoleErrors": "none on initial load (warnings only)",
         "network": "GET http://localhost:5173/ [200] and local asset/module requests [200], no failed localhost:5173 requests"
       },
@@ -63,10 +53,7 @@
         }
       ],
       "evidence": {
-        "screenshots": [
-          "foundation-web-api-u1-home.png",
-          "foundation-web-api-u1-trips.png"
-        ],
+        "screenshots": ["foundation-web-api-u1-home.png", "foundation-web-api-u1-trips.png"],
         "domSnapshots": [
           "foundation-web-api-u1-home.snapshot.txt",
           "foundation-web-api-u1-trips-forward.snapshot.txt"
@@ -178,11 +165,7 @@
       "description": "Shared browser environment had unrelated extension requests/tabs; filtered evidence to localhost routes and opened a dedicated localhost:5173 page for this flow.",
       "resolved": true,
       "resolution": "Captured assertion evidence from the dedicated localhost page and closed that page after testing.",
-      "affectedAssertions": [
-        "VAL-FOUND-001",
-        "VAL-FOUND-002",
-        "VAL-FOUND-003"
-      ]
+      "affectedAssertions": ["VAL-FOUND-001", "VAL-FOUND-002", "VAL-FOUND-003"]
     }
   ],
   "blockers": [],

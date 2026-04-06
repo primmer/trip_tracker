@@ -23,9 +23,7 @@
     "total": 1,
     "passed": 0,
     "failed": 1,
-    "failedFeatures": [
-      "fix-maps-scrutiny-issues"
-    ]
+    "failedFeatures": ["fix-maps-scrutiny-issues"]
   },
   "blockingIssues": [
     {

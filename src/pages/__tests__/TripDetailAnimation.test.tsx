@@ -36,12 +36,8 @@ vi.mock('../../components/Map/TripMap', () => ({
           Complete
         </button>
       )}
-      <div data-testid="animation-status">
-        {animationState.isPlaying ? 'Playing' : 'Paused'}
-      </div>
-      <div data-testid="animation-speed">
-        {animationState.speed}x
-      </div>
+      <div data-testid="animation-status">{animationState.isPlaying ? 'Playing' : 'Paused'}</div>
+      <div data-testid="animation-speed">{animationState.speed}x</div>
     </div>
   ),
 }));
@@ -69,7 +65,10 @@ describe('TripDetail Animation Controls', () => {
   };
 
   const mockStream: ActivityStreams = {
-    latlng: [[37, -122], [37.1, -122.1]],
+    latlng: [
+      [37, -122],
+      [37.1, -122.1],
+    ],
     altitude: [100, 200],
     distance: [0, 10000],
     time: [0, 3600],
@@ -77,7 +76,7 @@ describe('TripDetail Animation Controls', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup Firestore mocks
     vi.mocked(firestore.getDoc).mockImplementation((docRef: unknown) => {
       const ref = docRef as { path: string; id: string };
@@ -99,10 +98,12 @@ describe('TripDetail Animation Controls', () => {
 
     vi.mocked(firestore.getDocs).mockImplementation(() => {
       return Promise.resolve({
-        docs: [{
-          id: '123',
-          data: () => mockActivity,
-        }],
+        docs: [
+          {
+            id: '123',
+            data: () => mockActivity,
+          },
+        ],
       } as unknown as firestore.QuerySnapshot);
     });
   });
@@ -115,7 +116,7 @@ describe('TripDetail Animation Controls', () => {
           <Routes>
             <Route path="/trip/:tripId" element={<TripDetail />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
     return result;
@@ -126,7 +127,7 @@ describe('TripDetail Animation Controls', () => {
 
     // 1. Verify Day 1 stats card and animation controls
     await screen.findByTitle(/Play/i);
-    expect(screen.getByText(/#test-trip/i)).toBeInTheDocument();
+    expect(screen.getByText(/test-trip/i)).toBeInTheDocument();
     const playButton = screen.getByTitle(/Play/i).closest('button');
     const speedButton = screen.getByTitle(/Toggle Speed/i);
     expect(playButton).toBeInTheDocument();

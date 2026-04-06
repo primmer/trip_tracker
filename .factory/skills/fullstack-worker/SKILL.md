@@ -10,6 +10,7 @@ NOTE: Startup and cleanup are handled by `worker-base`. This skill defines the W
 ## When to Use This Skill
 
 Use for features that involve any combination of:
+
 - React UI components (pages, components, hooks)
 - Firebase Cloud Functions (API endpoints, background tasks)
 - Firestore schema/data operations
@@ -30,6 +31,7 @@ Use for features that involve any combination of:
 ### 2. Plan Implementation
 
 Before writing code, identify:
+
 - Which files need to be created or modified
 - What types/interfaces are needed
 - What tests should be written
@@ -38,6 +40,7 @@ Before writing code, identify:
 ### 3. Write Tests First (TDD)
 
 Write failing tests BEFORE implementation:
+
 - **Utility functions**: Vitest unit tests (e.g., hashtag parsing, unit conversion, timestamp matching)
 - **React components**: Vitest + React Testing Library (rendering, interaction, state)
 - **Cloud Functions**: Vitest with mocked Firebase Admin SDK
@@ -60,6 +63,7 @@ Write failing tests BEFORE implementation:
 ### 6. Run Validators
 
 Run ALL of these and fix any issues:
+
 ```
 npm run typecheck
 npm run lint
@@ -69,6 +73,7 @@ npx vitest run --reporter=verbose
 ### 7. Manual Verification
 
 Start the dev server and verify the feature works interactively:
+
 - Start frontend: `npm run dev` (port 5173)
 - Start functions if needed: `cd functions && npm run dev` (port 5001)
 - Use agent-browser to navigate to http://localhost:5173 and verify the feature
@@ -90,24 +95,50 @@ Commit with a descriptive message covering what was built and tested.
   "whatWasLeftUndone": "",
   "verification": {
     "commandsRun": [
-      { "command": "npx vitest run --reporter=verbose", "exitCode": 0, "observation": "6 tests passed: parseHashtags (3 cases), groupActivitiesByTrip (2 cases), refreshStravaToken (1 case)" },
+      {
+        "command": "npx vitest run --reporter=verbose",
+        "exitCode": 0,
+        "observation": "6 tests passed: parseHashtags (3 cases), groupActivitiesByTrip (2 cases), refreshStravaToken (1 case)"
+      },
       { "command": "npm run typecheck", "exitCode": 0, "observation": "No errors" },
       { "command": "npm run lint", "exitCode": 0, "observation": "No warnings or errors" },
-      { "command": "curl -X POST http://localhost:5001/api/sync", "exitCode": 0, "observation": "200 OK, response: {synced: 3, trips: 2}" }
+      {
+        "command": "curl -X POST http://localhost:5001/api/sync",
+        "exitCode": 0,
+        "observation": "200 OK, response: {synced: 3, trips: 2}"
+      }
     ],
     "interactiveChecks": [
-      { "action": "Navigate to http://localhost:5173, click Sync button", "observed": "Loading spinner shown, trip list populated after 3 seconds with 2 trips" },
-      { "action": "Check trip list entries", "observed": "#hmb_jul4 shows Jul 4-5 (2 rides), #otb shows Mar 15 (1 ride)" },
+      {
+        "action": "Navigate to http://localhost:5173, click Sync button",
+        "observed": "Loading spinner shown, trip list populated after 3 seconds with 2 trips"
+      },
+      {
+        "action": "Check trip list entries",
+        "observed": "#hmb_jul4 shows Jul 4-5 (2 rides), #otb shows Mar 15 (1 ride)"
+      },
       { "action": "Verify console has no errors", "observed": "Console clean, no uncaught errors" }
     ]
   },
   "tests": {
     "added": [
-      { "file": "src/utils/__tests__/hashtag.test.ts", "cases": [
-        { "name": "extracts single hashtag", "verifies": "parseHashtags('#otb something') returns ['otb']" },
-        { "name": "extracts multiple hashtags", "verifies": "parseHashtags('#trip1 text #trip2') returns ['trip1', 'trip2']" },
-        { "name": "returns empty for no hashtags", "verifies": "parseHashtags('no tags here') returns []" }
-      ]}
+      {
+        "file": "src/utils/__tests__/hashtag.test.ts",
+        "cases": [
+          {
+            "name": "extracts single hashtag",
+            "verifies": "parseHashtags('#otb something') returns ['otb']"
+          },
+          {
+            "name": "extracts multiple hashtags",
+            "verifies": "parseHashtags('#trip1 text #trip2') returns ['trip1', 'trip2']"
+          },
+          {
+            "name": "returns empty for no hashtags",
+            "verifies": "parseHashtags('no tags here') returns []"
+          }
+        ]
+      }
     ]
   },
   "discoveredIssues": []

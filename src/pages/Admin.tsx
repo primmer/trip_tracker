@@ -21,7 +21,9 @@ export const Admin: React.FC = () => {
 
   const handleSync = async (mode: 'quick' | 'full' = 'quick') => {
     setSyncing(mode);
-    setSyncStep(mode === 'quick' ? 'Quick syncing new activities...' : 'Full re-syncing all activities...');
+    setSyncStep(
+      mode === 'quick' ? 'Quick syncing new activities...' : 'Full re-syncing all activities...',
+    );
     setSyncResult(null);
     setError(null);
 
@@ -62,7 +64,8 @@ export const Admin: React.FC = () => {
             <p className="text-gray-400 text-sm mt-1 max-w-md">
               <strong className="text-gray-300">Quick Sync</strong> picks up new rides only.
               <br />
-              <strong className="text-gray-300">Full Sync</strong> re-fetches all descriptions and re-groups all trips.
+              <strong className="text-gray-300">Full Sync</strong> re-fetches all descriptions and
+              re-groups all trips.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -114,20 +117,28 @@ export const Admin: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               <div className="space-y-1">
-                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Activities Found</p>
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                  Activities Found
+                </p>
                 <p className="text-2xl font-bold text-white">{syncResult.activities_synced}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Trips Created</p>
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                  Trips Created
+                </p>
                 <p className="text-2xl font-bold text-white">{syncResult.trips_created}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Saved to DB</p>
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                  Saved to DB
+                </p>
                 <p className="text-2xl font-bold text-white">{syncResult.activities_saved}</p>
               </div>
               {syncResult.enhanced_count !== undefined && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Titles Enhanced</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                    Titles Enhanced
+                  </p>
                   <p className="text-2xl font-bold text-white">{syncResult.enhanced_count}</p>
                 </div>
               )}

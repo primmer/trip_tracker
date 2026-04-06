@@ -89,7 +89,7 @@ describe('groupActivitiesIntoTrips', () => {
     const trips = groupActivitiesIntoTrips(activities);
 
     expect(trips).toHaveLength(2);
-    expect(trips.find(t => t.hashtag === null)).toBeDefined();
-    expect(trips.find(t => t.hashtag === 'otb')).toBeDefined();
+    expect(trips.find((t) => t.hashtag === null)).toBeDefined();
+    expect(trips.find((t) => t.hashtag === 'otb')).toBeDefined();
   });
 });

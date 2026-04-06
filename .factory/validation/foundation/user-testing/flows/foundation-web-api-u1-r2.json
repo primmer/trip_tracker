@@ -5,10 +5,7 @@
     "account": "not required (public app shell)",
     "namespace": "foundation_round2_u1"
   },
-  "toolsUsed": [
-    "curl",
-    "my-chrome"
-  ],
+  "toolsUsed": ["curl", "my-chrome"],
   "assertionResults": [
     {
       "assertionId": "VAL-FOUND-004",
@@ -93,9 +90,7 @@
       "description": "Shared browser instance included unrelated tabs/extensions; filtered evidence strictly to localhost:5173 and localhost:5001 requests.",
       "resolved": true,
       "resolution": "Opened a dedicated localhost page, captured only relevant request/console evidence, then closed that page.",
-      "affectedAssertions": [
-        "VAL-FOUND-004"
-      ]
+      "affectedAssertions": ["VAL-FOUND-004"]
     }
   ],
   "blockers": [],

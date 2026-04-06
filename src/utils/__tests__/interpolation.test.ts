@@ -33,7 +33,7 @@ describe('interpolation utils', () => {
       { lat: 0, lng: 10 },
       { lat: 0, lng: 20 },
     ];
-    
+
     // Distance 5 should be at (0, 5)
     const p5 = getPointAtDistance(path, 5);
     expect(p5.lat).toBe(0);

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { metersToFeet, metersToMiles, metersToKm, secondsToDuration } from '../units';
+import {
+  metersToFeet,
+  metersToMiles,
+  metersToKm,
+  secondsToDuration,
+  formatTripName,
+} from '../units';
 
 describe('unit conversions', () => {
   it('converts meters to feet correctly', () => {
@@ -24,5 +30,28 @@ describe('unit conversions', () => {
     expect(secondsToDuration(3660)).toBe('1h 1m');
     expect(secondsToDuration(60)).toBe('0h 1m');
     expect(secondsToDuration(3725)).toBe('1h 2m');
+  });
+});
+
+describe('formatTripName', () => {
+  it('converts underscored hashtags to title case', () => {
+    expect(formatTripName('pacifica_to_half_moon_bay', '')).toBe('Pacifica to Half Moon Bay');
+  });
+
+  it('lowercases short prepositions except when first word', () => {
+    expect(formatTripName('the_road_to_nowhere', '')).toBe('The Road to Nowhere');
+    expect(formatTripName('to_the_coast', '')).toBe('To the Coast');
+  });
+
+  it('falls back to name when hashtag is null', () => {
+    expect(formatTripName(null, 'Morning Ride')).toBe('Morning Ride');
+  });
+
+  it('handles single-word hashtags', () => {
+    expect(formatTripName('otb', '')).toBe('Otb');
+  });
+
+  it('returns empty string for null hashtag and empty fallback', () => {
+    expect(formatTripName(null, '')).toBe('');
   });
 });

@@ -95,7 +95,7 @@ export async function createPickerSession(maxItemCount: number = 50) {
   const response = await fetch('https://photospicker.googleapis.com/v1/sessions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -117,7 +117,7 @@ export async function getPickerSession(sessionId: string) {
   const accessToken = await refreshGoogleTokenIfNeeded();
   const response = await fetch(`https://photospicker.googleapis.com/v1/sessions/${sessionId}`, {
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 
@@ -160,7 +160,7 @@ export async function listPickedMediaItems(sessionId: string): Promise<MediaItem
 
     const response = await fetch(url.toString(), {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 

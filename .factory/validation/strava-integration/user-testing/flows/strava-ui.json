@@ -5,10 +5,7 @@
     "account": "N/A",
     "namespace": "strava_ui_flow_ns"
   },
-  "toolsUsed": [
-    "agent-browser",
-    "curl"
-  ],
+  "toolsUsed": ["agent-browser", "curl"],
   "assertions": [
     {
       "id": "VAL-FOUND-006",
@@ -96,9 +93,7 @@
         }
       ],
       "evidence": {
-        "screenshots": [
-          "inline:trip-detail-placeholder"
-        ],
+        "screenshots": ["inline:trip-detail-placeholder"],
         "consoleErrors": "No route-crash error while rendering placeholder",
         "network": "No activity detail data-fetch call observed on /trip/otb"
       },
@@ -121,9 +116,7 @@
         }
       ],
       "evidence": {
-        "screenshots": [
-          "inline:trip-detail-placeholder"
-        ],
+        "screenshots": ["inline:trip-detail-placeholder"],
         "consoleErrors": "No additional console errors after reload beyond React Router warnings",
         "network": "Reload of /trip/otb showed only localhost assets; no strava.com/api/v3 requests"
       },
@@ -168,9 +161,7 @@
         }
       ],
       "evidence": {
-        "screenshots": [
-          "inline:trips-empty-state-after-failed-sync"
-        ],
+        "screenshots": ["inline:trips-empty-state-after-failed-sync"],
         "consoleErrors": "Sync failure error present; no independent rendering crash observed",
         "network": "POST /api/strava/sync -> 500"
       },
@@ -195,11 +186,7 @@
       "description": "Sync failure opened a blocking browser alert dialog (\"Failed to sync with Strava\") before additional interactions were possible.",
       "resolved": true,
       "resolution": "Accepted dialog and continued evidence collection.",
-      "affectedAssertions": [
-        "VAL-STRAVA-004",
-        "VAL-STRAVA-008",
-        "VAL-STRAVA-009"
-      ]
+      "affectedAssertions": ["VAL-STRAVA-004", "VAL-STRAVA-008", "VAL-STRAVA-009"]
     }
   ],
   "blockers": [

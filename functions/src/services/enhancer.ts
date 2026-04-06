@@ -7,7 +7,11 @@ export interface EnhancedDescription {
 }
 
 const GENERIC_TITLES = [
-  'Morning Ride', 'Afternoon Ride', 'Evening Ride', 'Lunch Ride', 'Night Ride'
+  'Morning Ride',
+  'Afternoon Ride',
+  'Evening Ride',
+  'Lunch Ride',
+  'Night Ride',
 ];
 
 export function isGenericTitle(title: string): boolean {
@@ -16,17 +20,18 @@ export function isGenericTitle(title: string): boolean {
 
 export async function enhanceActivityDescription(
   lat: number,
-  lng: number
+  lng: number,
 ): Promise<{ title: string; pois: string[] }> {
   const pois: string[] = [];
   const geocode = await reverseGeocode(lat, lng);
-  
+
   if (geocode) {
     // Extract neighborhood or sub-locality
-    const area = geocode.address_components.find(c => 
-      c.types.includes('neighborhood') || 
-      c.types.includes('sublocality') ||
-      c.types.includes('locality')
+    const area = geocode.address_components.find(
+      (c) =>
+        c.types.includes('neighborhood') ||
+        c.types.includes('sublocality') ||
+        c.types.includes('locality'),
     );
     if (area) {
       pois.push(area.long_name);
@@ -42,7 +47,7 @@ export async function enhanceActivityDescription(
 
   // Deduplicate POIs
   const uniquePois = Array.from(new Set(pois)).slice(0, 5);
-  
+
   if (uniquePois.length === 0) {
     return { title: 'Scenic Ride', pois: [] };
   }
@@ -60,10 +65,10 @@ export async function enhanceActivityDescription(
 
 export function generateEnhancedTitle(pois: string[]): string {
   if (pois.length === 0) return 'Scenic Ride';
-  
+
   // Use unique POIs to build a descriptive title
   const uniquePois = Array.from(new Set(pois));
-  
+
   if (uniquePois.length >= 3) {
     return `Ride through ${uniquePois[0]}, ${uniquePois[1]}, and ${uniquePois[2]}`;
   } else if (uniquePois.length === 2) {

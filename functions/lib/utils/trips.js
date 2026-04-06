@@ -7,7 +7,7 @@ export function extractHashtags(text) {
         return [];
     const regex = /#(\w+)/g;
     const matches = [...text.matchAll(regex)];
-    return matches.map(match => match[1]);
+    return matches.map((match) => match[1]);
 }
 /**
  * Groups activities into trips based on hashtags.

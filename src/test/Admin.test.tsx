@@ -20,19 +20,20 @@ vi.mock('../utils/api', () => ({
 describe('Admin Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Mock fetch for sync
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({
-        activities_synced: 10,
-        trips_created: 2,
-        activities_saved: 8,
-        activities_failed: 0,
-        trips_saved: 2,
-        trips_failed: 0,
-        enhanced_count: 5
-      }),
+      json: () =>
+        Promise.resolve({
+          activities_synced: 10,
+          trips_created: 2,
+          activities_saved: 8,
+          activities_failed: 0,
+          trips_saved: 2,
+          trips_failed: 0,
+          enhanced_count: 5,
+        }),
     } as unknown as Response);
   });
 
@@ -40,7 +41,7 @@ describe('Admin Page', () => {
     render(
       <MemoryRouter>
         <Admin />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument();
@@ -52,7 +53,7 @@ describe('Admin Page', () => {
     render(
       <MemoryRouter>
         <Admin />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const syncButton = screen.getByRole('button', { name: /full sync/i });
@@ -85,7 +86,7 @@ describe('Admin Page', () => {
     render(
       <MemoryRouter>
         <Admin />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const syncButton = screen.getByRole('button', { name: /full sync/i });
