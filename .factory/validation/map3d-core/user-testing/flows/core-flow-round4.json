@@ -1,0 +1,162 @@
+{
+  "groupId": "core-flow-round4",
+  "testedAt": "2026-04-06T06:32:51Z",
+  "isolation": {
+    "surface": "chrome-devtools",
+    "missionDir": "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f",
+    "appUrl": "http://localhost:5173/trip/marin_headlands_hawk_and_haypress_camps",
+    "constraints": [
+      "Use Chrome DevTools MCP only",
+      "No code changes",
+      "Stay on assigned localhost trip surface"
+    ]
+  },
+  "toolsUsed": [
+    "chrome-devtools"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-MAP3D-006",
+      "title": "Clicking photo marker opens dimmed preview overlay",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Initialize Chrome DevTools MCP session and open assigned trip URL",
+          "expected": "Browser session available for marker click and overlay validation",
+          "observed": "Session initialization failed with chrome-profile-in-use error before navigation"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": "blocked",
+        "consoleErrors": "not collected",
+        "network": "not collected",
+        "artifacts": [
+          "map3d-core/core-flow-round4/mcp-blocked-error.txt"
+        ]
+      },
+      "issues": "Blocked by Chrome DevTools MCP contention: browser profile already in use."
+    },
+    {
+      "id": "VAL-MAP3D-009",
+      "title": "Speed toggle and animation completion reset",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Initialize Chrome DevTools MCP session to validate speed state and completion reset",
+          "expected": "Can interact with play/speed controls and collect snapshot evidence",
+          "observed": "Session initialization failed with chrome-profile-in-use error"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": "blocked",
+        "consoleErrors": "not collected",
+        "network": "not collected",
+        "artifacts": [
+          "map3d-core/core-flow-round4/mcp-blocked-error.txt"
+        ]
+      },
+      "issues": "Blocked by Chrome DevTools MCP contention: browser profile already in use."
+    },
+    {
+      "id": "VAL-MAP3D-014",
+      "title": "Map pan/tilt/rotate interaction works",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Initialize Chrome DevTools MCP session to validate pan via camera-center delta",
+          "expected": "Collect evaluate_script evidence of pan and document tilt/rotate manual limitation",
+          "observed": "Session initialization failed with chrome-profile-in-use error before any map interaction"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": "blocked (no camera state captured)",
+        "consoleErrors": "not collected",
+        "network": "not collected",
+        "artifacts": [
+          "map3d-core/core-flow-round4/mcp-blocked-error.txt"
+        ]
+      },
+      "issues": "Blocked by Chrome DevTools MCP contention. Tilt/rotate still require manual verification when MCP is available, but pan evidence could not be collected in this run."
+    },
+    {
+      "id": "VAL-CROSS-013",
+      "title": "Photo marker → preview → gallery lightbox flow",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Initialize Chrome DevTools MCP session and run marker->preview->lightbox flow",
+          "expected": "Capture screenshot/snapshot evidence through full flow",
+          "observed": "Session initialization failed with chrome-profile-in-use error"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": "blocked",
+        "consoleErrors": "not collected",
+        "network": "not collected",
+        "artifacts": [
+          "map3d-core/core-flow-round4/mcp-blocked-error.txt"
+        ]
+      },
+      "issues": "Blocked by Chrome DevTools MCP contention: browser profile already in use."
+    },
+    {
+      "id": "VAL-CROSS-017",
+      "title": "No application console errors across full user flow",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Initialize Chrome DevTools MCP session and execute full flow for filtered console assessment",
+          "expected": "Collect console errors and filter out known third-party noise per contract",
+          "observed": "Session initialization failed with chrome-profile-in-use error; no console stream available for filtering"
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "snapshots": [],
+        "evaluate": "blocked",
+        "consoleErrors": "not collected (filtering could not be executed)",
+        "network": "not collected",
+        "artifacts": [
+          "map3d-core/core-flow-round4/mcp-blocked-error.txt"
+        ]
+      },
+      "issues": "Blocked by Chrome DevTools MCP contention. Contract filtering (Google Maps internal Event rejections / storage.googleapis.com retry noise / telemetry) could not be applied because no browser session was available."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Chrome DevTools MCP shared profile contention prevented session startup for rerun.",
+      "resolved": false,
+      "resolution": "Retried list_pages and retried after wait; same error persisted.",
+      "affectedAssertions": [
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-014",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Chrome DevTools MCP error: browser already running for /Users/primmer/.cache/chrome-devtools-mcp/chrome-profile.",
+      "affectedAssertions": [
+        "VAL-MAP3D-006",
+        "VAL-MAP3D-009",
+        "VAL-MAP3D-014",
+        "VAL-CROSS-013",
+        "VAL-CROSS-017"
+      ],
+      "quickFixAttempted": "Retried MCP list_pages twice immediately and once after a 5-second wait; all attempts returned the same profile-in-use error."
+    }
+  ],
+  "summary": "Attempted rerun for 5 assigned assertions; all 5 are blocked due to Chrome DevTools MCP profile contention before navigation or interaction could begin."
+}

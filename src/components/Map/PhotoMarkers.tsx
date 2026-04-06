@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { useMap3D } from '@vis.gl/react-google-maps';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Marker3D, AltitudeMode } from '@vis.gl/react-google-maps';
 
 export interface Photo {
   id: string;
@@ -15,60 +15,69 @@ interface PhotoMarkersProps {
   onPhotoSelect?: (photo: Photo) => void;
 }
 
-// Local type extension — Marker3DInteractiveElement is not yet in @types/google.maps 3.58.1
-interface Marker3DInteractiveEl extends HTMLElement {
-  position: google.maps.LatLngAltitudeLiteral | null;
-  altitudeMode: string;
+interface PhotoMarkerItemProps {
+  photo: Photo;
+  onPhotoSelect?: (photo: Photo) => void;
 }
 
-export const PhotoMarkers: React.FC<PhotoMarkersProps> = ({ photos, onPhotoSelect }) => {
-  const map3d = useMap3D();
-
-  // Keep a stable ref to the callback so the effect doesn't re-run on every render
+// Individual photo marker using the React Marker3D component.
+//
+// Marker3D automatically wraps <img> children in a <template slot="default">
+// as required by the gmp-marker-3d web component API — this is what makes
+// the thumbnail visually render in the 3D scene. The previous imperative
+// approach had correct DOM structure but no visual output; using the React
+// Marker3D component's built-in content-slot handling fixes this.
+//
+// When onClick is provided, Marker3D uses gmp-marker-3d-interactive so the
+// marker fires gmp-click events in response to user gestures in the 3D scene.
+const PhotoMarkerItem: React.FC<PhotoMarkerItemProps> = ({ photo, onPhotoSelect }) => {
+  // Stable ref to avoid re-creating the callback (and re-registering event
+  // listeners) on every parent render when onPhotoSelect is an inline lambda.
   const onPhotoSelectRef = useRef(onPhotoSelect);
   useEffect(() => {
     onPhotoSelectRef.current = onPhotoSelect;
   });
 
+  const handleClick = useCallback(() => {
+    onPhotoSelectRef.current?.(photo);
+  }, [photo]);
+
+  return (
+    <Marker3D
+      position={{ lat: photo.lat!, lng: photo.lng!, altitude: 0 }}
+      altitudeMode={AltitudeMode.CLAMP_TO_GROUND}
+      onClick={handleClick}
+      zIndex={500}
+    >
+      <img
+        src={photo.downloadUrl}
+        style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          border: '2px solid white',
+          objectFit: 'cover',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
+          cursor: 'pointer',
+          display: 'block',
+        }}
+        alt=""
+      />
+    </Marker3D>
+  );
+};
+
+export const PhotoMarkers: React.FC<PhotoMarkersProps> = ({ photos, onPhotoSelect }) => {
   const validPhotos = useMemo(
     () => photos.filter((p) => p.lat !== null && p.lng !== null),
     [photos],
   );
 
-  useEffect(() => {
-    if (!map3d) return;
-
-    const markers: HTMLElement[] = [];
-
-    validPhotos.forEach((photo) => {
-      const marker = document.createElement(
-        'gmp-marker-3d-interactive',
-      ) as Marker3DInteractiveEl;
-      marker.position = { lat: photo.lat!, lng: photo.lng!, altitude: 0 };
-      marker.altitudeMode = google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND;
-
-      const template = document.createElement('template');
-      const img = document.createElement('img');
-      img.src = photo.downloadUrl;
-      img.style.cssText =
-        'width:40px;height:40px;border-radius:50%;border:2px solid white;object-fit:cover;box-shadow:0 1px 4px rgba(0,0,0,0.5);cursor:pointer;display:block;';
-      template.content.appendChild(img);
-      marker.appendChild(template);
-
-      const handleSelect = () => {
-        onPhotoSelectRef.current?.(photo);
-      };
-      marker.addEventListener('gmp-click', handleSelect);
-      marker.addEventListener('click', handleSelect);
-
-      map3d.append(marker);
-      markers.push(marker);
-    });
-
-    return () => {
-      markers.forEach((m) => m.remove());
-    };
-  }, [map3d, validPhotos]);
-
-  return null;
+  return (
+    <>
+      {validPhotos.map((photo) => (
+        <PhotoMarkerItem key={photo.id} photo={photo} onPhotoSelect={onPhotoSelect} />
+      ))}
+    </>
+  );
 };
