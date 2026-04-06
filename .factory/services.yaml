@@ -1,24 +1,22 @@
 commands:
-  install: npm install && cd functions && npm install
-  dev: npm run dev
-  dev:functions: cd functions && npm run dev
-  build: npm run build
-  build:functions: cd functions && npm run build
+  install: npm install
   typecheck: npm run typecheck
+  build: npx vite build
+  test: npx vitest run
   lint: npm run lint
-  test: npx vitest run --reporter=verbose
+  dev: ./dev.sh
 
 services:
-  frontend:
-    start: npm run dev -- --port 5173
+  vite:
+    start: npx vite --port 5173
     stop: lsof -ti :5173 | xargs kill
     healthcheck: curl -sf http://localhost:5173
     port: 5173
     depends_on: []
 
   functions:
-    start: cd functions && npm run dev
+    start: cd functions && npm run build && npx firebase emulators:start --only functions
     stop: lsof -ti :5001 | xargs kill
-    healthcheck: curl -sf http://localhost:5001/api/health
+    healthcheck: curl -sf http://localhost:5001
     port: 5001
     depends_on: []

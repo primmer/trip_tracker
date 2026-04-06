@@ -2,7 +2,7 @@
 
 ## Before Screenshots (Reference Baseline)
 
-These capture the current UX that must be preserved through the refactor. The only visual difference after the refactor should be that mountains show actual 3D terrain relief when tilted.
+These capture the current UX that must be preserved through the refactor. The only visual map difference after the refactor should be that mountains show actual 3D terrain relief when tilted. Note the plan does include an additional fix: Mobile Header Vertical Space.
 
 ### Desktop (1440x900)
 - `before-desktop-all-rides.jpg` -- All rides selected, multi-color polylines, elevation chart, stats overlay
@@ -30,7 +30,7 @@ The trip detail map tilts but shows flat terrain -- mountains have no height rel
 ## Prerequisites
 
 ### Google Cloud Console
-1. Enable the **Map Tiles API** on the project (`primco-trip-tracker`). This is in addition to the already-enabled **Maps JavaScript API**. Without it, the 3D map will fail to load tiles (black screen).
+1. The **Map Tiles API** on the project (`primco-trip-tracker`) is already enabled. This is in addition to the already-enabled **Maps JavaScript API**. Without it, the 3D map will fail to load tiles (black screen).
 
 ### Library Upgrade
 2. Upgrade `@vis.gl/react-google-maps` from **v1.7.1** to **v1.8.2** (or latest stable). v1.7.1 has 3D type definitions but zero runtime code for Map3D. The runtime `Map3D`, `Marker3D`, and `Polyline3D` components were added in v1.8.0.
@@ -70,7 +70,7 @@ npm install @vis.gl/react-google-maps@^1.8.2
 - Remove `backgroundColor` prop (not supported on Map3D)
 
 **Camera model mapping guide:**
-- `defaultZoom: 2` → `defaultRange: 20000000` (very far out, world view)
+- `defaultZoom: 2` → `defaultRange: 20000000` (very far out, world view, not desired)
 - For fitted bounds: calculate range from the bounding box diagonal distance. Rough formula: `range = boundsSpanMeters * 1.5`
 
 **Replace `RoutePolylines` (uses `google.maps.Polyline`):**

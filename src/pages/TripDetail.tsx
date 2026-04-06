@@ -645,7 +645,6 @@ export const TripDetail: React.FC = () => {
               <div className="absolute inset-0">
                 <TripMap
                   activityStreams={streams}
-                  mapId="trip_map"
                   highlightedActivityId={activeActivityId}
                   animationState={animationState}
                   onAnimationComplete={() =>

@@ -1,11 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Map, useMap, MapProps, Marker } from '@vis.gl/react-google-maps';
+import { Map3D, useMap3D, AltitudeMode, MapMode, Marker3D } from '@vis.gl/react-google-maps';
 import { ActivityStreams } from '../../types';
 import { RouteAnimation } from './RouteAnimation';
 import { PhotoMarkers, Photo } from './PhotoMarkers';
 import { ROUTE_COLORS } from './routeColors';
+import { calculateRangeFromBounds } from '../../utils/mapUtils';
 
-interface TripMapProps extends MapProps {
+// Local type extension for flyCameraTo — available at runtime but not yet in @types/google.maps 3.58.1
+interface Map3DElementWithFly extends google.maps.maps3d.Map3DElement {
+  flyCameraTo(options: {
+    endCamera: {
+      center: google.maps.LatLngAltitudeLiteral;
+      range: number;
+      tilt: number;
+      heading: number;
+    };
+    durationMillis: number;
+  }): void;
+}
+
+interface TripMapProps {
   activityStreams: Record<number, ActivityStreams>;
   highlightedActivityId?: number | null;
   animationState?: {
@@ -27,7 +41,6 @@ export const TripMap: React.FC<TripMapProps> = ({
   photos = [],
   scrubPosition,
   onPhotoSelect,
-  ...mapProps
 }) => {
   const [animationPos, setAnimationPos] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -39,23 +52,13 @@ export const TripMap: React.FC<TripMapProps> = ({
   }, [animationState?.activityId, activityStreams]);
 
   return (
-    <Map
-      {...mapProps}
-      mapId={import.meta.env.VITE_GOOGLE_MAPS_ID || 'DEMO_MAP_ID'}
-      renderingType="VECTOR"
+    <Map3D
+      mode={MapMode.HYBRID}
       style={{ width: '100%', height: '100%' }}
-      defaultCenter={{ lat: 0, lng: 0 }}
-      defaultZoom={2}
+      defaultCenter={{ lat: 37.5, lng: -122.0, altitude: 0 }}
+      defaultRange={2000000}
       defaultTilt={0}
       defaultHeading={0}
-      gestureHandling="greedy"
-      disableDefaultUI={false}
-      zoomControl={true}
-      mapTypeControl={true}
-      streetViewControl={false}
-      headingInteractionEnabled={true}
-      tiltInteractionEnabled={true}
-      backgroundColor="#030712"
     >
       <RoutePolylines
         activityStreams={activityStreams}
@@ -67,122 +70,133 @@ export const TripMap: React.FC<TripMapProps> = ({
         isAnimationPlaying={animationState?.isPlaying}
       />
 
-      <SetInitialMapType />
+      {/* PhotoMarkers and RouteAnimation still use useMap/AdvancedMarker — they will be
+          non-functional until the next feature (map3d-photo-animation) migrates them */}
       <PhotoMarkers photos={photos} onPhotoSelect={onPhotoSelect} />
 
       {animationPath && animationState && animationState.activityId !== null && (
-        <>
-          <RouteAnimation
-            activityId={animationState.activityId}
-            path={animationPath}
-            isPlaying={animationState.isPlaying}
-            speed={animationState.speed}
-            onComplete={() => onAnimationComplete?.()}
-            onPositionChange={setAnimationPos}
+        <RouteAnimation
+          activityId={animationState.activityId}
+          path={animationPath}
+          isPlaying={animationState.isPlaying}
+          speed={animationState.speed}
+          onComplete={() => onAnimationComplete?.()}
+          onPositionChange={setAnimationPos}
+        />
+      )}
+
+      {animationPos && (
+        <Marker3D
+          position={{ lat: animationPos.lat, lng: animationPos.lng, altitude: 0 }}
+          altitudeMode={AltitudeMode.CLAMP_TO_GROUND}
+          zIndex={1000}
+        >
+          <div
+            style={{
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: '#FFFFFF',
+              border: '3px solid #3b82f6',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            }}
           />
-          {animationPos && (
-            <Marker
-              position={animationPos}
-              zIndex={1000}
-              icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: '#FFFFFF',
-                fillOpacity: 1,
-                strokeColor: '#3b82f6',
-                strokeWeight: 4,
-              }}
-            />
-          )}
-        </>
+        </Marker3D>
       )}
 
       {scrubPosition && (
-        <Marker
-          position={scrubPosition}
+        <Marker3D
+          position={{ lat: scrubPosition.lat, lng: scrubPosition.lng, altitude: 0 }}
+          altitudeMode={AltitudeMode.CLAMP_TO_GROUND}
           zIndex={999}
-          icon={{
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#FFFFFF',
-            fillOpacity: 1,
-            strokeColor: '#3b82f6',
-            strokeWeight: 3,
-          }}
-        />
+        >
+          <div
+            style={{
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: '#FFFFFF',
+              border: '3px solid #3b82f6',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            }}
+          />
+        </Marker3D>
       )}
-    </Map>
+    </Map3D>
   );
 };
+
+// ---------------------------------------------------------------------------
+// RoutePolylines — renders route polylines using the imperative Map3D API.
+// Uses gmp-polyline-3d custom elements with CLAMP_TO_GROUND altitude mode so
+// polylines follow terrain surface rather than floating or clipping through hills.
+// ---------------------------------------------------------------------------
 
 const RoutePolylines: React.FC<{
   activityStreams: Record<number, ActivityStreams>;
   highlightedActivityId?: number | null;
 }> = ({ activityStreams, highlightedActivityId }) => {
-  const map = useMap();
-
-  const colors = ROUTE_COLORS;
-
-  const polylines = useMemo(() => {
-    return Object.entries(activityStreams).map(([idStr, streams], index) => {
-      const id = parseInt(idStr);
-      if (!streams.latlng || streams.latlng.length === 0) return null;
-
-      const path = streams.latlng.map(([lat, lng]) => ({ lat, lng }));
-
-      const isHighlighted = highlightedActivityId === null || highlightedActivityId === id;
-
-      return {
-        id,
-        polyline: new google.maps.Polyline({
-          path,
-          geodesic: true,
-          strokeColor: colors[index % colors.length],
-          strokeOpacity: isHighlighted ? 0.9 : 0.3,
-          strokeWeight: isHighlighted ? 5 : 3,
-          zIndex: isHighlighted ? 100 : 10,
-        }),
-      };
-    });
-  }, [activityStreams, highlightedActivityId, colors]);
+  const map3d = useMap3D();
 
   useEffect(() => {
-    if (!map) return;
+    if (!map3d) return;
 
-    polylines.forEach((item) => {
-      if (item) item.polyline.setMap(map);
+    const polylines: Element[] = [];
+
+    Object.entries(activityStreams).forEach(([idStr, streams], index) => {
+      const id = parseInt(idStr);
+      if (!streams.latlng || streams.latlng.length === 0) return;
+
+      const isHighlighted = highlightedActivityId === null || highlightedActivityId === id;
+      const color = ROUTE_COLORS[index % ROUTE_COLORS.length];
+
+      const polyline = document.createElement(
+        'gmp-polyline-3d',
+      ) as google.maps.maps3d.Polyline3DElement;
+
+      polyline.altitudeMode = google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND;
+      polyline.coordinates = streams.latlng.map(([lat, lng]) => ({ lat, lng, altitude: 0 }));
+      polyline.strokeColor = color;
+      polyline.strokeOpacity = isHighlighted ? 0.9 : 0.3;
+      polyline.strokeWidth = isHighlighted ? 5 : 3;
+      polyline.zIndex = isHighlighted ? 100 : 10;
+
+      map3d.append(polyline);
+      polylines.push(polyline);
     });
 
     return () => {
-      polylines.forEach((item) => {
-        if (item) item.polyline.setMap(null);
-      });
+      polylines.forEach((p) => p.remove());
     };
-  }, [map, polylines]);
+  }, [map3d, activityStreams, highlightedActivityId]);
 
   return null;
 };
+
+// ---------------------------------------------------------------------------
+// MapAutoZoom — renderless component that fits the camera to the active routes.
+// Replaces map.fitBounds() (not available on Map3D) with a range-based approach
+// using calculateRangeFromBounds. Uses flyCameraTo for smooth animated transitions.
+// ---------------------------------------------------------------------------
 
 const MapAutoZoom: React.FC<{
   activityStreams: Record<number, ActivityStreams>;
   highlightedActivityId?: number | null;
   isAnimationPlaying?: boolean;
 }> = ({ activityStreams, highlightedActivityId, isAnimationPlaying }) => {
-  const map = useMap();
-
+  const map3d = useMap3D();
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
-    if (!map || isAnimationPlaying) return;
+    if (!map3d || isAnimationPlaying) return;
 
     const bounds = new google.maps.LatLngBounds();
     let hasCoords = false;
 
     Object.entries(activityStreams).forEach(([idStr, streams]) => {
       const id = parseInt(idStr);
-      // If an activity is highlighted, only zoom to that one.
-      // If null is highlighted (show all), zoom to all.
-      // Special case: on first load, we want to zoom to ALL activities if it's a multi-day trip
+      // On subsequent selections: only zoom to the highlighted activity.
+      // On first load (isFirstLoad.current === true): zoom to all activities.
       if (!isFirstLoad.current && highlightedActivityId !== null && highlightedActivityId !== id)
         return;
 
@@ -195,29 +209,24 @@ const MapAutoZoom: React.FC<{
     });
 
     if (hasCoords) {
-      map.fitBounds(bounds, {
-        top: 100,
-        right: 100,
-        bottom: 100,
-        left: 100,
+      const center = bounds.getCenter();
+      const range = calculateRangeFromBounds(bounds);
+
+      const map3dWithFly = map3d as unknown as Map3DElementWithFly;
+      map3dWithFly.flyCameraTo({
+        endCamera: {
+          center: { lat: center.lat(), lng: center.lng(), altitude: 0 },
+          range,
+          tilt: 0,
+          heading: 0,
+        },
+        // Instant on first load; animated on ride selection changes
+        durationMillis: isFirstLoad.current ? 0 : 1000,
       });
+
       isFirstLoad.current = false;
     }
-  }, [map, activityStreams, highlightedActivityId, isAnimationPlaying]);
-
-  return null;
-};
-
-const SetInitialMapType: React.FC = () => {
-  const map = useMap();
-  const hasSet = useRef(false);
-
-  useEffect(() => {
-    if (map && !hasSet.current) {
-      map.setMapTypeId('hybrid');
-      hasSet.current = true;
-    }
-  }, [map]);
+  }, [map3d, activityStreams, highlightedActivityId, isAnimationPlaying]);
 
   return null;
 };
