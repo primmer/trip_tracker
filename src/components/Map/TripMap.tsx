@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Map3D, useMap3D, AltitudeMode, MapMode, Marker3D } from '@vis.gl/react-google-maps';
+import { Map3D, useMap3D, AltitudeMode, MapMode, Marker3D, useApiIsLoaded } from '@vis.gl/react-google-maps';
 import { ActivityStreams } from '../../types';
 import { RouteAnimation } from './RouteAnimation';
 import { PhotoMarkers, Photo } from './PhotoMarkers';
@@ -43,6 +43,7 @@ export const TripMap: React.FC<TripMapProps> = ({
   onPhotoSelect,
 }) => {
   const [animationPos, setAnimationPos] = useState<{ lat: number; lng: number } | null>(null);
+  const apiIsLoaded = useApiIsLoaded();
 
   const animationPath = useMemo(() => {
     if (!animationState?.activityId) return null;
@@ -169,10 +170,11 @@ const MapAutoZoom: React.FC<{
   isAnimationPlaying?: boolean;
 }> = ({ activityStreams, highlightedActivityId, isAnimationPlaying }) => {
   const map3d = useMap3D();
+  const apiIsLoaded = useApiIsLoaded();
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
-    if (!map3d || isAnimationPlaying) return;
+    if (!map3d || !apiIsLoaded || isAnimationPlaying) return;
 
     const bounds = new google.maps.LatLngBounds();
     let hasCoords = false;
@@ -203,13 +205,11 @@ const MapAutoZoom: React.FC<{
           tilt: 0,
           heading: 0,
         },
-        // Instant on first load; animated on ride selection changes
-        durationMillis: isFirstLoad.current ? 0 : 1000,
+        durationMillis: isFirstLoad.current ? 500 : 1000,
       });
-
       isFirstLoad.current = false;
     }
-  }, [map3d, activityStreams, highlightedActivityId, isAnimationPlaying]);
+  }, [map3d, apiIsLoaded, activityStreams, highlightedActivityId, isAnimationPlaying]);
 
   return null;
 };

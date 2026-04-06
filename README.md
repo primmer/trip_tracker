@@ -76,6 +76,37 @@ Append `?admin=<key>` to any URL to enable admin features (photo picker, sync co
 - **Dependency hygiene**: knip for unused dependency detection (`npm run knip`)
 - **Error tracking**: Sentry on both frontend and backend (production only)
 
+# Design Decisions
+
+### Homepage
+
+- Full-bleed hero photo that randomly rotates among trips with photos. Route polyline and elevation profile line overlay the hero, with a dark top gradient for nav/elevation contrast.
+- Trip grid shows only trips with photos. Each tile has a photo background, route polyline, and elevation line at the bottom.
+- Nav shows only "Trips" (plus "Admin" when in admin mode).
+
+### Trips Page
+
+- All trips listed grouped by month, regardless of photos. Same tile design as homepage.
+
+### Trip Detail Map
+
+- Full-bleed satellite/hybrid map using Google Maps vector rendering with 3D tilt and heading controls enabled. Users can tilt into 3D and rotate the map freely.
+- Bottom overlay contains a scrubbable elevation chart, ride stats (distance, elevation, duration), and route animation controls. The overlay uses a gradient background and is positioned to avoid conflicting with Google Maps' own zoom/tilt controls on the right side.
+- For multi-day trips, pill-style ride selector buttons ("All", "Ride 1", "Ride 2", etc.) filter which activity is shown. Selecting a ride re-fits the map bounds to that activity.
+- Scrubbing the elevation chart places a marker dot on the map at the corresponding GPS position, with a tooltip showing distance, elevation, and grade.
+- Route animation plays a dot along the route path with play/pause and 1x/2x speed controls.
+
+### Trip Detail Photos
+
+- Map photo markers are circular thumbnails. Clicking one opens a dimmed full-viewport preview that covers all UI (rendered outside the Maps component). Clicking the preview photo goes to the gallery lightbox; clicking off dismisses.
+- Gallery is a clean grid of square thumbnails grouped by date. No hover overlays or filename display.
+- Lightbox supports prev/next arrows, keyboard navigation, and swipe gestures. Shows date/time and position counter only.
+
+### Route & Elevation Overlays
+
+- Route polylines are sized to ~70% of their container. Hero polyline is more prominent than tile polylines.
+- Elevation data is fetched from Firestore activity streams and rendered as a thin SVG line -- at the top of the hero, at the bottom of trip tiles.
+
 ## Author
 
 David Primmer

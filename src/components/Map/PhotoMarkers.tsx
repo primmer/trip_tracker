@@ -21,6 +21,7 @@ interface PhotoMarkerItemProps {
 }
 
 function toProxyUrl(url: string): string {
+  if (!import.meta.env.DEV) return url;
   const prefix = 'https://storage.googleapis.com/';
   if (url.startsWith(prefix)) {
     return '/storage-proxy/' + url.slice(prefix.length);

@@ -1,127 +1,88 @@
-# AGENTS.md
+# AGENTS.md — Trip Tracker
 
-## Project
+## Critical Rules
 
-Bike Trip Tracker -- a web app for tracking bike trips and bikepacking adventures. Integrates Strava (routes/activities), Google Photos (geotagged imagery), and Google Maps (interactive satellite/3D map display). The emphasis is on visual storytelling and photo presentation, not data logging.
+- **Version Control: Use `jj`, NEVER `git`**. This repo is jj-colocated. Use `jj describe -m "..."`, `jj new`, `jj log`, `jj diff`, `jj status`. Commit incrementally—don't let a session pass without checkpoints.
+- **Always use `./dev.sh`** to start development (starts Vite on :5173 + Functions on :5001). Never start servers individually.
+- **Visual verification required**: Use Chrome DevTools MCP to take snapshots/screenshots after every UI change. Do not rely on code review alone.
 
-## Requirements Source
+## Quick Reference
 
-Current overview of the project is in `README.md`. Original product requirements live in `spec.md` at the repo root. Read them before making feature decisions. 
+| Task | Command |
+|------|---------|
+| Start dev | `./dev.sh` |
+| Build | `npx vite build` |
+| Type check | `npm run typecheck` |
+| Lint | `npm run lint` |
+| Test | `npm test` |
+| Format | `npm run format` |
+| Unused deps | `npm run knip` |
+| Full deploy | `npx vite build && firebase deploy` |
+| Hosting only | `npx vite build && firebase deploy --only hosting` |
+| Functions only | `firebase deploy --only functions` |
 
-## Version Control
+## Architecture
 
-**IMPORTANT: This project uses Jujutsu (`jj`), NOT git. Never use `git commit`, `git add`, or `git push`. The repo is jj-colocated with git, but all version control operations must go through jj.**
-
-- `jj describe -m "..."` -- set the working copy commit message
-- `jj new` -- snapshot current changes and start a fresh working copy
-- `jj log` -- view commit history
-- `jj diff` -- view working copy changes
-- `jj status` -- check working copy state
-
-Commit incrementally after each meaningful feature or fix -- do not let a full session go by without checkpoints.
+- **Frontend**: React 18 + TypeScript + Tailwind CSS + Vite (:5173)
+- **Backend**: Firebase Cloud Functions (Express) (:5001)
+- **Data**: Firestore (trips, activities, photos as subcollections), Firebase Storage
+- **APIs**: Strava (activities/routes), Google Photos (geotagged images), Google Maps JavaScript API (3D satellite)
+- **Host**: Firebase Hosting at https://primco-trip-tracker.web.app
+- **Project ID**: `primco-trip-tracker`
 
 ## Key Concepts
 
-- **Trip grouping**: Strava activities are grouped into multi-day trips via hashtags in the private activity description (e.g. `#hmb_jul4`). Individual rides can also be explored standalone.
-- **Photos**: Photos are added per-trip via the Google Photos picker (admin mode). They are stored in Firestore as subcollections under each trip. Geolocation is derived by matching each photo's timestamp against the GPS stream of the trip's Strava activities -- photos taken during a ride get placed at the corresponding lat/lng on the map; photos taken off-ride (at camp, etc.) appear in the gallery only with no map location.
-- **Auth model**: No user login. The app connects to one personal Strava/Google account with durable API tokens. Secrets are needed for Strava API, Google Photos API, and Google Maps API.
-- **Route data**: Parsed from GPX or similar format from Strava activities; stored for map visualization.
-- **Activity descriptions**: Auto-enhanced by scanning the route for geographic points of interest (mountains, ridges, notable areas) to replace Strava's generic titles.
+- **Trip grouping**: Multi-day trips group Strava activities via hashtags in activity descriptions (e.g., `#hmb_jul4`).
+- **Photo geolocation**: Photos matched to GPS stream by timestamp; on-ride photos get map markers, off-ride photos (camp, etc.) appear in gallery only.
+- **Auth**: No user login. Single personal Strava/Google account with durable API tokens. Secrets in `.env` (copy from `.env.example`).
+- **Admin mode**: Append `?admin=<VITE_ADMIN_KEY>` to enable admin features (photo picker, /admin page). `?admin=off` to clear.
 
-## External APIs
+## Code Quality
 
-| Service                    | Purpose                                                        |
-| -------------------------- | -------------------------------------------------------------- |
-| Strava API                 | Activity data, routes, media references, activity descriptions |
-| Google Photos API          | Full-resolution geotagged photos                               |
-| Google Maps JavaScript API | Satellite map display, 3D flyover, geometry library            |
+- **ESLint**: Strict TypeScript, naming conventions enforced (`camelCase`/`PascalCase`), `import/no-default-export` rule (off for configs only)
+- **Prettier**: Single quotes, trailing commas, 100 char width
+- **Pre-commit**: Husky + lint-staged runs ESLint + Prettier
+- **Tests**: Vitest with jsdom, coverage thresholds at 30% (statements/branches/functions/lines)
+- **Deps**: Knip detects unused dependencies
 
-## Admin Mode
+## Entrypoints & Structure
 
-Administrative features (adding photos, /admin page) are hidden from public visitors. Append `?admin=<VITE_ADMIN_KEY>` to any URL to enable for the session, `?admin=off` to clear it. Controlled via `src/utils/admin.ts` and `sessionStorage`.
+```
+src/
+  main.tsx          # Vite entry
+  App.tsx           # React Router setup
+  firebase.ts       # Firebase client init
+  pages/            # Home, Trips, TripDetail, Admin, About
+  components/       # Map/, PhotoGallery, ElevationChart, etc.
+  utils/            # api.ts, admin.ts, mapUtils.ts, etc.
+  types/index.ts    # Shared types
+functions/
+  src/index.ts      # Functions entry (Express app)
+  src/dev-server.ts # Local dev server (:5001)
+```
 
-## Design Decisions
+## Important Files
 
-### Homepage
+- `spec.md` — Original product requirements (read before feature decisions)
+- `TODO.md` — Active issues/fixes (mobile viewport, touch events, 3D map deprecation warnings)
+- `firebase.json` — Hosting rewrites: `/api/**` → Cloud Function, rest → SPA
 
-- Full-bleed hero photo that randomly rotates among trips with photos. Route polyline and elevation profile line overlay the hero, with a dark top gradient for nav/elevation contrast.
-- Trip grid shows only trips with photos. Each tile has a photo background, route polyline, and elevation line at the bottom.
-- Heading is "by Dave Primmer". Copyright is "David Primmer". No subtitle or explore link.
-- Nav shows only "Trips" (plus "Admin" when in admin mode).
+## Testing Conventions
 
-### Trips Page
+- Unit tests alongside source (`Component.test.tsx` next to `Component.tsx`)
+- Test setup in `src/test/setup.ts`
+- Coverage enforced at 30% minimum
+- **Always verify UI in browser** — use Chrome DevTools MCP tools after visual changes
 
-- All trips listed grouped by month, regardless of photos. Same tile design as homepage.
+## Deployment Notes
 
-### Trip Detail Map
+- `firebase.json` predeploy hook builds functions automatically
+- Frontend built to `dist/`, served as static hosting
+- Functions served at `/api/*` via rewrite rules
 
-- Full-bleed satellite/hybrid map using Google Maps vector rendering with 3D tilt and heading controls enabled. Users can tilt into 3D and rotate the map freely.
-- Bottom overlay contains a scrubbable elevation chart, ride stats (distance, elevation, duration), and route animation controls. The overlay uses a gradient background and is positioned to avoid conflicting with Google Maps' own zoom/tilt controls on the right side.
-- For multi-day trips, pill-style ride selector buttons ("All", "Ride 1", "Ride 2", etc.) filter which activity is shown. Selecting a ride re-fits the map bounds to that activity.
-- Scrubbing the elevation chart places a marker dot on the map at the corresponding GPS position, with a tooltip showing distance, elevation, and grade.
-- Route animation plays a dot along the route path with play/pause and 1x/2x speed controls.
+## Environment Variables
 
-### Trip Detail Photos
-
-- Map photo markers are circular thumbnails. Clicking one opens a dimmed full-viewport preview that covers all UI (rendered outside the Maps component). Clicking the preview photo goes to the gallery lightbox; clicking off dismisses.
-- Gallery is a clean grid of square thumbnails grouped by date. No hover overlays or filename display.
-- Lightbox supports prev/next arrows, keyboard navigation, and swipe gestures. Shows date/time and position counter only.
-
-### Route & Elevation Overlays
-
-- Route polylines are sized to ~70% of their container. Hero polyline is more prominent than tile polylines.
-- Elevation data is fetched from Firestore activity streams and rendered as a thin SVG line -- at the top of the hero, at the bottom of trip tiles.
-
-## Development
-
-Run `./dev.sh` to start both the frontend (Vite on :5173) and backend (Functions dev server on :5001). It checks if each is already running, builds the backend if needed, and prints health status. Always use this script rather than starting servers individually.
-
-## Deployment
-
-Hosted on Firebase at https://primco-trip-tracker.web.app. Firebase project ID is `primco-trip-tracker`. Firebase CLI is installed globally (`firebase-tools`).
-
-- **Full deploy**: `npx vite build && firebase deploy` -- builds frontend, deploys hosting, functions, Firestore rules, and storage rules.
-- **Hosting only** (faster, frontend changes only): `npx vite build && firebase deploy --only hosting`
-- **Functions only**: `firebase deploy --only functions`
-
-The `firebase.json` config rewrites `/api/**` to a Cloud Function and all other routes to `index.html` for SPA routing.
-
-## Visual Testing
-
-Always verify UI changes in the user's Chrome browser via the Chrome DevTools MCP tools (`chrome-devtools___*`). Take snapshots and screenshots after each visual change to confirm it looks correct before moving on. Do not rely on code review alone for frontend work -- render it and check it.
-
-# TODO
-
-## Planned: Video Support
-
-- The Google Photos picker can return videos (mime type `video/mp4`). Currently the backend downloads the video thumbnail bytes only (Size 427,675 bytes Type
-
-  video/mp4) and displays the thumbnail. Need to either skip videos during import or properly handle them -- download and render with a `<video>` element in the gallery/lightbox instead of `<img>`. Also, do not use them as thumbnails for tile backgrounds or hero images -- their thumb has a play button burned in.
-
-## Planned: AI-Powered POI & Photo Captions
-
-- Use AI to identify notable points of interest along each activity's GPS route (major landmarks, peaks, ridges, parks) and enrich the activity description with them.
-- Optionally generate captions for trip photos using vision AI. Captions should be specific and informative (e.g. "Hawk Camp overlooking Gerbode Valley"), not obvious or generic (e.g. "picture of a bridge"). If the AI can't add meaningful context, skip the caption.
-- Goal is to make trip storytelling richer without manual effort. Details on implementation TBD.
-
-## UX nits:
-
-#### the 3d map is not actually 3d. it tilt's but has no height in the mountains.
-
-Now for Fix 4 (3D terrain) -- this is a different beast. Here's what the research found:
-
-The standard Google Maps `Map` component with vector rendering does NOT support 3D terrain elevation for mountains, even when tilted. It only supports 3D buildings in urban
-areas. The flat terrain you're seeing when tilted is expected behavior for the current API.
-
-To get actual mountain height relief, you'd need to switch to `Map3D` (Photorealistic 3D Maps) from @vis.gl/react-google-maps v1.8.0+. This is a significant refactor
-because:
-
-1. Upgrade library from v1.1.0 to v1.8.0+
-2. Replace <Map> with <Map3D> (different camera model: range instead of zoom)
-3. Replace all google.maps.Polyline with <Polyline3D>
-4. Replace <AdvancedMarker> with <Marker3D>
-5. Replace <Marker> (scrub/animation markers) with 3D equivalents
-6. Add 'maps3d' library to APIProvider
-7. Rewrite RouteAnimation, PhotoMarkers, and auto-zoom logic for the 3D API
-
-This isn't a quick fix -- it's a feature rewrite of the entire map component.
+Required in `.env`:
+- `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`
+- `VITE_GOOGLE_MAPS_API_KEY`, `VITE_FIREBASE_CONFIG`, `VITE_ADMIN_KEY`, `VITE_SENTRY_DSN`
