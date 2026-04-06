@@ -38,6 +38,10 @@ vi.mock('../../utils/api', () => ({
   getApiBaseUrl: () => 'http://localhost:5001',
 }));
 
+vi.mock('../../utils/admin', () => ({
+  isAdmin: () => true,
+}));
+
 const mockTrip: Trip = {
   id: 'headlands_overnighter',
   hashtag: 'headlands_overnighter',
@@ -221,7 +225,7 @@ describe('TripDetail Photo Picker Flow', () => {
     });
 
     // Click Add Photos
-    const addButton = screen.getByText(/Add Photos/i).closest('button')!;
+    const addButton = screen.getByRole('button', { name: /add photos/i });
     await user.click(addButton);
 
     // Should hit health check then create session
@@ -276,7 +280,7 @@ describe('TripDetail Photo Picker Flow', () => {
       expect(screen.getByText(/headlands overnighter/i)).toBeInTheDocument();
     });
 
-    const addButton = screen.getByText(/Add Photos/i).closest('button')!;
+    const addButton = screen.getByRole('button', { name: /add photos/i });
     await user.click(addButton);
 
     await waitFor(() => {
@@ -327,7 +331,7 @@ describe('TripDetail Photo Picker Flow', () => {
       expect(screen.getByText(/headlands overnighter/i)).toBeInTheDocument();
     });
 
-    const addButton = screen.getByText(/Add Photos/i).closest('button')!;
+    const addButton = screen.getByRole('button', { name: /add photos/i });
     await user.click(addButton);
 
     await waitFor(() => {
@@ -346,7 +350,7 @@ describe('TripDetail Photo Picker Flow', () => {
       expect(screen.getByText(/headlands overnighter/i)).toBeInTheDocument();
     });
 
-    const addButton = screen.getByText(/Add Photos/i).closest('button')!;
+    const addButton = screen.getByRole('button', { name: /add photos/i });
     await user.click(addButton);
 
     await waitFor(() => {

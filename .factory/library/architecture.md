@@ -11,7 +11,7 @@ TripDetail.tsx (page)
 ├── Header (back arrow, trip name, date, Map/Gallery toggle)
 ├── TripMap.tsx (map container)
 │   ├── Map3D (from @vis.gl/react-google-maps)
-│   │   ├── Polyline3D × N (one per activity, from library)
+│   │   ├── gmp-polyline-3d custom elements × N (one per activity, imperative)
 │   │   ├── Marker3D (scrub position dot)
 │   │   ├── Marker3D (animation position dot)
 │   │   └── PhotoMarkers.tsx → Marker3D × N (photo thumbnails)
@@ -48,6 +48,7 @@ range = computeDistanceBetween(ne, sw) * multiplier
 
 ### Key Invariants
 
+- `@vis.gl/react-google-maps` v1.8.2 does not export a `Polyline3D` React component; route lines are rendered via imperative `gmp-polyline-3d` custom elements
 - Polylines use `altitudeMode="CLAMP_TO_GROUND"` — follow terrain surface
 - Markers use `altitudeMode="CLAMP_TO_GROUND"` — sit on terrain
 - Bottom overlay uses `pointer-events-none` container with `pointer-events-auto` on interactive children

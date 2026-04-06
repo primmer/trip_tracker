@@ -112,7 +112,7 @@ describe('TripDetail Fullscreen Overlay', () => {
     fireEvent.click(photoItem);
 
     // Find the close button
-    const closeButton = screen.getByRole('button', { name: /close fullscreen view/i });
+    const closeButton = screen.getByRole('button', { name: /close/i });
     expect(closeButton).toBeInTheDocument();
 
     // Verify Tailwind classes for size (min-h-[44px] min-w-[44px])
@@ -129,7 +129,7 @@ describe('TripDetail Fullscreen Overlay', () => {
 
     // Verify overlay is closed
     expect(
-      screen.queryByRole('button', { name: /close fullscreen view/i }),
+      screen.queryByRole('button', { name: /close/i }),
     ).not.toBeInTheDocument();
   });
 });

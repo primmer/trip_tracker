@@ -65,7 +65,7 @@ describe('PhotoGallery', () => {
     const onPhotoClick = vi.fn();
     render(<PhotoGallery photos={mockPhotos} onPhotoClick={onPhotoClick} />);
 
-    const photoElements = screen.getAllByRole('img');
+    const photoElements = screen.getAllByRole('presentation');
     fireEvent.click(photoElements[0]);
 
     expect(onPhotoClick).toHaveBeenCalledWith(mockPhotos[0]);

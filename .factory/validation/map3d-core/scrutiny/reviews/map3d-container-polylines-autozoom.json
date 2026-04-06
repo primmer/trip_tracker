@@ -1,0 +1,31 @@
+{
+  "featureId": "map3d-container-polylines-autozoom",
+  "reviewedAt": "2026-04-06T05:30:08Z",
+  "commitId": "93218f9b",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The commit implements the scoped Map3D container migration correctly: TripMap now uses Map3D + Marker3D, route rendering moved to CLAMP_TO_GROUND 3D polylines, auto-zoom was rewritten to range-based flyCameraTo using calculateRangeFromBounds, SetInitialMapType/mapId usage was removed, and APIProvider now loads maps3d. Deferred PhotoMarkers/RouteAnimation behavior is explicitly documented in the handoff as out-of-scope for this feature and handled by the follow-up feature.",
+    "issues": []
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "Architecture docs still describe Polyline3D as a library component even though implementation correctly uses imperative gmp-polyline-3d because Polyline3D is not exported in v1.8.2.",
+      "evidence": ".factory/library/architecture.md:14 says 'Polyline3D × N (one per activity, from library)'; actual implementation is document.createElement('gmp-polyline-3d') in src/components/Map/TripMap.tsx:153-165 (commit 93218f9b). Handoff also calls this out at lines 105-106."
+    },
+    {
+      "area": "skills",
+      "observation": "frontend-worker skill requires all tests to pass with zero failures, but mission AGENTS defines known baseline Vitest failures; this creates procedural mismatch and false-negative expectations.",
+      "evidence": ".factory/skills/frontend-worker/SKILL.md:34-42 says 'All must pass with zero errors'; mission AGENTS 'Known Pre-Existing Issues' documents expected failing suites; handoff shows npx vitest run exitCode 1 as baseline at lines 36-39."
+    },
+    {
+      "area": "services",
+      "observation": "Shared state lacks an operational recovery path for Chrome DevTools MCP lock contention, which blocked required visual verification in this feature.",
+      "evidence": ".factory/library/user-testing.md:13 states Chrome DevTools MCP is already connected, but handoff interactiveChecks reports persistent profile lock/PID issue at lines 48-50; .factory/services.yaml has no chrome-devtools service lifecycle/recovery instructions."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed feature map3d-container-polylines-autozoom at commit 93218f9b. Core migration goals for Map3D, Marker3D, 3D polyline rendering, and range-based auto-zoom are implemented as expected for this phase, with no blocking code defects found in-scope. Noted shared-state documentation/skill gaps around Polyline3D guidance, baseline test expectations, and Chrome DevTools MCP recovery."
+}

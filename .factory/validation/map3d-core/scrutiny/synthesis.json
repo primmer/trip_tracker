@@ -1,0 +1,55 @@
+{
+  "milestone": "map3d-core",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "npx --prefix \"/Users/primmer/trip_tracker\" vitest run",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "npm --prefix \"/Users/primmer/trip_tracker\" run typecheck",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "npm --prefix \"/Users/primmer/trip_tracker\" run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "description": "Updated .factory/library/architecture.md to reflect that route lines are rendered via imperative gmp-polyline-3d custom elements (not a library-exported Polyline3D React component) in @vis.gl/react-google-maps v1.8.2.",
+      "sourceFeature": "map3d-container-polylines-autozoom"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "skill",
+      "suggestion": "Clarify frontend-worker behavior when Chrome DevTools MCP cannot connect by documenting required recovery attempts and an explicit fallback/return decision rule.",
+      "evidence": "Both map3d feature reviews reported DevTools MCP connection/lock failures in worker handoffs while implementation continued; current skill guidance is not explicit enough for consistent handling.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "Add chrome-devtools service lifecycle commands directly to .factory/services.yaml.",
+      "reason": "ambiguous"
+    },
+    {
+      "observation": "Frontend-worker zero-failure test policy conflicts with mission-level expected failing tests.",
+      "reason": "obsolete-after-fix"
+    }
+  ],
+  "previousRound": null
+}

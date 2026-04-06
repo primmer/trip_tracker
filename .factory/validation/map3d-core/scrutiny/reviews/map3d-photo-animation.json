@@ -1,0 +1,31 @@
+{
+  "featureId": "map3d-photo-animation",
+  "reviewedAt": "2026-04-06T05:28:19Z",
+  "commitId": "730c3a8",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The feature implementation matches the stated migration scope: PhotoMarkers moved from AdvancedMarker/useMap to Marker3D/useMap3D with CLAMP_TO_GROUND + altitude 0, and RouteAnimation moved camera updates from panTo() to direct map3d.center assignment for per-frame follow behavior. No blocking correctness issues were identified in the reviewed diff.",
+    "issues": []
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "frontend-worker procedure says all validators must pass with zero errors, but this mission intentionally has known pre-existing Vitest failures. The skill and mission guidance are inconsistent.",
+      "evidence": ".factory/skills/frontend-worker/SKILL.md:41 says \"All must pass with zero errors\"; mission AGENTS at /Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/AGENTS.md:56 says `npx vitest run` is expected to exit 1 and workers should only ensure no new failures."
+    },
+    {
+      "area": "skills",
+      "observation": "frontend-worker says to return to orchestrator when Chrome DevTools MCP cannot connect, but the worker proceeded and completed the feature despite MCP connection failure. The procedure needs a clearer fallback path for this common condition.",
+      "evidence": ".factory/skills/frontend-worker/SKILL.md:96 lists \"Chrome DevTools MCP cannot connect to the browser\" under return conditions; handoff file /Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/handoffs/2026-04-06T05-24-23-883Z__map3d-photo-animation__8bc8b34f-57ef-4ce2-925c-8ff7d0aa44b3.json:39 records MCP connection failure while feature was still completed."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Shared architecture documentation still describes Polyline3D as a library React component, which conflicts with mission guidance that the library does not export Polyline3D and custom elements must be used.",
+      "evidence": ".factory/library/architecture.md:14 says \"Polyline3D × N (one per activity, from library)\"; mission AGENTS at /Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f/AGENTS.md:58 says Polyline3D is not exported and `gmp-polyline-3d` custom elements are required."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed transcript skeleton, handoff, and commit 730c3a8. The map3d-photo-animation migration is implemented correctly and satisfies the described scope without introducing blocking issues; status is pass. Noted shared-state mismatches in skill guidance (validator pass policy and DevTools MCP fallback) plus a stale architecture note about Polyline3D."
+}
