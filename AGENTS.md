@@ -10,7 +10,15 @@ Current overview of the project is in `README.md`. Original product requirements
 
 ## Version Control
 
-Using local Jujutsu (`jj`) repository; will eventually move to a private GitHub repo. Commit incrementally after each meaningful feature or fix -- do not let a full session go by without checkpoints. Use `jj describe -m "..."` to set the working copy message.
+**IMPORTANT: This project uses Jujutsu (`jj`), NOT git. Never use `git commit`, `git add`, or `git push`. The repo is jj-colocated with git, but all version control operations must go through jj.**
+
+- `jj describe -m "..."` -- set the working copy commit message
+- `jj new` -- snapshot current changes and start a fresh working copy
+- `jj log` -- view commit history
+- `jj diff` -- view working copy changes
+- `jj status` -- check working copy state
+
+Commit incrementally after each meaningful feature or fix -- do not let a full session go by without checkpoints.
 
 ## Key Concepts
 
