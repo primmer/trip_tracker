@@ -21,7 +21,7 @@ describe('calculateRangeFromBounds', () => {
     // ~10km x 10km area
     const bounds = makeMockBounds(37.8, -122.3, 37.7, -122.4);
     const range = calculateRangeFromBounds(bounds);
-    // Diagonal ~14km, * 0.8 = ~11.2km, but minimum is 1000m
+    // Diagonal ~14km, * 1.3 = ~18.2km, but minimum is 1000m
     expect(range).toBeGreaterThan(1000);
     expect(range).toBeLessThan(50000);
   });
@@ -30,7 +30,7 @@ describe('calculateRangeFromBounds', () => {
     // ~100km x 100km area
     const bounds = makeMockBounds(38.5, -121.5, 37.5, -122.5);
     const range = calculateRangeFromBounds(bounds);
-    // Diagonal ~141km, * 0.8 = ~113km
+    // Diagonal ~141km, * 1.3 = ~183km
     expect(range).toBeGreaterThan(50000);
     expect(range).toBeLessThan(500000);
   });

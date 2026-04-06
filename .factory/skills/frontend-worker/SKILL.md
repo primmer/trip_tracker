@@ -40,16 +40,17 @@ None. Workers use Chrome DevTools MCP tools (`chrome-devtools___*`) directly for
    ```
    All must pass with zero errors. Fix any failures.
 
-8. **Visual verification via Chrome DevTools MCP**:
-   - Navigate to a trip detail page: `http://localhost:5173/trip/<tripId>`
-   - Use `chrome-devtools___list_pages` then `chrome-devtools___select_page` to connect
-   - Take screenshots at desktop (1440x900) and mobile (390x844) viewports
-   - Use `chrome-devtools___resize_page` for viewport changes
-   - Use `chrome-devtools___take_screenshot` for visual evidence
-   - Use `chrome-devtools___take_snapshot` for DOM structure verification
-   - Use `chrome-devtools___evaluate_script` to check element properties
-   - Compare against before-screenshots in `.factory/plans/`
-   - If Chrome DevTools MCP fails to connect, try `chrome-devtools___navigate_page` to `http://localhost:5173/trip/<tripId>` first
+8. **Visual verification via Chrome DevTools MCP** (MANDATORY — do NOT use Playwright, agent-browser, or any other browser tool):
+   - Use ONLY `chrome-devtools___*` tools. Never fall back to Playwright or agent-browser.
+   - Navigate: `chrome-devtools___navigate_page` to `http://localhost:5173/trip/marin_headlands_hawk_and_haypress_camps`
+   - Wait for content: `chrome-devtools___wait_for` with text ["Ride 1"] to confirm page loaded
+   - Set viewport: `chrome-devtools___resize_page` to 1440x900 (desktop) or 390x844 (mobile)
+   - Screenshots: `chrome-devtools___take_screenshot` with format="jpeg" quality=70 (PNG can exceed 5MB)
+   - DOM verification: `chrome-devtools___take_snapshot` to confirm elements exist
+   - Element properties: `chrome-devtools___evaluate_script` for dimensions, counts, styles
+   - Click elements: `chrome-devtools___click` on ride selectors, markers, buttons
+   - Console errors: `chrome-devtools___list_console_messages` with types=["error"]
+   - If Chrome DevTools MCP fails to connect, RETURN TO ORCHESTRATOR. Do not use alternative tools.
 
 9. **Commit with jj**: Use `jj describe -m "..."` then `jj new` to checkpoint. NEVER use git commands.
 

@@ -1,0 +1,526 @@
+{
+  "groupId": "core-flow-round3",
+  "testedAt": "2026-04-06T06:19:34Z",
+  "isolation": {
+    "surface": "chrome-devtools",
+    "missionDir": "/Users/primmer/.factory/missions/1250be64-5023-4ca4-9b9c-be6c3193c15f",
+    "appUrl": "http://localhost:5173/trip/marin_headlands_hawk_and_haypress_camps",
+    "constraints": [
+      "No code changes",
+      "No process killing or port changes",
+      "Assigned trip URL + related in-app interactions only"
+    ]
+  },
+  "toolsUsed": [
+    "chrome-devtools"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-CROSS-010",
+      "title": "Homepage to trip detail loads 3D terrain",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to homepage and click Marin Headlands trip tile",
+          "expected": "Trip detail loads",
+          "observed": "Loaded /trip/marin_headlands_hawk_and_haypress_camps with map and ride pills"
+        },
+        {
+          "action": "Validate map element type via evaluate_script",
+          "expected": "gmp-map-3d exists and gmp-map does not",
+          "observed": "hasMap3D=true, hasMap2D=false"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/initial-load.jpeg",
+          "map3d-core/core-flow-round3/tilted-terrain.jpeg"
+        ],
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-initial.txt"
+        ],
+        "evaluate": "{\"hasMap3D\":true,\"hasMap2D\":false,\"polyline3dCount\":3}",
+        "consoleErrors": "No Google Maps API initialization errors observed; separate app/runtime errors are recorded in VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-012",
+      "title": "Ride selector updates map AND elevation chart simultaneously",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Switch Ride 1 -> Ride 2 -> All",
+          "expected": "Map framing and stats/elevation context update together",
+          "observed": "Stats changed (2.6 mi/860 ft -> 9.7 mi/1,048 ft -> 23.7 mi/4,107 ft) and map framing changed between selections"
+        },
+        {
+          "action": "Capture component states",
+          "expected": "Ride pills, map, chart, and stats stay in sync",
+          "observed": "Ride-specific screenshots/snapshots show synchronized updates"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/ride-1-all-components.jpeg",
+          "map3d-core/core-flow-round3/ride-2-all-components.jpeg",
+          "map3d-core/core-flow-round3/all-rides-all-components.jpeg"
+        ],
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-ride2-components.txt",
+          "map3d-core/core-flow-round3/snapshot-all-components.txt"
+        ],
+        "statsTextContent": "Ride 1: 2.6 mi / 860 ft / 0h 27m; Ride 2: 9.7 mi / 1,048 ft / 1h 26m; All: 23.7 mi / 4,107 ft / 3h 36m",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-013",
+      "title": "Photo marker -> preview -> gallery lightbox flow",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "Attempt to click map photo marker buttons from map a11y tree",
+          "expected": "Marker click opens dimmed preview overlay",
+          "observed": "Marker uids (e.g., 7_0, 10_0, 17_0, 34_0) repeatedly timed out as non-interactive; preview did not open"
+        },
+        {
+          "action": "Validate gallery lightbox independently",
+          "expected": "Lightbox supports next/prev, counter, and Escape close",
+          "observed": "Gallery click opened lightbox; ArrowRight advanced to 2/16; Escape closed lightbox"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/all-rides.jpeg",
+          "map3d-core/core-flow-round3/lightbox.jpeg"
+        ],
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-lightbox-structure.txt"
+        ],
+        "consoleErrors": "See VAL-CROSS-017",
+        "network": "Photo image requests include repeated CORS/ERR_FAILED events in console during flow"
+      },
+      "issues": "Marker->preview leg could not be completed because map marker elements were not interactable in Chrome DevTools MCP session; downstream gallery/lightbox leg works."
+    },
+    {
+      "id": "VAL-CROSS-017",
+      "title": "No console errors across full user flow",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "Run full flow (homepage->trip, ride switching, scrub, map/gallery toggle, animation)",
+          "expected": "Zero uncaught errors",
+          "observed": "149 console error entries"
+        },
+        {
+          "action": "Inspect error types",
+          "expected": "No app runtime failures",
+          "observed": "Multiple CORS image load errors + many 'Uncaught (in promise) #<Event>' messages"
+        }
+      ],
+      "evidence": {
+        "consoleErrors": "149 errors total (CORS failures to storage.googleapis.com image URLs, repeated uncaught promise Event errors)",
+        "network": "Image requests include net::ERR_FAILED entries (e.g., reqid 128-134) and subsequent 200 retries"
+      },
+      "issues": "Console is not clean in the tested flow."
+    },
+    {
+      "id": "VAL-MAP3D-001",
+      "title": "Mountain terrain shows visible 3D height relief",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Set map tilt/heading and capture terrain",
+          "expected": "Visible mountain relief, not flat texture",
+          "observed": "Tilted terrain view rendered with depth perspective"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/tilted-terrain.jpeg"
+        ],
+        "evaluate": "{\"tilt\":65,\"heading\":25,\"mode\":\"HYBRID\"}",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-002",
+      "title": "Satellite imagery renders on terrain surface",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Inspect map surface after load",
+          "expected": "Photorealistic satellite tiles visible",
+          "observed": "Satellite imagery rendered with roads/vegetation/water detail"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/satellite-imagery.jpeg"
+        ],
+        "network": "Map3D assets and keyhole terrain tile requests returned 200",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-003",
+      "title": "Route polylines render and follow terrain contour",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Validate polyline elements and tilted visual",
+          "expected": "Polylines present and draped on terrain",
+          "observed": "gmp-polyline-3d count=3; tilted map screenshot shows routes over terrain"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/tilted-polylines.jpeg"
+        ],
+        "evaluate": "{\"polyline3dCount\":3}",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-004",
+      "title": "Multi-ride color differentiation and highlighting",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Select Ride 1 and then All",
+          "expected": "Single-ride emphasis and all-rides reset",
+          "observed": "Ride-specific highlight state visible; all-rides restored"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/ride-1-highlighted.jpeg",
+          "map3d-core/core-flow-round3/all-rides.jpeg"
+        ],
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-all-components.txt"
+        ],
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-005",
+      "title": "Photo marker thumbnails at correct GPS positions",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Inspect marker presence on map in all-rides view",
+          "expected": "Photo markers visible on map",
+          "observed": "Map marker buttons rendered in map layer; marker groups visible in all-rides snapshots"
+        },
+        {
+          "action": "Count marker elements",
+          "expected": "At least one marker present",
+          "observed": "evaluate_script reported marker elements present (gmp-marker-3d count observed in session)"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/all-rides.jpeg"
+        ],
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-marker-count-all.txt"
+        ],
+        "evaluate": "marker counts observed during session (including gmp-marker-3d presence)",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-006",
+      "title": "Clicking photo marker opens dimmed preview overlay",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "Click multiple candidate marker buttons in map layer",
+          "expected": "Dimmed preview overlay appears",
+          "observed": "Marker elements repeatedly timed out as non-interactive; no overlay appeared"
+        },
+        {
+          "action": "Check for preview overlay DOM",
+          "expected": "Preview overlay present while active",
+          "observed": "previewVisible=false"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/all-rides.jpeg"
+        ],
+        "evaluate": "{\"previewVisible\":false,\"lightboxVisible\":false}",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": "Photo marker click-to-preview behavior could not be triggered; expected overlay never rendered."
+    },
+    {
+      "id": "VAL-MAP3D-007",
+      "title": "Elevation chart scrub places marker at correct GPS position",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Dispatch scrub hover at ~25% and ~75% across elevation SVG",
+          "expected": "Marker moves along route",
+          "observed": "Scrub states captured at both positions"
+        },
+        {
+          "action": "Leave chart",
+          "expected": "Scrub marker removed",
+          "observed": "Post-leave screenshot captured"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/scrub-25.jpeg",
+          "map3d-core/core-flow-round3/scrub-75.jpeg",
+          "map3d-core/core-flow-round3/scrub-cleared.jpeg"
+        ],
+        "evaluate": "mousemove events dispatched on chart svg at 25% and 75% x positions",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-008",
+      "title": "Play/pause animation and camera follow",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Play route animation on Ride 2",
+          "expected": "Animation runs and camera follows",
+          "observed": "Play button changed to Pause; map center/URL changed while playing"
+        },
+        {
+          "action": "Pause animation",
+          "expected": "Animation stops",
+          "observed": "Pause toggled back to Play"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/play-t1.jpeg",
+          "map3d-core/core-flow-round3/play-t2.jpeg",
+          "map3d-core/core-flow-round3/paused.jpeg"
+        ],
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-ride2-components.txt"
+        ],
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-009",
+      "title": "Speed toggle and animation completion reset",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Click speed toggle and inspect state",
+          "expected": "Observable 1x/2x state change",
+          "observed": "Speed control is icon-only in this surface; 1x/2x state was not observable via a11y/DOM"
+        },
+        {
+          "action": "Run Ride 1 animation to completion",
+          "expected": "Play reappears, animation marker cleared",
+          "observed": "Play button reappeared after completion"
+        }
+      ],
+      "evidence": {
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-speed-toggle-state.txt",
+          "map3d-core/core-flow-round3/snapshot-post-completion-reset.txt"
+        ],
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": "Could not verify explicit 1x/2x toggle state in this MCP surface despite control click succeeding."
+    },
+    {
+      "id": "VAL-MAP3D-010",
+      "title": "Initial load frames all activities",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Load trip page initial state",
+          "expected": "All activities visible; camera not world/0,0",
+          "observed": "Initial all-rides frame loaded with center near Marin Headlands and all routes visible"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/initial-load.jpeg"
+        ],
+        "evaluate": "camera center ~{lat:37.8565,lng:-122.5393}, range ~6771",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-011",
+      "title": "Ride selection re-frames map with smooth transition",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Switch to Ride 2",
+          "expected": "Map re-frames to Ride 2",
+          "observed": "Ride 2 framing and stats shown"
+        },
+        {
+          "action": "Switch back to All",
+          "expected": "Map re-frames to full trip",
+          "observed": "All-rides framing restored"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/ride-2-framed.jpeg",
+          "map3d-core/core-flow-round3/all-rides-all-components.jpeg"
+        ],
+        "evaluate": "range changed between ride-specific and all-rides states",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-012",
+      "title": "Ride selection filters visible photo markers",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Count markers on All",
+          "expected": "N_all available",
+          "observed": "marker3dCount=2"
+        },
+        {
+          "action": "Count markers on Ride 1 then return to All",
+          "expected": "N_ride1 <= N_all and All count restored",
+          "observed": "marker3dCount Ride1=2, All=2 (condition satisfied)"
+        }
+      ],
+      "evidence": {
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-marker-count-all.txt",
+          "map3d-core/core-flow-round3/snapshot-marker-count-ride1.txt"
+        ],
+        "evaluate": "All=2, Ride1=2 marker3d count",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-013",
+      "title": "Bottom overlay renders chart, stats, ride selector, controls",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Inspect desktop overlay",
+          "expected": "Chart/stats/pills/controls visible and not clipped",
+          "observed": "All overlay components visible"
+        },
+        {
+          "action": "Inspect mobile overlay",
+          "expected": "Responsive and readable",
+          "observed": "Overlay rendered on 390x844"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/bottom-overlay-desktop.jpeg",
+          "map3d-core/core-flow-round3/mobile-overlay.jpeg"
+        ],
+        "snapshots": [
+          "map3d-core/core-flow-round3/snapshot-overlay-elements.txt"
+        ],
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-MAP3D-014",
+      "title": "Map pan/tilt interaction works",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "Capture camera state, drag pan map, capture again",
+          "expected": "Center changes after pan",
+          "observed": "Center changed from lng -122.5240200 to -122.5239307"
+        },
+        {
+          "action": "Attempt tilt/rotate via map movement controls and keyboard",
+          "expected": "tilt/heading change",
+          "observed": "tilt and heading stayed at 0 in evaluated camera state"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/map-panned.jpeg"
+        ],
+        "evaluate": "before {center:{lat:37.858819,lng:-122.524020},tilt:0,heading:0} -> after pan {center:{lat:37.858819,lng:-122.5239307},tilt:0,heading:0}",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": "Pan worked, but tilt/rotate interactions did not produce camera tilt/heading updates in this run."
+    },
+    {
+      "id": "VAL-MAP3D-015",
+      "title": "Bottom overlay does not block map interaction",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Check overlay pointer-events style",
+          "expected": "Overlay container pointer-events none",
+          "observed": "Computed pointer-events='none' on overlay container"
+        },
+        {
+          "action": "Drag map area above overlay",
+          "expected": "Map still pans",
+          "observed": "Camera center updated after drag"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "map3d-core/core-flow-round3/map-panned.jpeg"
+        ],
+        "evaluate": "overlay pointer-events none; camera center changed after drag",
+        "consoleErrors": "See VAL-CROSS-017"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Map marker buttons exposed in a11y tree were frequently non-interactive in MCP click operations (timeout), requiring additional evaluate_script attempts.",
+      "resolved": false,
+      "resolution": "Tried multiple marker uids and direct marker element click dispatch; preview overlay still not triggered.",
+      "affectedAssertions": [
+        "VAL-MAP3D-006",
+        "VAL-CROSS-013"
+      ]
+    },
+    {
+      "description": "Speed toggle is icon-only in this surface; no accessible 1x/2x state text found for deterministic validation.",
+      "resolved": false,
+      "resolution": "Validated completion reset separately; left speed-state assertion blocked.",
+      "affectedAssertions": [
+        "VAL-MAP3D-009"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Could not assert explicit 1x/2x speed state transition because state text/value was not exposed through a11y/DOM in this MCP run.",
+      "affectedAssertions": [
+        "VAL-MAP3D-009"
+      ],
+      "quickFixAttempted": "Clicked speed toggle, inspected button title/class/innerHTML and snapshots before/after; no observable 1x/2x state value found."
+    }
+  ],
+  "summary": "Tested 19 assertions: 14 passed, 4 failed, 1 blocked. Key failures were marker->preview flow (VAL-MAP3D-006, VAL-CROSS-013), non-clean console (VAL-CROSS-017), and incomplete interaction coverage for tilt/rotate (VAL-MAP3D-014)."
+}

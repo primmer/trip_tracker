@@ -55,9 +55,11 @@ export const PhotoMarkers: React.FC<PhotoMarkersProps> = ({ photos, onPhotoSelec
       template.content.appendChild(img);
       marker.appendChild(template);
 
-      marker.addEventListener('gmp-click', () => {
+      const handleSelect = () => {
         onPhotoSelectRef.current?.(photo);
-      });
+      };
+      marker.addEventListener('gmp-click', handleSelect);
+      marker.addEventListener('click', handleSelect);
 
       map3d.append(marker);
       markers.push(marker);

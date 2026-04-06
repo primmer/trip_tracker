@@ -100,8 +100,17 @@ A validator that only runs curl/shell commands has NOT validated any browser ass
 - Before-screenshots are in `.factory/plans/` for visual baseline comparison
 - Screenshots must use format="jpeg" quality=70 — PNG of the 3D map can exceed the 5MB read limit
 - If Chrome DevTools MCP reports "Not connected" or "chrome-profile already in use", the validator MUST return to orchestrator as blocked — do NOT mark assertions as passed
+- Some map marker nodes in the accessibility tree may be non-interactive in MCP click calls; when this happens, record the exact uid/timeouts and keep the assertion as fail/blocked with evidence.
+- Speed toggle may render as icon-only; if explicit `1x/2x` text is unavailable, capture before/after control state and include a clear limitation note in the assertion result.
 
 ## Flow Validator Guidance: shell
 
 - Use repo-root commands only (`npm run typecheck`, `npm run lint`, `npx vite build`, `npx vitest run`)
 - Do not install/uninstall packages during validation
+
+## Flow Validator Guidance: chrome-devtools
+
+- Isolation boundary: use only `http://localhost:5173/trip/marin_headlands_hawk_and_haypress_camps` and do not navigate to unrelated surfaces.
+- Single-session policy: run one validator at a time on this surface (max concurrency = 1) to avoid MCP contention.
+- Evidence policy: each assertion must include screenshot/snapshot/evaluate_script evidence; if browser tools are unavailable, mark blocked and record the concrete MCP error text.
+- Do not modify app code, service ports, or backend state from browser validation flows.

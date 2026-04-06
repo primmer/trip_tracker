@@ -32,7 +32,8 @@ export function calculateRangeFromBounds(bounds: google.maps.LatLngBounds): numb
     );
   }
 
-  // Multiply by 0.8 to get a good framing with a little margin
+  // Multiply by 1.3 to ensure all route bounds fit with comfortable padding,
+  // accounting for the bottom overlay consuming viewport space.
   // Minimum of 1000m to avoid zooming in too far on a single point
-  return Math.max(diagonal * 0.8, 1000);
+  return Math.max(diagonal * 1.3, 1000);
 }

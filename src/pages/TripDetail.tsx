@@ -776,14 +776,16 @@ export const TripDetail: React.FC = () => {
                           ))}
                         <button
                           onClick={() => toggleSpeed()}
-                          className={`p-1.5 transition-colors flex items-center justify-center ${
+                          aria-label={`Speed: ${animationState.speed}x`}
+                          className={`p-1.5 transition-colors flex items-center gap-1 justify-center ${
                             animationState.speed > 1
-                              ? 'text-red-500'
+                              ? 'text-yellow-400 hover:text-yellow-300'
                               : 'text-red-500 hover:text-red-400'
                           }`}
-                          title="Toggle Speed (1x/2x)"
+                          title={`Speed: ${animationState.speed}x (click to toggle)`}
                         >
                           <FastForward className="w-5 h-5" fill="currentColor" />
+                          <span className="text-xs font-bold">{animationState.speed}x</span>
                         </button>
                       </div>
                     </div>

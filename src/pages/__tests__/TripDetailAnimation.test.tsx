@@ -129,7 +129,7 @@ describe('TripDetail Animation Controls', () => {
     await screen.findByTitle(/Play/i);
     expect(screen.getByText(/test-trip/i)).toBeInTheDocument();
     const playButton = screen.getByTitle(/Play/i).closest('button');
-    const speedButton = screen.getByTitle(/Toggle Speed/i);
+    const speedButton = screen.getByRole('button', { name: /Speed:/i });
     expect(playButton).toBeInTheDocument();
     expect(speedButton).toBeInTheDocument();
 
