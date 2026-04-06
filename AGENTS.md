@@ -76,6 +76,12 @@ functions/
 
 ## Deployment Notes
 
+Hosted on Firebase at https://primco-trip-tracker.web.app. Firebase project ID is `primco-trip-tracker`. Firebase CLI is installed globally (`firebase-tools`).
+
+- **Full deploy**: `npx vite build && firebase deploy` -- builds frontend, deploys hosting, functions, Firestore rules, and storage rules.
+- **Hosting only** (faster, frontend changes only): `npx vite build && firebase deploy --only hosting`
+- **Functions only**: `firebase deploy --only functions`
+
 - `firebase.json` predeploy hook builds functions automatically
 - Frontend built to `dist/`, served as static hosting
 - Functions served at `/api/*` via rewrite rules
@@ -86,3 +92,7 @@ Required in `.env`:
 - `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`
 - `VITE_GOOGLE_MAPS_API_KEY`, `VITE_FIREBASE_CONFIG`, `VITE_ADMIN_KEY`, `VITE_SENTRY_DSN`
+
+## Testing Notes
+
+- **Mobile viewport limitations**: Chrome DevTools mobile emulation does not perfectly match real device behavior, especially for `dvh` (dynamic viewport height) units and touch gesture handling. Always verify mobile layout fixes on an actual device before considering them complete.

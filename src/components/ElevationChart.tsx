@@ -73,8 +73,8 @@ export const ElevationChart: React.FC<ElevationChartProps> = ({
     [data],
   );
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
       if (!containerRef.current || !isInteractive) return;
       const rect = containerRef.current.getBoundingClientRect();
       const f = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -84,7 +84,7 @@ export const ElevationChart: React.FC<ElevationChartProps> = ({
     [isInteractive, onScrub, getDataAtFraction],
   );
 
-  const handleMouseLeave = useCallback(() => {
+  const handlePointerLeave = useCallback(() => {
     if (!isInteractive) return;
     setLocalFraction(null);
     onScrub?.(null);
@@ -129,9 +129,9 @@ export const ElevationChart: React.FC<ElevationChartProps> = ({
     <div
       ref={containerRef}
       className={`relative ${className} ${isInteractive ? 'cursor-crosshair' : ''}`}
-      style={{ height, width }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      style={{ height, width, touchAction: isInteractive ? 'none' : 'auto' }}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
     >
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
         <defs>

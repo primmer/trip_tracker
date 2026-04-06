@@ -39,16 +39,19 @@ describe('calculateCameraFromBounds', () => {
     expect(range).toBe(1000);
   });
 
-  it('shifts center north of geometric center', () => {
+  it('shifts center south to move route up in viewport', () => {
     const bounds = makeMockBounds(37.8, -122.3, 37.7, -122.4);
     const { center } = calculateCameraFromBounds(bounds);
     const geoCenter = (37.8 + 37.7) / 2;
-    expect(center.lat).toBeGreaterThan(geoCenter);
+    // Center shifted SOUTH ~12% to move route UP in viewport
+    // (shifting center down moves the viewport up, pushing route higher)
+    expect(center.lat).toBeLessThan(geoCenter);
+    expect(center.lat).toBeGreaterThan(geoCenter - 0.015); // shifted by ~0.012
   });
 
   it('returns range proportional to bounds size', () => {
-    const small = makeMockBounds(37.71, -122.39, 37.70, -122.40);
-    const large = makeMockBounds(37.80, -122.30, 37.70, -122.40);
+    const small = makeMockBounds(37.71, -122.39, 37.7, -122.4);
+    const large = makeMockBounds(37.8, -122.3, 37.7, -122.4);
     expect(calculateCameraFromBounds(large).range).toBeGreaterThan(
       calculateCameraFromBounds(small).range,
     );

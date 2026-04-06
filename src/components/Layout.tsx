@@ -26,10 +26,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, [isHome]);
 
   return (
-    <div className={`min-h-screen flex flex-col ${isHome ? 'bg-gray-950' : 'bg-gray-950'}`}>
+    <div className={`flex flex-col ${isHome ? 'bg-gray-950' : 'bg-gray-950'} ${isTripDetail ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
       <header
         className={`
-          top-0 z-50 transition-all duration-300
+          top-0 z-50 transition-all duration-300 flex-shrink-0
           ${
             isHome
               ? `fixed w-full ${scrolled ? 'bg-gray-950/80 backdrop-blur-md' : 'bg-transparent'}`
@@ -75,7 +75,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </div>
       </header>
 
-      <main className="flex-grow">{children}</main>
+      <main className={`${isTripDetail ? 'flex-1 min-h-0 overflow-hidden' : 'flex-grow'}`}>{children}</main>
 
       {!isTripDetail && (
         <footer

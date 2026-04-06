@@ -20,12 +20,7 @@ import {
   Mountain,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  metersToFeet,
-  metersToMiles,
-  secondsToDuration,
-  formatTripName,
-} from '../utils/units';
+import { metersToFeet, metersToMiles, secondsToDuration, formatTripName } from '../utils/units';
 import { TripMap } from '../components/Map/TripMap';
 import { ROUTE_COLORS } from '../components/Map/routeColors';
 import { PhotoGallery } from '../components/PhotoGallery';
@@ -173,7 +168,7 @@ export const TripDetail: React.FC = () => {
     activityId: number | null;
   }>({
     isPlaying: false,
-    speed: 1,
+    speed: 4,
     activityId: null,
   });
   const [isPickingPhotos, setIsPickingPhotos] = useState(false);
@@ -363,18 +358,42 @@ export const TripDetail: React.FC = () => {
     }
   };
 
-  const handlePlayPause = (activityId: number) => {
+  const handlePlayPause = () => {
+    // When 'All' is selected, play the first ride (or current animation)
+    // When a ride is selected, play that ride
+    const targetActivityId = activeActivityId ?? activities[0]?.id;
+    if (!targetActivityId) return;
+
     setAnimationState((prev) => ({
       ...prev,
-      activityId,
-      isPlaying: prev.activityId === activityId ? !prev.isPlaying : true,
+      activityId: targetActivityId,
+      isPlaying: prev.activityId === targetActivityId ? !prev.isPlaying : true,
     }));
+  };
+
+  const handleAnimationComplete = () => {
+    // When 'All' is selected, play the next ride in sequence
+    if (activeActivityId === null && animationState.activityId !== null) {
+      const currentIndex = activities.findIndex((a) => a.id === animationState.activityId);
+      const nextActivity = activities[currentIndex + 1];
+      if (nextActivity) {
+        // Play the next ride
+        setAnimationState((prev) => ({
+          ...prev,
+          activityId: nextActivity.id,
+          isPlaying: true,
+        }));
+        return;
+      }
+    }
+    // Otherwise just stop playing
+    setAnimationState((prev) => ({ ...prev, isPlaying: false }));
   };
 
   const toggleSpeed = () => {
     setAnimationState((prev) => ({
       ...prev,
-      speed: prev.speed === 1 ? 2 : 1,
+      speed: prev.speed === 4 ? 8 : 4,
     }));
   };
 
@@ -543,7 +562,7 @@ export const TripDetail: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-65px)] overflow-hidden bg-gray-900 text-gray-100">
+    <div className="flex flex-col h-full overflow-hidden bg-gray-900 text-gray-100">
       <AnimatePresence mode="wait">
         {/* Header */}
         <motion.div
@@ -646,11 +665,10 @@ export const TripDetail: React.FC = () => {
               <div className="absolute inset-0">
                 <TripMap
                   activityStreams={streams}
+                  activities={activities}
                   highlightedActivityId={activeActivityId}
                   animationState={animationState}
-                  onAnimationComplete={() =>
-                    setAnimationState((prev) => ({ ...prev, isPlaying: false }))
-                  }
+                  onAnimationComplete={handleAnimationComplete}
                   photos={visiblePhotos}
                   scrubPosition={scrubPosition}
                   onPhotoSelect={(photo) => setMapPreviewPhoto(photo)}
@@ -658,7 +676,7 @@ export const TripDetail: React.FC = () => {
               </div>
 
               {/* Bottom overlay - elevation background, ride selector, stats, play controls */}
-              <div className="absolute bottom-5 left-0 right-[60px] z-10 pointer-events-none pb-[env(safe-area-inset-bottom)]">
+              <div className="absolute bottom-5 left-0 right-0 z-10 pointer-events-none pb-[env(safe-area-inset-bottom)]">
                 <div className="bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-12">
                   <div className="relative isolate pb-3 px-3 sm:px-8">
                     <div className="relative z-10 flex flex-col gap-3">
@@ -667,32 +685,30 @@ export const TripDetail: React.FC = () => {
                         <div className="flex gap-2 pointer-events-auto">
                           <button
                             onClick={() => setActiveActivityId(null)}
-                            className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${
-                              activeActivityId === null
-                                ? 'bg-amber-400 text-gray-900'
-                                : 'bg-white/10 text-white/70 hover:bg-white/20 backdrop-blur-sm'
-                            }`}
+                            className="px-4 py-1.5 text-xs font-bold rounded-full transition-all text-gray-900"
+                            style={{
+                              backgroundColor:
+                                activeActivityId === null ? '#fbbf24' : 'rgba(251, 191, 36, 0.3)',
+                            }}
                           >
                             All
                           </button>
-                          {activities.map((activity, index) => (
-                            <button
-                              key={activity.id}
-                              onClick={() => setActiveActivityId(activity.id)}
-                              className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${
-                                activeActivityId === activity.id
-                                  ? 'text-white'
-                                  : 'bg-white/10 text-white/70 hover:bg-white/20 backdrop-blur-sm'
-                              }`}
-                              style={
-                                activeActivityId === activity.id
-                                  ? { backgroundColor: ROUTE_COLORS[index % ROUTE_COLORS.length] }
-                                  : undefined
-                              }
-                            >
-                              Ride {index + 1}
-                            </button>
-                          ))}
+                          {activities.map((activity, index) => {
+                            const color = ROUTE_COLORS[index % ROUTE_COLORS.length];
+                            const isActive = activeActivityId === activity.id;
+                            return (
+                              <button
+                                key={activity.id}
+                                onClick={() => setActiveActivityId(activity.id)}
+                                className="px-4 py-1.5 text-xs font-bold rounded-full transition-all text-white"
+                                style={{
+                                  backgroundColor: isActive ? color : `${color}4D`, // 4D = 30% opacity in hex
+                                }}
+                              >
+                                Ride {index + 1}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
 
@@ -731,12 +747,16 @@ export const TripDetail: React.FC = () => {
                               <span className="flex items-center gap-2 text-base sm:text-2xl font-bold text-amber-300">
                                 <Bike className="w-4 h-4 sm:w-6 sm:h-6 text-amber-400/70" />
                                 {metersToMiles(totalDist).toFixed(1)}{' '}
-                                <span className="text-amber-300/50 text-xs sm:text-base font-normal">mi</span>
+                                <span className="text-amber-300/50 text-xs sm:text-base font-normal">
+                                  mi
+                                </span>
                               </span>
                               <span className="flex items-center gap-2 text-base sm:text-2xl font-bold text-amber-300">
                                 <Mountain className="w-4 h-4 sm:w-6 sm:h-6 text-amber-400/70" />
                                 {Math.round(metersToFeet(totalElev)).toLocaleString()}{' '}
-                                <span className="text-amber-300/50 text-xs sm:text-base font-normal">ft</span>
+                                <span className="text-amber-300/50 text-xs sm:text-base font-normal">
+                                  ft
+                                </span>
                               </span>
                               <span className="text-base sm:text-2xl font-bold text-amber-300">
                                 {secondsToDuration(totalTime)}
@@ -747,45 +767,29 @@ export const TripDetail: React.FC = () => {
 
                         <div className="w-px h-6 bg-amber-400/20" />
 
-                        {activities
-                          .filter((a) => activeActivityId === null || a.id === activeActivityId)
-                          .map((activity) => (
-                            <button
-                              key={activity.id}
-                              onClick={() => handlePlayPause(activity.id)}
-                              className={`p-1.5 transition-colors flex items-center justify-center ${
-                                animationState.activityId === activity.id &&
-                                animationState.isPlaying
-                                  ? 'text-red-500 hover:text-red-400'
-                                  : 'text-red-500 hover:text-red-400'
-                              }`}
-                              title={
-                                animationState.activityId === activity.id &&
-                                animationState.isPlaying
-                                  ? 'Pause'
-                                  : 'Play'
-                              }
-                            >
-                              {animationState.activityId === activity.id &&
-                              animationState.isPlaying ? (
-                                <Pause className="w-6 h-6" fill="currentColor" />
-                              ) : (
-                                <Play className="w-6 h-6" fill="currentColor" />
-                              )}
-                            </button>
-                          ))}
+                        {/* Single play button - plays selected ride, or all rides in sequence when 'All' */}
+                        <button
+                          onClick={() => handlePlayPause()}
+                          className="p-1.5 transition-colors flex items-center justify-center text-red-500 hover:text-red-400"
+                          title={animationState.isPlaying ? 'Pause' : 'Play'}
+                        >
+                          {animationState.isPlaying ? (
+                            <Pause className="w-6 h-6" fill="currentColor" />
+                          ) : (
+                            <Play className="w-6 h-6" fill="currentColor" />
+                          )}
+                        </button>
                         <button
                           onClick={() => toggleSpeed()}
                           aria-label={`Speed: ${animationState.speed}x`}
-                          className={`p-1.5 transition-colors flex items-center gap-1 justify-center ${
-                            animationState.speed > 1
+                          className={`p-1.5 transition-colors flex items-center justify-center ${
+                            animationState.speed === 4
                               ? 'text-yellow-400 hover:text-yellow-300'
                               : 'text-red-500 hover:text-red-400'
                           }`}
                           title={`Speed: ${animationState.speed}x (click to toggle)`}
                         >
                           <FastForward className="w-5 h-5" fill="currentColor" />
-                          <span className="text-xs font-bold">{animationState.speed}x</span>
                         </button>
                       </div>
                     </div>

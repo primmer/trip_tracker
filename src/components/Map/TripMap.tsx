@@ -1,12 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Map3D, useMap3D, AltitudeMode, MapMode, Marker3D, useApiIsLoaded } from '@vis.gl/react-google-maps';
-import { ActivityStreams } from '../../types';
+import {
+  Map3D,
+  useMap3D,
+  AltitudeMode,
+  MapMode,
+  Marker3D,
+  useApiIsLoaded,
+} from '@vis.gl/react-google-maps';
+import { Activity, ActivityStreams } from '../../types';
 import { RouteAnimation } from './RouteAnimation';
 import { PhotoMarkers, Photo } from './PhotoMarkers';
 import { ROUTE_COLORS } from './routeColors';
 import { calculateCameraFromBounds } from '../../utils/mapUtils';
 
-// Local type extension for flyCameraTo — available at runtime but not yet in @types/google.maps 3.58.1
+// Local type extensions for APIs available at runtime but not yet in @types/google.maps 3.58.1
 interface Map3DElementWithFly extends google.maps.maps3d.Map3DElement {
   flyCameraTo(options: {
     endCamera: {
@@ -19,8 +26,13 @@ interface Map3DElementWithFly extends google.maps.maps3d.Map3DElement {
   }): void;
 }
 
+interface Polyline3DElementWithPath extends google.maps.maps3d.Polyline3DElement {
+  path: google.maps.LatLngAltitudeLiteral[];
+}
+
 interface TripMapProps {
   activityStreams: Record<number, ActivityStreams>;
+  activities?: Activity[];
   highlightedActivityId?: number | null;
   animationState?: {
     isPlaying: boolean;
@@ -35,6 +47,7 @@ interface TripMapProps {
 
 export const TripMap: React.FC<TripMapProps> = ({
   activityStreams,
+  activities,
   highlightedActivityId,
   animationState,
   onAnimationComplete,
@@ -44,6 +57,7 @@ export const TripMap: React.FC<TripMapProps> = ({
 }) => {
   const [animationPos, setAnimationPos] = useState<{ lat: number; lng: number } | null>(null);
   const apiIsLoaded = useApiIsLoaded();
+  const map3d = useMap3D();
 
   const animationPath = useMemo(() => {
     if (!animationState?.activityId) return null;
@@ -60,6 +74,8 @@ export const TripMap: React.FC<TripMapProps> = ({
       defaultRange={2000000}
       defaultTilt={0}
       defaultHeading={0}
+      // @ts-expect-error - defaultUIHidden is a valid runtime prop but not in types yet
+      defaultUIHidden={true}
     >
       <RoutePolylines
         activityStreams={activityStreams}
@@ -71,7 +87,7 @@ export const TripMap: React.FC<TripMapProps> = ({
         isAnimationPlaying={animationState?.isPlaying}
       />
 
-      <PhotoMarkers photos={photos} onPhotoSelect={onPhotoSelect} />
+      <PhotoMarkers photos={photos} activities={activities} onPhotoSelect={onPhotoSelect} />
 
       {animationPath && animationState && animationState.activityId !== null && (
         <RouteAnimation
@@ -140,7 +156,11 @@ const RoutePolylines: React.FC<{
       ) as google.maps.maps3d.Polyline3DElement;
 
       polyline.altitudeMode = google.maps.maps3d.AltitudeMode.CLAMP_TO_GROUND;
-      polyline.coordinates = streams.latlng.map(([lat, lng]) => ({ lat, lng, altitude: 0 }));
+      (polyline as Polyline3DElementWithPath).path = streams.latlng.map(([lat, lng]) => ({
+        lat,
+        lng,
+        altitude: 0,
+      }));
       polyline.strokeColor = color;
       polyline.strokeOpacity = isHighlighted ? 0.9 : 0.3;
       polyline.strokeWidth = isHighlighted ? 5 : 3;

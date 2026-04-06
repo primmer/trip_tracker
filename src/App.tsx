@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import type { Router as RouterType } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Trips } from './pages/Trips';
 import { TripDetail } from './pages/TripDetail';
@@ -10,7 +11,7 @@ import { isAdmin } from './utils/admin';
 
 export function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
       <Layout>
         <Routes>

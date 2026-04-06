@@ -1,9 +1,11 @@
 /**
  * Calculates camera parameters to frame all points within a LatLngBounds on a Map3D.
  *
- * Returns both the range (distance from camera to center) and an adjusted center
- * that shifts northward to compensate for the bottom overlay consuming ~30% of
- * the viewport.
+ * The camera range is increased to ensure the route fits entirely within the visible
+ * map area above the bottom overlay (elevation chart + stats). The overlay consumes
+ * approximately the bottom 30% of the viewport, so we scale the range by 1/0.7 ≈ 1.43
+ * to compensate. This keeps the geometric center of the route in the true center while
+ * ensuring no part of the route is hidden under the overlay.
  */
 export function calculateCameraFromBounds(bounds: google.maps.LatLngBounds): {
   center: { lat: number; lng: number };
@@ -30,12 +32,20 @@ export function calculateCameraFromBounds(bounds: google.maps.LatLngBounds): {
 
   const geoCenter = bounds.getCenter();
   const latSpan = ne.lat() - sw.lat();
-  // Shift center north by ~20% of the lat span to compensate for the bottom overlay
-  const adjustedLat = geoCenter.lat() + latSpan * 0.2;
+
+  // The bottom overlay consumes ~30% of viewport height.
+  // Scale range by 1/(1-0.3) = 1.43 to fit route in visible area.
+  // Original multiplier was 1.8, so new multiplier is 1.8 * 1.43 ≈ 2.57
+  const visibleHeightRatio = 0.7;
+  const rangeMultiplier = 1.8 / visibleHeightRatio;
+
+  // Shift center SOUTH by ~12% to move the route UP in the viewport
+  // (visible area has more space above than below due to overlay)
+  const adjustedLat = geoCenter.lat() - latSpan * 0.12;
 
   return {
     center: { lat: adjustedLat, lng: geoCenter.lng() },
-    range: Math.max(diagonal * 1.8, 1000),
+    range: Math.max(diagonal * rangeMultiplier, 1000),
   };
 }
 

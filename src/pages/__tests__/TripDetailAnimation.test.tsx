@@ -151,12 +151,12 @@ describe('TripDetail Animation Controls', () => {
     expect(screen.queryByTitle(/Pause/i)).not.toBeInTheDocument();
     expect(screen.getByTestId('animation-status')).toHaveTextContent('Paused');
 
-    // 5. Click Speed toggle and verify it changes state
-    expect(screen.getByTestId('animation-speed')).toHaveTextContent('1x');
+    // 5. Click Speed toggle and verify it changes state (default is 4x, toggles to 8x)
+    expect(screen.getByTestId('animation-speed')).toHaveTextContent('4x');
     await act(async () => {
       fireEvent.click(speedButton);
     });
-    expect(screen.getByTestId('animation-speed')).toHaveTextContent('2x');
+    expect(screen.getByTestId('animation-speed')).toHaveTextContent('8x');
 
     // 6. Click Play again and verify it resumes
     await act(async () => {
