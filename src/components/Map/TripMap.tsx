@@ -3,6 +3,7 @@ import { Map, useMap, MapProps, Marker } from '@vis.gl/react-google-maps';
 import { ActivityStreams } from '../../types';
 import { RouteAnimation } from './RouteAnimation';
 import { PhotoMarkers, Photo } from './PhotoMarkers';
+import { ROUTE_COLORS } from './routeColors';
 
 interface TripMapProps extends MapProps {
   activityStreams: Record<number, ActivityStreams>;
@@ -14,15 +15,19 @@ interface TripMapProps extends MapProps {
   };
   onAnimationComplete?: () => void;
   photos?: Photo[];
+  scrubPosition?: { lat: number; lng: number } | null;
+  onPhotoSelect?: (photo: Photo) => void;
 }
 
-export const TripMap: React.FC<TripMapProps> = ({ 
-  activityStreams, 
+export const TripMap: React.FC<TripMapProps> = ({
+  activityStreams,
   highlightedActivityId,
   animationState,
   onAnimationComplete,
   photos = [],
-  ...mapProps 
+  scrubPosition,
+  onPhotoSelect,
+  ...mapProps
 }) => {
   const [animationPos, setAnimationPos] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -37,27 +42,33 @@ export const TripMap: React.FC<TripMapProps> = ({
     <Map
       {...mapProps}
       mapId={import.meta.env.VITE_GOOGLE_MAPS_ID || 'DEMO_MAP_ID'}
+      renderingType="VECTOR"
       style={{ width: '100%', height: '100%' }}
       defaultCenter={{ lat: 0, lng: 0 }}
       defaultZoom={2}
+      defaultTilt={0}
+      defaultHeading={0}
       gestureHandling="greedy"
       disableDefaultUI={false}
       zoomControl={true}
       mapTypeControl={true}
+      streetViewControl={false}
+      headingInteractionEnabled={true}
+      tiltInteractionEnabled={true}
       backgroundColor="#030712"
     >
-      <RoutePolylines 
-        activityStreams={activityStreams} 
-        highlightedActivityId={highlightedActivityId} 
+      <RoutePolylines
+        activityStreams={activityStreams}
+        highlightedActivityId={highlightedActivityId}
       />
-      <MapAutoZoom 
-        activityStreams={activityStreams} 
-        highlightedActivityId={highlightedActivityId} 
+      <MapAutoZoom
+        activityStreams={activityStreams}
+        highlightedActivityId={highlightedActivityId}
         isAnimationPlaying={animationState?.isPlaying}
       />
-      
+
       <SetInitialMapType />
-      <PhotoMarkers photos={photos} />
+      <PhotoMarkers photos={photos} onPhotoSelect={onPhotoSelect} />
 
       {animationPath && animationState && animationState.activityId !== null && (
         <>
@@ -70,7 +81,7 @@ export const TripMap: React.FC<TripMapProps> = ({
             onPositionChange={setAnimationPos}
           />
           {animationPos && (
-            <Marker 
+            <Marker
               position={animationPos}
               zIndex={1000}
               icon={{
@@ -85,32 +96,40 @@ export const TripMap: React.FC<TripMapProps> = ({
           )}
         </>
       )}
+
+      {scrubPosition && (
+        <Marker
+          position={scrubPosition}
+          zIndex={999}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#FFFFFF',
+            fillOpacity: 1,
+            strokeColor: '#3b82f6',
+            strokeWeight: 3,
+          }}
+        />
+      )}
     </Map>
   );
 };
 
-const RoutePolylines: React.FC<{ 
+const RoutePolylines: React.FC<{
   activityStreams: Record<number, ActivityStreams>;
   highlightedActivityId?: number | null;
 }> = ({ activityStreams, highlightedActivityId }) => {
   const map = useMap();
-  
-  const colors = useMemo(() => [
-    '#3b82f6', // blue-500
-    '#ef4444', // red-500
-    '#10b981', // emerald-500
-    '#f59e0b', // amber-500
-    '#8b5cf6', // violet-500
-    '#ec4899', // pink-500
-  ], []);
+
+  const colors = ROUTE_COLORS;
 
   const polylines = useMemo(() => {
     return Object.entries(activityStreams).map(([idStr, streams], index) => {
       const id = parseInt(idStr);
       if (!streams.latlng || streams.latlng.length === 0) return null;
-      
+
       const path = streams.latlng.map(([lat, lng]) => ({ lat, lng }));
-      
+
       const isHighlighted = highlightedActivityId === null || highlightedActivityId === id;
 
       return {
@@ -122,20 +141,20 @@ const RoutePolylines: React.FC<{
           strokeOpacity: isHighlighted ? 0.9 : 0.3,
           strokeWeight: isHighlighted ? 5 : 3,
           zIndex: isHighlighted ? 100 : 10,
-        })
+        }),
       };
     });
   }, [activityStreams, highlightedActivityId, colors]);
 
   useEffect(() => {
     if (!map) return;
-    
-    polylines.forEach(item => {
+
+    polylines.forEach((item) => {
       if (item) item.polyline.setMap(map);
     });
 
     return () => {
-      polylines.forEach(item => {
+      polylines.forEach((item) => {
         if (item) item.polyline.setMap(null);
       });
     };
@@ -144,7 +163,7 @@ const RoutePolylines: React.FC<{
   return null;
 };
 
-const MapAutoZoom: React.FC<{ 
+const MapAutoZoom: React.FC<{
   activityStreams: Record<number, ActivityStreams>;
   highlightedActivityId?: number | null;
   isAnimationPlaying?: boolean;
@@ -155,7 +174,7 @@ const MapAutoZoom: React.FC<{
 
   useEffect(() => {
     if (!map || isAnimationPlaying) return;
-    
+
     const bounds = new google.maps.LatLngBounds();
     let hasCoords = false;
 
@@ -164,7 +183,8 @@ const MapAutoZoom: React.FC<{
       // If an activity is highlighted, only zoom to that one.
       // If null is highlighted (show all), zoom to all.
       // Special case: on first load, we want to zoom to ALL activities if it's a multi-day trip
-      if (!isFirstLoad.current && highlightedActivityId !== null && highlightedActivityId !== id) return;
+      if (!isFirstLoad.current && highlightedActivityId !== null && highlightedActivityId !== id)
+        return;
 
       if (streams.latlng && streams.latlng.length > 0) {
         streams.latlng.forEach(([lat, lng]) => {
@@ -179,7 +199,7 @@ const MapAutoZoom: React.FC<{
         top: 100,
         right: 100,
         bottom: 100,
-        left: 100
+        left: 100,
       });
       isFirstLoad.current = false;
     }
