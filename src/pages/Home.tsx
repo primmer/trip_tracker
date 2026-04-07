@@ -23,6 +23,7 @@ interface Photo {
   lat: number | null;
   lng: number | null;
   createdAt: string;
+  mediaType?: 'photo' | 'video';
 }
 
 const formatDateRange = (start: string, end: string) => {
@@ -145,8 +146,10 @@ export const Home: React.FC = () => {
                 const allPhotos = photosSnapshot.docs.map(
                   (d) => ({ id: d.id, ...d.data() }) as Photo,
                 );
-                const geoPhoto = allPhotos.find((p) => p.lat !== null && p.lng !== null);
-                photos[trip.id] = geoPhoto || allPhotos[0];
+                // Filter out videos for hero background (they have play button overlay on thumbnails)
+                const photoOnly = allPhotos.filter((p) => p.mediaType !== 'video');
+                const geoPhoto = photoOnly.find((p) => p.lat !== null && p.lng !== null);
+                photos[trip.id] = geoPhoto || photoOnly[0];
               }
             } catch (err) {
               console.error(`Photo query failed for ${trip.id}:`, err);

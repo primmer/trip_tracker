@@ -7,6 +7,7 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts: true,
     proxy: {
       '/storage-proxy': {
         target: 'https://storage.googleapis.com',

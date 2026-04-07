@@ -542,31 +542,76 @@ router.post('/api/photos/process-session', async (req, res) => {
         const results = [];
         for (const item of mediaItems) {
             try {
-                // 1. Download photo (baseUrl + w2048, requires auth)
-                const photoUrl = `${item.mediaFile.baseUrl}=w2048-h1024`;
-                console.log(`Downloading photo: ${item.id}, URL prefix: ${item.mediaFile.baseUrl?.substring(0, 80)}...`);
-                const response = await fetch(photoUrl, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                });
-                if (!response.ok) {
-                    console.error(`Download failed: ${response.status} ${response.statusText}`);
-                    throw new Error(`Failed to download photo ${item.id}`);
-                }
-                const buffer = await response.arrayBuffer();
-                // 2. Upload to Firebase Storage
+                const isVideo = item.type === 'VIDEO';
                 const bucket = admin.storage().bucket();
-                const filename = item.mediaFile.filename || `${item.id}.jpg`;
+                let filename = item.mediaFile.filename || `${item.id}.${isVideo ? 'mp4' : 'jpg'}`;
+                // Ensure video files have proper extension
+                if (isVideo && !filename.match(/\.(mp4|mov|avi|mkv)$/i)) {
+                    filename += '.mp4';
+                }
                 const storagePath = `trips/${tripId}/photos/${filename}`;
                 const file = bucket.file(storagePath);
-                await file.save(Buffer.from(buffer), {
-                    metadata: {
-                        contentType: item.mediaFile.mimeType || 'image/jpeg',
-                    },
-                });
+                if (isVideo) {
+                    // Check if video is ready for download
+                    const processingStatus = item.mediaFile.mediaFileMetadata?.video?.processingStatus;
+                    if (processingStatus === 'PROCESSING') {
+                        console.log(`Video ${item.id} is still processing, skipping...`);
+                        results.push({
+                            id: item.id,
+                            success: false,
+                            error: 'Video still processing in Google Photos',
+                        });
+                        continue;
+                    }
+                    if (processingStatus === 'FAILED') {
+                        console.log(`Video ${item.id} processing failed, skipping...`);
+                        results.push({
+                            id: item.id,
+                            success: false,
+                            error: 'Video processing failed in Google Photos',
+                        });
+                        continue;
+                    }
+                    // Download video using =dv parameter
+                    const videoUrl = `${item.mediaFile.baseUrl}=dv`;
+                    console.log(`Downloading video: ${item.id}, URL prefix: ${item.mediaFile.baseUrl?.substring(0, 80)}...`);
+                    const response = await fetch(videoUrl, {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                    });
+                    if (!response.ok) {
+                        console.error(`Download failed: ${response.status} ${response.statusText}`);
+                        throw new Error(`Failed to download video ${item.id}`);
+                    }
+                    const buffer = await response.arrayBuffer();
+                    console.log(`Downloaded video ${item.id}: ${buffer.byteLength} bytes`);
+                    await file.save(Buffer.from(buffer), {
+                        metadata: {
+                            contentType: item.mediaFile.mimeType || 'video/mp4',
+                        },
+                    });
+                }
+                else {
+                    // Download photo (baseUrl + w2048, requires auth)
+                    const photoUrl = `${item.mediaFile.baseUrl}=w2048-h1024`;
+                    console.log(`Downloading photo: ${item.id}, URL prefix: ${item.mediaFile.baseUrl?.substring(0, 80)}...`);
+                    const response = await fetch(photoUrl, {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                    });
+                    if (!response.ok) {
+                        console.error(`Download failed: ${response.status} ${response.statusText}`);
+                        throw new Error(`Failed to download photo ${item.id}`);
+                    }
+                    const buffer = await response.arrayBuffer();
+                    await file.save(Buffer.from(buffer), {
+                        metadata: {
+                            contentType: item.mediaFile.mimeType || 'image/jpeg',
+                        },
+                    });
+                }
                 // Make file publicly readable and construct download URL
                 await file.makePublic();
                 const downloadUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
-                // 3. Geolocation derivation
+                // Geolocation derivation
                 let lat = null;
                 let lng = null;
                 if (item.createTime) {
@@ -576,13 +621,13 @@ router.post('/api/photos/process-session', async (req, res) => {
                             if (geo) {
                                 lat = geo.lat;
                                 lng = geo.lng;
-                                break; // Found matching activity
+                                break;
                             }
                         }
                     }
                 }
-                // 4. Firestore metadata
-                const photoMetadata = {
+                // Firestore metadata
+                const mediaMetadata = {
                     id: item.id,
                     filename,
                     storagePath,
@@ -593,18 +638,23 @@ router.post('/api/photos/process-session', async (req, res) => {
                     width: item.mediaFile.mediaFileMetadata?.width ?? null,
                     height: item.mediaFile.mediaFileMetadata?.height ?? null,
                     mimeType: item.mediaFile.mimeType,
+                    mediaType: isVideo ? 'video' : 'photo',
                     syncedAt: admin.firestore.FieldValue.serverTimestamp(),
                 };
+                // Add video-specific metadata
+                if (isVideo) {
+                    mediaMetadata.fps = item.mediaFile.mediaFileMetadata?.video?.fps ?? null;
+                }
                 await db
                     .collection('trips')
                     .doc(tripId)
                     .collection('photos')
                     .doc(item.id)
-                    .set(photoMetadata);
-                results.push({ id: item.id, success: true });
+                    .set(mediaMetadata);
+                results.push({ id: item.id, success: true, type: isVideo ? 'video' : 'photo' });
             }
             catch (err) {
-                console.error(`Error processing photo ${item.id}:`, err);
+                console.error(`Error processing media ${item.id}:`, err);
                 results.push({
                     id: item.id,
                     success: false,

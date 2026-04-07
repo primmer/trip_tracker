@@ -132,7 +132,7 @@ export async function getPickerSession(sessionId: string) {
 export interface MediaItem {
   id: string;
   createTime: string;
-  type: string;
+  type: 'PHOTO' | 'VIDEO' | 'TYPE_UNSPECIFIED';
   mediaFile: {
     baseUrl: string;
     mimeType: string;
@@ -142,6 +142,10 @@ export interface MediaItem {
       height: number;
       cameraMake?: string;
       cameraModel?: string;
+      video?: {
+        fps: number;
+        processingStatus: 'UNSPECIFIED' | 'PROCESSING' | 'READY' | 'FAILED';
+      };
     };
   };
 }

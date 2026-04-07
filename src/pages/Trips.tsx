@@ -24,6 +24,7 @@ interface Photo {
   lat: number | null;
   lng: number | null;
   createdAt: string;
+  mediaType?: 'photo' | 'video';
 }
 
 const ElevationLine: React.FC<{
@@ -139,8 +140,10 @@ export const Trips: React.FC = () => {
               const snap = await getDocs(photosQuery);
               if (!snap.empty) {
                 const allPhotos = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Photo);
-                const geoPhoto = allPhotos.find((p) => p.lat !== null && p.lng !== null);
-                photos[trip.id] = geoPhoto || allPhotos[0];
+                // Filter out videos for tile backgrounds (they have play button overlay)
+                const photoOnly = allPhotos.filter((p) => p.mediaType !== 'video');
+                const geoPhoto = photoOnly.find((p) => p.lat !== null && p.lng !== null);
+                photos[trip.id] = geoPhoto || photoOnly[0];
               }
             } catch {
               /* skip */

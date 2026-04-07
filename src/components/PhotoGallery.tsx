@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Photo } from './Map/PhotoMarkers';
-import { Image as ImageIcon, MapPin, Clock } from 'lucide-react';
+import { Image as ImageIcon, MapPin, Clock, Play } from 'lucide-react';
 
 interface PhotoGalleryProps {
   photos: Photo[];
@@ -60,46 +60,69 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {dayPhotos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="group relative bg-gray-800 rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1"
-                  onClick={() => onPhotoClick?.(photo)}
-                >
-                  <div className="aspect-square w-full bg-gray-800 overflow-hidden">
-                    <img
-                      src={photo.downloadUrl}
-                      alt=""
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <div className="px-3 py-2 flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
-                      <Clock className="w-3 h-3" />
-                      <span>
-                        {new Date(photo.createdAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
+              {dayPhotos.map((photo) => {
+                const isVideo = photo.mediaType === 'video';
+                return (
+                  <div
+                    key={photo.id}
+                    className="group relative bg-gray-800 rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1"
+                    onClick={() => onPhotoClick?.(photo)}
+                  >
+                    <div className="aspect-square w-full bg-gray-800 overflow-hidden relative">
+                      {isVideo ? (
+                        <>
+                          <video
+                            src={photo.downloadUrl}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            preload="metadata"
+                          />
+                          {/* Custom play button overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                              <Play className="w-5 h-5 text-gray-900 ml-0.5" fill="currentColor" />
+                            </div>
+                          </div>
+                          {/* Video indicator badge */}
+                          <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 rounded text-[10px] font-medium text-white">
+                            VIDEO
+                          </div>
+                        </>
+                      ) : (
+                        <img
+                          src={photo.downloadUrl}
+                          alt=""
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      )}
                     </div>
 
-                    {photo.lat !== null && photo.lng !== null ? (
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
-                        <MapPin className="w-3 h-3" />
-                        <span>Geolocated</span>
+                    <div className="px-3 py-2 flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
+                        <Clock className="w-3 h-3" />
+                        <span>
+                          {new Date(photo.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-500 italic">
-                        <MapPin className="w-3 h-3" />
-                        <span>No location</span>
-                      </div>
-                    )}
+
+                      {photo.lat !== null && photo.lng !== null ? (
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
+                          <MapPin className="w-3 h-3" />
+                          <span>Geolocated</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-500 italic">
+                          <MapPin className="w-3 h-3" />
+                          <span>No location</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         ))}

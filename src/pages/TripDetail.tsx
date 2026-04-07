@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -35,6 +35,7 @@ const LightboxOverlay: React.FC<{
   onClose: () => void;
   onNavigate: (photo: Photo) => void;
 }> = ({ photo, photos, onClose, onNavigate }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const sortedPhotos = useMemo(
     () =>
       [...photos].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
@@ -43,6 +44,7 @@ const LightboxOverlay: React.FC<{
   const currentIndex = sortedPhotos.findIndex((p) => p.id === photo.id);
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < sortedPhotos.length - 1;
+  const isVideo = photo.mediaType === 'video';
 
   const goTo = useCallback(
     (dir: -1 | 1) => {
@@ -59,7 +61,15 @@ const LightboxOverlay: React.FC<{
       if (e.key === 'ArrowRight' && hasNext) goTo(1);
     };
     window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      // Pause video when component unmounts to prevent cleanup errors
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+        videoRef.current.load();
+      }
+    };
   }, [onClose, hasPrev, hasNext, goTo]);
 
   // Swipe gesture
@@ -128,12 +138,28 @@ const LightboxOverlay: React.FC<{
         className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={photo.downloadUrl}
-          alt=""
-          className="max-w-full max-h-[80vh] object-contain rounded-lg"
-        />
+        {isVideo ? (
+          <video
+            ref={videoRef}
+            src={photo.downloadUrl}
+            controls
+            autoPlay
+            className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <img
+            src={photo.downloadUrl}
+            alt=""
+            className="max-w-full max-h-[80vh] object-contain rounded-lg"
+          />
+        )}
         <div className="mt-4 text-center text-white/50 text-sm">
+          {isVideo && (
+            <span className="inline-block px-2 py-0.5 bg-white/10 rounded text-[10px] font-medium mr-2">
+              VIDEO
+            </span>
+          )}
           {new Date(photo.createdAt).toLocaleDateString(undefined, {
             weekday: 'long',
             month: 'long',
@@ -147,6 +173,73 @@ const LightboxOverlay: React.FC<{
               {currentIndex + 1} / {sortedPhotos.length}
             </span>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MapPhotoPreview: React.FC<{
+  photo: Photo;
+  onClose: () => void;
+  onOpenInGallery: () => void;
+}> = ({ photo, onClose, onOpenInGallery }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      // Pause video when component unmounts to prevent cleanup errors
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+        videoRef.current.load();
+      }
+    };
+  }, [onClose]);
+
+  const isVideo = photo.mediaType === 'video';
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center cursor-pointer"
+      onClick={onClose}
+    >
+      <div className="relative max-w-[80vw] max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+        {isVideo ? (
+          <video
+            ref={videoRef}
+            src={photo.downloadUrl}
+            controls
+            autoPlay
+            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <img
+            src={photo.downloadUrl}
+            alt=""
+            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-pointer"
+            onClick={onOpenInGallery}
+          />
+        )}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-xs pointer-events-none">
+          {isVideo && (
+            <span className="inline-block px-1.5 py-0.5 bg-black/60 rounded text-[10px] font-medium mr-2">
+              VIDEO
+            </span>
+          )}
+          {new Date(photo.createdAt).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </div>
       </div>
     </div>
@@ -813,35 +906,15 @@ export const TripDetail: React.FC = () => {
 
         {/* Map photo preview */}
         {mapPreviewPhoto && (
-          <div
-            className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center cursor-pointer"
-            onClick={() => setMapPreviewPhoto(null)}
-          >
-            <div
-              className="relative max-w-[80vw] max-h-[80vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={mapPreviewPhoto.downloadUrl}
-                alt=""
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-pointer"
-                onClick={() => {
-                  setMapPreviewPhoto(null);
-                  setActiveView('gallery');
-                  setSelectedGalleryPhoto(mapPreviewPhoto);
-                }}
-              />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-xs pointer-events-none">
-                {new Date(mapPreviewPhoto.createdAt).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </div>
-            </div>
-          </div>
+          <MapPhotoPreview
+            photo={mapPreviewPhoto}
+            onClose={() => setMapPreviewPhoto(null)}
+            onOpenInGallery={() => {
+              setMapPreviewPhoto(null);
+              setActiveView('gallery');
+              setSelectedGalleryPhoto(mapPreviewPhoto);
+            }}
+          />
         )}
 
         {/* Lightbox Photo Overlay */}

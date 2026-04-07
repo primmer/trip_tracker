@@ -33,6 +33,22 @@ cd functions && npm install && cd ..
 
 This starts both the Vite frontend (`:5173`) and the Cloud Functions dev server (`:5001`), checks if each is already running, and prints health status.
 
+### Mobile Testing with Tailscale
+
+Test on your phone without deploying by exposing the dev server via Tailscale:
+
+```sh
+# Terminal 1: Start dev server (already running)
+./dev.sh
+
+# Terminal 2: Expose to your Tailscale network
+tailscale serve --http 5173 localhost:5173
+```
+
+Then on your phone, open: `http://<your-mac-hostname>.<tailnet>.ts.net:5173`
+
+The `vite.config.ts` already has `allowedHosts: true` configured to allow Tailscale hostnames.
+
 ## Scripts
 
 | Command             | Description                       |

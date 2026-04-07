@@ -15,11 +15,12 @@
 - **Deployed:** 2026-04-06
 - **Verified:** Map interactions (pan, tilt, zoom) now work with one finger instead of requiring two. Page no longer scrolls independently of map.
 
-## 2. Mobile elevation scrub doesn't work
+## 2. Mobile elevation scrub doesn't work ✅ FIXED
 
-- **File:** `src/components/ElevationChart.tsx` lines 75-90, 131-134
+- **File:** `src/components/ElevationChart.tsx` lines 76-91, 131-134
 - **Problem:** Only `onMouseMove`/`onMouseLeave` handlers exist. Zero touch event handlers. No `touch-action: none` CSS, so the browser intercepts touch gestures for scrolling.
-- **Fix:** Add `onTouchStart`/`onTouchMove`/`onTouchEnd` handlers using `e.touches[0].clientX`, or switch to unified `onPointerMove`/`onPointerLeave`. Add `touch-action: none` to the chart container.
+- **Fix:** Switched to unified `onPointerMove`/`onPointerLeave` handlers (Pointer Events API handles both mouse and touch). Added `touch-action: none` to the chart container style to prevent browser scrolling interference.
+- **Deployed:** 2026-04-06
 
 ## 3. Expanded map camera controls hidden behind overlay ✅ FIXED
 
@@ -88,11 +89,14 @@
   - Removed speed multiplier text display (icon only)
 - **Deployed:** Pending
 
-## Planned: Video Support
+## Video Support ✅ IMPLEMENTED
 
-- The Google Photos picker can return videos (mime type `video/mp4`). Currently the backend downloads the video thumbnail bytes only (Size 427,675 bytes Type
-
-  video/mp4) and displays the thumbnail. Need to either skip videos during import or properly handle them -- download and render with a `<video>` element in the gallery/lightbox instead of `<img>`. Also, do not use them as thumbnails for tile backgrounds or hero images -- their thumb has a play button burned in.
+- Backend downloads full videos from Google Photos picker using `=dv` URL parameter
+- Videos stored in Firebase Storage and `mediaType: 'video'` field in Firestore
+- Gallery shows video thumbnails with custom play button overlay (not Google's burned-in one)
+- Lightbox renders videos with native `<video>` controls and autoplay
+- Videos excluded from tile/hero backgrounds to avoid thumbnail quality issues
+- Verified working with actual video import
 
 ## Planned: AI-Powered POI & Photo Captions
 
