@@ -15,6 +15,7 @@ import { ChevronDown, Mountain, Bike } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RouteOverlay } from '../components/RouteOverlay';
 import { metersToMiles, metersToFeet, formatTripName } from '../utils/units';
+import { logTripCardClick } from '../utils/analytics';
 
 interface Photo {
   id: string;
@@ -311,6 +312,7 @@ export const Home: React.FC = () => {
                   key={trip.id}
                   to={`/trip/${trip.id}`}
                   data-trip-id={trip.id}
+                  onClick={() => logTripCardClick(trip.id, 'home')}
                   className={`group relative overflow-hidden aspect-[3/2] block bg-gray-900 rounded-lg transition-all duration-700 ease-out ${
                     visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}

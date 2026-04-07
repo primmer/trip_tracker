@@ -28,13 +28,23 @@ import { ErrorBanner } from '../components/ErrorBanner';
 import { ElevationChart, ElevationScrubData } from '../components/ElevationChart';
 import { getApiBaseUrl } from '../utils/api';
 import { isAdmin } from '../utils/admin';
+import {
+  logTripView,
+  logPhotoGalleryOpen,
+  logPhotoNavigate,
+  logMapMarkerClick,
+  logRouteAnimation,
+  logAdminPhotoPickerOpen,
+  logAdminPhotoAssigned,
+} from '../utils/analytics';
 
 const LightboxOverlay: React.FC<{
   photo: Photo;
   photos: Photo[];
   onClose: () => void;
   onNavigate: (photo: Photo) => void;
-}> = ({ photo, photos, onClose, onNavigate }) => {
+  tripId: string;
+}> = ({ photo, photos, onClose, onNavigate, tripId }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sortedPhotos = useMemo(
     () =>
@@ -49,9 +59,12 @@ const LightboxOverlay: React.FC<{
   const goTo = useCallback(
     (dir: -1 | 1) => {
       const next = sortedPhotos[currentIndex + dir];
-      if (next) onNavigate(next);
+      if (next) {
+        logPhotoNavigate(dir === -1 ? 'prev' : 'next', tripId, next.id);
+        onNavigate(next);
+      }
     },
-    [sortedPhotos, currentIndex, onNavigate],
+    [sortedPhotos, currentIndex, onNavigate, tripId],
   );
 
   useEffect(() => {
@@ -355,6 +368,7 @@ export const TripDetail: React.FC = () => {
     if (!tripId) return;
     setIsPickingPhotos(true);
     setPickProgress('Checking connection...');
+    logAdminPhotoPickerOpen(tripId);
     const apiBaseUrl = getApiBaseUrl();
     try {
       // 0. Pre-check backend health
@@ -420,7 +434,13 @@ export const TripDetail: React.FC = () => {
               id: doc.id,
               ...doc.data(),
             })) as Photo[];
+            const addedCount = photosData.length - photos.length;
             setPhotos(photosData);
+
+            // Log analytics for photo assignment
+            if (addedCount > 0) {
+              logAdminPhotoAssigned(tripId, addedCount);
+            }
 
             setTimeout(() => {
               setPickProgress(null);
@@ -457,10 +477,16 @@ export const TripDetail: React.FC = () => {
     const targetActivityId = activeActivityId ?? activities[0]?.id;
     if (!targetActivityId) return;
 
+    const willBePlaying =
+      animationState.activityId === targetActivityId ? !animationState.isPlaying : true;
+
+    // Log animation action
+    logRouteAnimation(willBePlaying ? 'play' : 'pause', tripId || 'unknown');
+
     setAnimationState((prev) => ({
       ...prev,
       activityId: targetActivityId,
-      isPlaying: prev.activityId === targetActivityId ? !prev.isPlaying : true,
+      isPlaying: willBePlaying,
     }));
   };
 
@@ -624,6 +650,11 @@ export const TripDetail: React.FC = () => {
           ...doc.data(),
         })) as Photo[];
         setPhotos(photosData);
+
+        // Log trip view analytics
+        if (tripId) {
+          logTripView(tripId, tripData.name || tripData.hashtag || 'unnamed', photosData.length);
+        }
       } catch (err) {
         console.error('Error fetching trip data:', err);
         setError('Failed to load trip data');
@@ -764,7 +795,10 @@ export const TripDetail: React.FC = () => {
                   onAnimationComplete={handleAnimationComplete}
                   photos={visiblePhotos}
                   scrubPosition={scrubPosition}
-                  onPhotoSelect={(photo) => setMapPreviewPhoto(photo)}
+                  onPhotoSelect={(photo) => {
+                    logMapMarkerClick('photo', photo.id);
+                    setMapPreviewPhoto(photo);
+                  }}
                 />
               </div>
 
@@ -899,7 +933,13 @@ export const TripDetail: React.FC = () => {
               transition={{ duration: 0.4 }}
               className="flex-grow overflow-y-auto"
             >
-              <PhotoGallery photos={photos} onPhotoClick={setSelectedGalleryPhoto} />
+              <PhotoGallery
+                photos={photos}
+                onPhotoClick={(photo) => {
+                  logPhotoGalleryOpen(tripId || 'unknown', photo.id);
+                  setSelectedGalleryPhoto(photo);
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -924,6 +964,7 @@ export const TripDetail: React.FC = () => {
             photos={photos}
             onClose={() => setSelectedGalleryPhoto(null)}
             onNavigate={setSelectedGalleryPhoto}
+            tripId={tripId || 'unknown'}
           />
         )}
       </div>

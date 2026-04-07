@@ -16,6 +16,7 @@ import { Mountain, Bike } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RouteOverlay } from '../components/RouteOverlay';
 import { metersToMiles, metersToFeet, formatTripName } from '../utils/units';
+import { logTripCardClick } from '../utils/analytics';
 
 interface Photo {
   id: string;
@@ -255,6 +256,7 @@ export const Trips: React.FC = () => {
                     <Link
                       key={trip.id}
                       to={`/trip/${trip.id}`}
+                      onClick={() => logTripCardClick(trip.id, 'trips')}
                       className="group block relative overflow-hidden bg-gray-900 aspect-[3/2] rounded-lg transition-all"
                     >
                       {photo ? (

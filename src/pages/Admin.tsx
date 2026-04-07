@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RefreshCw, CheckCircle2, Loader2 } from 'lucide-react';
 import { getApiBaseUrl } from '../utils/api';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { logAdminSync } from '../utils/analytics';
 
 interface SyncResult {
   activities_synced: number;
@@ -26,6 +27,9 @@ export const Admin: React.FC = () => {
     );
     setSyncResult(null);
     setError(null);
+
+    // Log analytics
+    logAdminSync('strava');
 
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/strava/sync`, {
