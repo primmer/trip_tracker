@@ -9,7 +9,8 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "dev": "tsx src/dev-server.ts",
-    "setup:google": "tsx src/scripts/setup-google.ts"
+    "setup:google": "tsx src/scripts/setup-google.ts",
+    "fix:google-tokens": "tsx src/scripts/fix-google-tokens.ts"
   },
   "engines": {
     "node": "20"

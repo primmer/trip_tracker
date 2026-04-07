@@ -36,6 +36,10 @@ export async function refreshGoogleTokenIfNeeded() {
     if (!tokens) {
         throw new Error('Google tokens not found in Firestore. Run setup script.');
     }
+    if (!tokens.refresh_token) {
+        throw new Error('Google refresh token is missing. ' +
+            'Run "npm run setup:google" in the functions directory to re-authorize.');
+    }
     const now = Math.floor(Date.now() / 1000);
     if (tokens.expires_at > now + 300 && tokens.access_token) {
         return tokens.access_token;
@@ -60,6 +64,14 @@ export async function refreshGoogleTokenIfNeeded() {
     });
     if (!response.ok) {
         const errorBody = await response.text();
+        // Check for specific OAuth errors
+        if (errorBody.includes('invalid_grant')) {
+            throw new Error('Google refresh token has been invalidated. This can happen if:\n' +
+                '1. You revoked app access at https://myaccount.google.com/permissions\n' +
+                '2. The token expired due to inactivity\n' +
+                '3. The token was used too many times\n\n' +
+                'To fix: Run "npm run setup:google" in the functions directory to re-authorize.');
+        }
         throw new Error(`Failed to refresh Google token: ${response.status} ${errorBody}`);
     }
     const data = await response.json();
