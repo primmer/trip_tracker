@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractHashtags, groupActivitiesIntoTrips } from '../utils/trips.js';
+import { extractHashtags, groupActivitiesIntoTrips, shouldExcludeFromSync, } from '../utils/trips.js';
 describe('extractHashtags', () => {
     it('extracts single hashtag', () => {
         expect(extractHashtags('#otb something')).toEqual(['otb']);
@@ -79,6 +79,27 @@ describe('groupActivitiesIntoTrips', () => {
         expect(trips).toHaveLength(2);
         expect(trips.find((t) => t.hashtag === null)).toBeDefined();
         expect(trips.find((t) => t.hashtag === 'otb')).toBeDefined();
+    });
+});
+describe('shouldExcludeFromSync', () => {
+    it('returns true for #no_triptracker_sync hashtag', () => {
+        expect(shouldExcludeFromSync('Ride with #no_triptracker_sync tag')).toBe(true);
+    });
+    it('returns true for lowercase variation', () => {
+        expect(shouldExcludeFromSync('Ride with #NO_TRIPTRACKER_SYNC tag')).toBe(true);
+        expect(shouldExcludeFromSync('Ride with #No_TripTracker_Sync tag')).toBe(true);
+    });
+    it('returns false when no exclusion hashtag present', () => {
+        expect(shouldExcludeFromSync('Regular ride description')).toBe(false);
+        expect(shouldExcludeFromSync('Ride with #otb hashtag')).toBe(false);
+    });
+    it('returns false for null or undefined', () => {
+        expect(shouldExcludeFromSync(null)).toBe(false);
+        expect(shouldExcludeFromSync(undefined)).toBe(false);
+    });
+    it('returns false for similar but different hashtags', () => {
+        expect(shouldExcludeFromSync('Ride with #no_sync tag')).toBe(false);
+        expect(shouldExcludeFromSync('Ride with #nosync tag')).toBe(false);
     });
 });
 //# sourceMappingURL=trips.test.js.map

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, CheckCircle2, Loader2 } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
 import { getApiBaseUrl } from '../utils/api';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { logAdminSync } from '../utils/analytics';
@@ -9,9 +9,23 @@ interface SyncResult {
   trips_created: number;
   activities_saved: number;
   activities_failed: number;
+  activities_excluded?: number;
   trips_saved: number;
   trips_failed: number;
   enhanced_count?: number;
+}
+
+interface CleanupResult {
+  activities_checked: number;
+  activities_excluded: number;
+  activities_not_found: number;
+  activities_deleted: number;
+  delete_errors: number;
+  trips_recreated: number;
+  total_trips: number;
+  photos_preserved?: number;
+  deleted_activity_ids?: string[];
+  not_found_in_strava_ids?: string[];
 }
 
 export const Admin: React.FC = () => {
@@ -20,12 +34,16 @@ export const Admin: React.FC = () => {
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [cleaning, setCleaning] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+
   const handleSync = async (mode: 'quick' | 'full' = 'quick') => {
     setSyncing(mode);
     setSyncStep(
       mode === 'quick' ? 'Quick syncing new activities...' : 'Full re-syncing all activities...',
     );
     setSyncResult(null);
+    setCleanupResult(null);
     setError(null);
 
     // Log analytics
@@ -54,6 +72,38 @@ export const Admin: React.FC = () => {
       setSyncStep(null);
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    setCleaning(true);
+    setSyncStep('Checking for excluded activities...');
+    setSyncResult(null);
+    setCleanupResult(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/strava/cleanup-excluded`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Cleanup failed');
+      }
+
+      const data = await response.json();
+      setCleanupResult(data);
+      setSyncStep(null);
+    } catch (err) {
+      console.error('Cleanup error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to cleanup excluded activities');
+      setSyncStep(null);
+    } finally {
+      setCleaning(false);
     }
   };
 
@@ -138,6 +188,17 @@ export const Admin: React.FC = () => {
                 </p>
                 <p className="text-2xl font-bold text-white">{syncResult.activities_saved}</p>
               </div>
+              {syncResult.activities_excluded !== undefined &&
+                syncResult.activities_excluded > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                      Excluded
+                    </p>
+                    <p className="text-2xl font-bold text-yellow-400">
+                      {syncResult.activities_excluded}
+                    </p>
+                  </div>
+                )}
               {syncResult.enhanced_count !== undefined && (
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
@@ -147,6 +208,147 @@ export const Admin: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white">Cleanup Excluded Activities</h2>
+            <p className="text-gray-400 text-sm mt-1 max-w-md">
+              Remove activities from Firestore that have the{' '}
+              <code className="text-yellow-400 bg-gray-900 px-1 rounded">#no_triptracker_sync</code>{' '}
+              hashtag. This fetches fresh data from Strava and deletes excluded activities.
+            </p>
+          </div>
+          <button
+            onClick={handleCleanup}
+            disabled={cleaning || syncing !== false}
+            className="flex items-center justify-center gap-2 bg-red-600/80 hover:bg-red-600 text-white px-6 py-3 rounded-lg disabled:bg-red-600/40 transition-all font-bold shadow-lg min-h-[44px]"
+          >
+            {cleaning ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Trash2 className="w-5 h-5" />
+            )}
+            <span>{cleaning ? 'Cleaning up...' : 'Run Cleanup'}</span>
+          </button>
+        </div>
+
+        {cleanupResult && (
+          <div className="mt-6 bg-gray-900/50 rounded-lg p-6 border border-gray-700">
+            <div className="flex items-center gap-2 text-green-400 mb-4 font-bold">
+              <CheckCircle2 className="w-5 h-5" />
+              <span>Cleanup Completed Successfully</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Checked</p>
+                <p className="text-2xl font-bold text-white">{cleanupResult.activities_checked}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                  Excluded
+                </p>
+                <p className="text-2xl font-bold text-yellow-400">
+                  {cleanupResult.activities_excluded}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Deleted</p>
+                <p className="text-2xl font-bold text-red-400">
+                  {cleanupResult.activities_deleted}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                  Trips Recreated
+                </p>
+                <p className="text-2xl font-bold text-white">{cleanupResult.trips_recreated}</p>
+              </div>
+              {cleanupResult.photos_preserved !== undefined && (
+                <div className="space-y-1">
+                  <p className="text-xs text-green-500 uppercase tracking-widest font-bold">
+                    Photos Preserved
+                  </p>
+                  <p className="text-2xl font-bold text-green-400">
+                    {cleanupResult.photos_preserved}
+                  </p>
+                </div>
+              )}
+            </div>
+            {(cleanupResult.activities_not_found > 0 || cleanupResult.delete_errors > 0) && (
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <div className="grid grid-cols-2 gap-6">
+                  {cleanupResult.activities_not_found > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                        Not in Strava
+                      </p>
+                      <p className="text-xl font-bold text-orange-400">
+                        {cleanupResult.activities_not_found}
+                      </p>
+                    </div>
+                  )}
+                  {cleanupResult.delete_errors > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
+                        Delete Errors
+                      </p>
+                      <p className="text-xl font-bold text-red-400">
+                        {cleanupResult.delete_errors}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Show deleted activity IDs */}
+            {cleanupResult.not_found_in_strava_ids &&
+              cleanupResult.not_found_in_strava_ids.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">
+                    Not Found in Strava (deleted from Firestore):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {cleanupResult.not_found_in_strava_ids.map((id) => (
+                      <a
+                        key={id}
+                        href={`https://www.strava.com/activities/${id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm bg-orange-900/50 text-orange-300 px-2 py-1 rounded hover:bg-orange-900/70 transition-colors"
+                      >
+                        {id}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {cleanupResult.deleted_activity_ids &&
+              cleanupResult.deleted_activity_ids.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">
+                    All Deleted Activity IDs:
+                  </p>
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                    {cleanupResult.deleted_activity_ids.map((id) => (
+                      <a
+                        key={id}
+                        href={`https://www.strava.com/activities/${id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm bg-gray-700 text-gray-300 px-2 py-1 rounded hover:bg-gray-600 transition-colors"
+                      >
+                        {id}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
           </div>
         )}
       </div>

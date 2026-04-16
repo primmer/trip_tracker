@@ -1,6 +1,11 @@
 import express, { Router } from 'express';
 import { refreshStravaTokenIfNeeded } from './services/strava.js';
-import { groupActivitiesIntoTrips, type Activity, type ActivityStreams } from './utils/trips.js';
+import {
+  groupActivitiesIntoTrips,
+  shouldExcludeFromSync,
+  type Activity,
+  type ActivityStreams,
+} from './utils/trips.js';
 import admin from 'firebase-admin';
 import {
   createPickerSession,
@@ -392,9 +397,11 @@ router.post('/api/strava/sync', async (req, res) => {
     }
 
     // 2. Fetch DETAILED activities to get descriptions and hashtags
+    // Also filter out activities with exclusion hashtags
     const detailedActivities: Activity[] = [];
     let activitiesSaved = 0;
     let activitiesFailed = 0;
+    let activitiesExcluded = 0;
     let rateLimitReached = false;
 
     const db = admin.firestore();
@@ -426,6 +433,24 @@ router.post('/api/strava/sync', async (req, res) => {
               );
               detailed = await fetchDetailedActivity(summary.id, accessToken);
 
+              // Check if activity has exclusion hashtag - skip syncing if found
+              const activityDescription = (detailed as unknown as Activity).description || '';
+              if (shouldExcludeFromSync(activityDescription)) {
+                console.log(
+                  `Activity ${summary.id} has #no_triptracker_sync hashtag - excluding from sync`,
+                );
+                activitiesExcluded++;
+                // Still delete from Firestore if it was previously synced
+                await db
+                  .collection('activities')
+                  .doc(summary.id.toString())
+                  .delete()
+                  .catch(() => {
+                    // Ignore errors if document doesn't exist
+                  });
+                return { success: false, excluded: true };
+              }
+
               // Save detailed activity to Firestore
               const activityRef = db.collection('activities').doc(summary.id.toString());
               const cleanedData = prepareActivityForFirestore(detailed);
@@ -446,6 +471,16 @@ router.post('/api/strava/sync', async (req, res) => {
               description: (detailed as Activity).description || null,
             };
 
+            // Check for exclusion hashtag on cached activities too (in case hashtag was added after initial sync)
+            if (shouldExcludeFromSync(activity.description)) {
+              console.log(
+                `Activity ${summary.id} has #no_triptracker_sync hashtag - excluding from sync`,
+              );
+              activitiesExcluded++;
+              await db.collection('activities').doc(summary.id.toString()).delete();
+              return { success: false, excluded: true };
+            }
+
             // Fetch GPS streams
             await fetchAndSaveStreams(activity.id, accessToken);
 
@@ -463,6 +498,8 @@ router.post('/api/strava/sync', async (req, res) => {
       for (const result of batchResults) {
         if (result.success && result.activity) {
           detailedActivities.push(result.activity);
+        } else if (result.excluded) {
+          // Activity was excluded, already counted in activitiesExcluded
         } else if (result.rateLimit) {
           rateLimitReached = true;
         } else {
@@ -532,12 +569,207 @@ router.post('/api/strava/sync', async (req, res) => {
       trips_created: trips.length,
       activities_saved: activitiesSaved,
       activities_failed: activitiesFailed,
+      activities_excluded: activitiesExcluded,
       trips_saved: tripsSaved,
       trips_failed: tripsFailed,
       enhanced_count: enhancedCount,
     });
   } catch (error) {
     console.error('Error syncing with Strava:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// Cleanup endpoint: Remove activities with #no_triptracker_sync hashtag from Firestore
+router.post('/api/strava/cleanup-excluded', async (req, res) => {
+  try {
+    const accessToken = await refreshStravaTokenIfNeeded();
+    const db = admin.firestore();
+
+    // 1. Fetch all activities from Firestore
+    const activitiesSnapshot = await db.collection('activities').get();
+    const activitiesToCheck = activitiesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      data: doc.data() as Activity,
+      ref: doc.ref,
+    }));
+
+    console.log(`Checking ${activitiesToCheck.length} activities for exclusion hashtag...`);
+
+    const activitiesToDelete: typeof activitiesToCheck = [];
+    const deletedIds: string[] = [];
+    const notFoundIds: string[] = [];
+    let checkedCount = 0;
+    let excludedCount = 0;
+    let notFoundInStravaCount = 0;
+
+    // Helper function to fetch with retry on 429
+    async function fetchActivityWithRetry(
+      activityId: string,
+      maxRetries = 3,
+    ): Promise<Response | null> {
+      let retries = 0;
+      while (retries < maxRetries) {
+        const response = await fetch(`https://www.strava.com/api/v3/activities/${activityId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (response.status === 429) {
+          // Rate limited - wait and retry with exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retries), 10000); // Max 10s
+          console.log(
+            `Rate limited for activity ${activityId}, retrying in ${delay}ms (attempt ${retries + 1}/${maxRetries})...`,
+          );
+          await sleep(delay);
+          retries++;
+          continue;
+        }
+
+        return response;
+      }
+      console.warn(`Max retries exceeded for activity ${activityId}`);
+      return null;
+    }
+
+    // 2. Check each activity against Strava (in batches to respect rate limits)
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < activitiesToCheck.length; i += BATCH_SIZE) {
+      const batch = activitiesToCheck.slice(i, i + BATCH_SIZE);
+
+      await Promise.all(
+        batch.map(async (activity) => {
+          try {
+            // Fetch fresh data from Strava with retry on 429
+            const response = await fetchActivityWithRetry(activity.id);
+
+            if (!response) {
+              console.warn(`Failed to fetch activity ${activity.id} after retries`);
+              return;
+            }
+
+            if (response.status === 404) {
+              // Activity was deleted from Strava, mark for deletion
+              console.log(`Activity ${activity.id} not found in Strava, will delete`);
+              activitiesToDelete.push(activity);
+              notFoundIds.push(activity.id);
+              notFoundInStravaCount++;
+              return;
+            }
+
+            if (!response.ok) {
+              console.warn(`Failed to fetch activity ${activity.id}: ${response.status}`);
+              return;
+            }
+
+            const stravaActivity = (await response.json()) as Activity;
+            checkedCount++;
+
+            // Check if it has the exclusion hashtag
+            if (shouldExcludeFromSync(stravaActivity.description)) {
+              console.log(`Activity ${activity.id} has #no_triptracker_sync hashtag, will delete`);
+              activitiesToDelete.push(activity);
+              excludedCount++;
+            }
+          } catch (error) {
+            console.error(`Error checking activity ${activity.id}:`, error);
+          }
+        }),
+      );
+
+      // Small delay between batches
+      if (i + BATCH_SIZE < activitiesToCheck.length) {
+        await sleep(100);
+      }
+    }
+
+    // 3. Delete excluded activities and their streams
+    let deletedCount = 0;
+    let deleteErrors = 0;
+
+    for (const activity of activitiesToDelete) {
+      try {
+        // Delete streams subcollection first
+        const streamsSnapshot = await activity.ref.collection('streams').get();
+        const streamDeletions = streamsSnapshot.docs.map((doc) => doc.ref.delete());
+        await Promise.all(streamDeletions);
+
+        // Delete the activity document
+        await activity.ref.delete();
+        deletedCount++;
+        deletedIds.push(activity.id);
+        console.log(`Deleted activity ${activity.id} and its streams`);
+      } catch (error) {
+        console.error(`Failed to delete activity ${activity.id}:`, error);
+        deleteErrors++;
+      }
+    }
+
+    // 4. Recreate trips (since excluded activities might have been part of trips)
+    // IMPORTANT: Deleting trip documents does NOT delete their subcollections (photos).
+    // Firestore subcollections are independent - the photos at trips/{tripId}/photos
+    // will remain intact when we recreate the trip document with the same ID.
+    // This means no photos need to be re-downloaded from Google Photos.
+
+    // Fetch remaining activities
+    const remainingActivitiesSnapshot = await db.collection('activities').get();
+    const remainingActivities = remainingActivitiesSnapshot.docs.map(
+      (doc) => doc.data() as Activity,
+    );
+
+    // Regroup into trips
+    const trips = groupActivitiesIntoTrips(remainingActivities);
+
+    // Delete all existing trips and recreate (photos subcollections are preserved)
+    const existingTripsSnapshot = await db.collection('trips').get();
+    const tripDeletions = existingTripsSnapshot.docs.map((doc) => doc.ref.delete());
+    await Promise.all(tripDeletions);
+
+    // Create new trips (photos subcollections remain from before)
+    let tripsCreated = 0;
+    let photosPreserved = 0;
+    for (const trip of trips) {
+      try {
+        await db
+          .collection('trips')
+          .doc(trip.id)
+          .set({
+            ...trip,
+            synced_at: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        tripsCreated++;
+
+        // Count photos to confirm they're preserved
+        const photosSnapshot = await db.collection('trips').doc(trip.id).collection('photos').get();
+        photosPreserved += photosSnapshot.size;
+      } catch (error) {
+        console.error(`Failed to create trip ${trip.id}:`, error);
+      }
+    }
+
+    console.log(
+      `Cleanup complete: ${tripsCreated} trips recreated, ${photosPreserved} photos preserved`,
+    );
+
+    res.status(200).json({
+      status: 'success',
+      activities_checked: checkedCount,
+      activities_excluded: excludedCount,
+      activities_not_found: notFoundInStravaCount,
+      activities_deleted: deletedCount,
+      delete_errors: deleteErrors,
+      trips_recreated: tripsCreated,
+      total_trips: trips.length,
+      photos_preserved: photosPreserved,
+      deleted_activity_ids: deletedIds,
+      not_found_in_strava_ids: notFoundIds,
+    });
+  } catch (error) {
+    console.error('Error cleaning up excluded activities:', error);
     res.status(500).json({
       status: 'error',
       message: error instanceof Error ? error.message : 'Unknown error',

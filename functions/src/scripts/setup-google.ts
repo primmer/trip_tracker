@@ -112,34 +112,10 @@ async function setupGoogle() {
       const db = admin.firestore();
       await db.doc('secrets/google_tokens').set(tokens);
 
-      // Also update .env file with the new refresh token
-      const fs = await import('fs');
-      const envPath = path.resolve(__dirname, '../../../.env');
-      try {
-        let envContent = fs.readFileSync(envPath, 'utf8');
-        // Replace or add GOOGLE_REFRESH_TOKEN
-        if (envContent.includes('GOOGLE_REFRESH_TOKEN=')) {
-          envContent = envContent.replace(
-            /GOOGLE_REFRESH_TOKEN=.*/,
-            `GOOGLE_REFRESH_TOKEN=${data.refresh_token}`,
-          );
-        } else {
-          envContent += `\nGOOGLE_REFRESH_TOKEN=${data.refresh_token}\n`;
-        }
-        fs.writeFileSync(envPath, envContent);
-        console.log('Updated .env file with new refresh token.');
-      } catch (err) {
-        console.warn('Failed to update .env file:', (err as Error).message);
-        console.log('Add this to your .env file manually:');
-        console.log(`GOOGLE_REFRESH_TOKEN=${data.refresh_token}`);
-      }
-
-      console.log('Successfully saved Google tokens to Firestore and .env.');
+      console.log('Successfully saved Google tokens to Firestore.');
 
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(
-        '<h1>Success!</h1><p>Google tokens saved to Firestore and .env. You can close this tab.</p>',
-      );
+      res.end('<h1>Success!</h1><p>Google tokens saved to Firestore. Setup complete!</p>');
 
       server.close();
       process.exit(0);

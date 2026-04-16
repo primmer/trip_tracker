@@ -11,15 +11,6 @@ export async function getGoogleTokens() {
     catch (error) {
         console.warn('Failed to read Google tokens from Firestore:', error);
     }
-    // Fallback to .env for initialization
-    const refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
-    if (refresh_token) {
-        return {
-            access_token: '',
-            refresh_token: refresh_token,
-            expires_at: 0, // Force refresh
-        };
-    }
     return null;
 }
 export async function saveGoogleTokens(tokens) {

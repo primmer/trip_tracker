@@ -10,6 +10,7 @@ vi.mock('lucide-react', () => ({
   Loader2: () => <div data-testid="loader-icon" />,
   AlertCircle: () => <div data-testid="alert-icon" />,
   X: () => <div data-testid="x-icon" />,
+  Trash2: () => <div data-testid="trash-icon" />,
 }));
 
 // Mock API base URL

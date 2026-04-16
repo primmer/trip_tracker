@@ -9,6 +9,16 @@ export function extractHashtags(text: string | null | undefined): string[] {
   return matches.map((match) => match[1]);
 }
 
+/**
+ * Checks if an activity should be excluded from syncing based on hashtags.
+ * Returns true if the activity description contains the #no_triptracker_sync hashtag.
+ */
+export function shouldExcludeFromSync(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const hashtags = extractHashtags(text);
+  return hashtags.some((tag) => tag.toLowerCase() === 'no_triptracker_sync');
+}
+
 export interface Activity {
   id: number;
   name: string;
@@ -57,7 +67,9 @@ export function groupActivitiesIntoTrips(activities: Activity[]): Trip[] {
   );
 
   for (const activity of sortedActivities) {
-    const hashtags = extractHashtags(activity.description);
+    const allHashtags = extractHashtags(activity.description);
+    // Filter out the exclusion hashtag - it should not create or join trips
+    const hashtags = allHashtags.filter((tag) => tag.toLowerCase() !== 'no_triptracker_sync');
     const polyline = activity.map?.summary_polyline;
 
     if (hashtags.length > 0) {

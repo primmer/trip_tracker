@@ -91,7 +91,7 @@ async function setupGoogle() {
             await db.doc('secrets/google_tokens').set(tokens);
             console.log('Successfully saved Google tokens to Firestore.');
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end('<h1>Success!</h1><p>Google tokens saved. You can close this tab.</p>');
+            res.end('<h1>Success!</h1><p>Google tokens saved to Firestore. Setup complete!</p>');
             server.close();
             process.exit(0);
         }
