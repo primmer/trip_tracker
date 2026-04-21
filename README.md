@@ -76,6 +76,39 @@ A web app for tracking bike trips and bikepacking adventures that focuses on pho
 - Route polylines are sized to ~70% of their container. Hero polyline is more prominent than tile polylines.
 - Elevation data is fetched from Firestore activity streams and rendered as a thin SVG line -- at the top of the hero, at the bottom of trip tiles.
 
+## Hosting Costs & Free Tier Limits
+
+The app is designed to run within the Firebase Spark (no-cost) plan and stay under the free caps of the APIs it uses. For a single-user personal project, typical usage is well within these limits.
+
+### Firebase Spark Plan
+
+| Product | Free Tier | Docs |
+|---------|-----------|------|
+| **Hosting** | 10 GB storage, 360 MB/day transfer | [Firebase Pricing](https://firebase.google.com/pricing) |
+| **Cloud Functions** | 2M invocations/mo, 400K GB-seconds, 200K CPU-seconds, 5 GB egress/mo | [Firebase Pricing](https://firebase.google.com/pricing) |
+| **Firestore** | 1 GiB stored, 10 GiB egress/mo, 20K writes/day, 50K reads/day, 20K deletes/day | [Firebase Pricing](https://firebase.google.com/pricing) |
+| **Cloud Storage** | 5 GB stored, 100 GB downloaded/mo | [Firebase Pricing](https://firebase.google.com/pricing) |
+
+### Google Maps Platform
+
+Google Maps Platform uses a pay-as-you-go model with a monthly credit that applies to qualifying SKUs. The app uses:
+
+- **Maps JavaScript API** (Dynamic Maps SKU) — billed per map load
+- **Map Tiles API** — 15,000 2D tiles/day, 10,000 root tileset queries/day for 3D tiles
+- **Geocoding API** — billed per request
+- **Places API (New)** — billed per request
+
+See [Maps JavaScript API Usage and Billing](https://developers.google.com/maps/documentation/javascript/usage-and-billing) and [Map Tiles API Usage and Billing](https://developers.google.com/maps/documentation/tile/usage-and-billing) for current pricing.
+
+### Strava API Rate Limits
+
+Strava imposes rate limits on all API requests:
+
+- **Overall:** 200 requests per 15 minutes, 2,000 per day
+- **Read endpoints:** 100 requests per 15 minutes, 1,000 per day
+
+The app implements batching and delays during sync to respect these limits. If you hit a 429, the sync will back off and retry. See [Strava Rate Limits](https://developers.strava.com/docs/rate-limits/).
+
 ## Prerequisites
 
 Setting up your own instance requires accounts and credentials from three external services, plus a Firebase project to host the backend. The detailed steps below walk through each one, but here is the high-level summary of what you will need:
