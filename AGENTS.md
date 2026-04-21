@@ -21,14 +21,21 @@
 | Hosting only | `npx vite build && firebase deploy --only hosting` |
 | Functions only | `firebase deploy --only functions` |
 
+## Instance Configuration
+
+All per-instance values (project IDs, API keys, bucket names, hosting URLs) live in `.env` and are documented in `README.md`.
+
+- **Frontend env vars**: `VITE_*` prefixes, consumed by Vite at build time.
+- **Backend env vars**: Loaded by `dotenv` in the Functions dev server and setup scripts.
+- **Never hardcode project IDs or bucket names** in source code. Use `process.env.FIREBASE_PROJECT_ID` and `process.env.FIREBASE_STORAGE_BUCKET`.
+
 ## Architecture
 
 - **Frontend**: React 18 + TypeScript + Tailwind CSS + Vite (:5173)
 - **Backend**: Firebase Cloud Functions (Express) (:5001)
 - **Data**: Firestore (trips, activities, photos as subcollections), Firebase Storage
 - **APIs**: Strava (activities/routes), Google Photos (geotagged images), Google Maps JavaScript API (3D satellite)
-- **Host**: Firebase Hosting at https://primco-trip-tracker.web.app
-- **Project ID**: `primco-trip-tracker`
+- **Host**: Firebase Hosting (URL depends on your Firebase project)
 
 ## Key Concepts
 
@@ -76,7 +83,7 @@ functions/
 
 ## Deployment Notes
 
-Hosted on Firebase at https://primco-trip-tracker.web.app. Firebase project ID is `primco-trip-tracker`. Firebase CLI is installed globally (`firebase-tools`).
+Firebase CLI is installed globally (`firebase-tools`).
 
 - **Full deploy**: `npx vite build && firebase deploy` -- builds frontend, deploys hosting, functions, Firestore rules, and storage rules.
 - **Hosting only** (faster, frontend changes only): `npx vite build && firebase deploy --only hosting`
@@ -88,11 +95,10 @@ Hosted on Firebase at https://primco-trip-tracker.web.app. Firebase project ID i
 
 ## Environment Variables
 
-Required in `.env`:
+Required in `.env` (see `.env.example` for full list and descriptions):
+
+- `FIREBASE_PROJECT_ID` — Target Firebase project for local dev / setup scripts
+- `FIREBASE_STORAGE_BUCKET` — Storage bucket for local dev server
 - `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - `VITE_GOOGLE_MAPS_API_KEY`, `VITE_FIREBASE_CONFIG`, `VITE_ADMIN_KEY`, `VITE_SENTRY_DSN`
-
-## Testing Notes
-
-- **Mobile viewport limitations**: Chrome DevTools mobile emulation does not perfectly match real device behavior, especially for `dvh` (dynamic viewport height) units and touch gesture handling. Always verify mobile layout fixes on an actual device before considering them complete.

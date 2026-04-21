@@ -9,10 +9,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Load .env from root
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+const projectId = process.env.FIREBASE_PROJECT_ID;
+const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+if (!projectId) {
+    console.error('FIREBASE_PROJECT_ID is not set in .env');
+    process.exit(1);
+}
 if (!admin.apps.length) {
     admin.initializeApp({
-        projectId: 'primco-trip-tracker',
-        storageBucket: 'primco-trip-tracker.firebasestorage.app',
+        projectId,
+        storageBucket: storageBucket || undefined,
     });
 }
 const app = express();
