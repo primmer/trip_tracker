@@ -14,6 +14,12 @@ vi.mock('lucide-react', () => ({
 }));
 
 // Mock API base URL
+vi.mock('../firebase', () => ({
+  db: {},
+  trackEvent: vi.fn(),
+  trackPageView: vi.fn(),
+}));
+
 vi.mock('../utils/api', () => ({
   getApiBaseUrl: () => 'http://localhost:5001',
 }));
