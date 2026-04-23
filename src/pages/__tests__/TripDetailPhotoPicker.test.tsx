@@ -24,6 +24,11 @@ vi.mock('firebase/firestore', () => ({
 
 vi.mock('../../firebase', () => ({
   db: {},
+
+  trackEvent: vi.fn(),
+  trackPageView: vi.fn(),
+
+
 }));
 
 vi.mock('../../components/Map/TripMap', () => ({
