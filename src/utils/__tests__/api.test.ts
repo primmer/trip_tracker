@@ -10,7 +10,13 @@ describe('getApiBaseUrl', () => {
     vi.unstubAllEnvs();
   });
 
-  it('returns localhost in development mode when VITE_API_BASE_URL is not set', () => {
+  it('returns localhost in development mode when VITE_API_BASE_URL is completely undefined', () => {
+    vi.stubEnv('MODE', 'development');
+
+    expect(getApiBaseUrl()).toBe('http://localhost:5001');
+  });
+
+  it('returns localhost in development mode when VITE_API_BASE_URL is an empty string', () => {
     vi.stubEnv('MODE', 'development');
     // We shouldn't strictly need to delete it since vitest starts cleanish,
     // but just to be sure we can set it to an empty string to simulate not set
@@ -27,7 +33,13 @@ describe('getApiBaseUrl', () => {
     expect(getApiBaseUrl()).toBe('http://custom:5001');
   });
 
-  it('returns empty string in production mode when VITE_API_BASE_URL is not set', () => {
+  it('returns empty string in production mode when VITE_API_BASE_URL is completely undefined', () => {
+    vi.stubEnv('MODE', 'production');
+
+    expect(getApiBaseUrl()).toBe('');
+  });
+
+  it('returns empty string in production mode when VITE_API_BASE_URL is an empty string', () => {
     vi.stubEnv('MODE', 'production');
     vi.stubEnv('VITE_API_BASE_URL', '');
 
